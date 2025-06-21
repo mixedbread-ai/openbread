@@ -1,7 +1,7 @@
-import pLimit from 'p-limit';
+import pLimit from "p-limit";
 
 // Export pLimit for direct use
-export { default as pLimit } from 'p-limit';
+export { default as pLimit } from "p-limit";
 
 /**
  * Process items with a configurable concurrency limit using p-limit
@@ -12,11 +12,13 @@ export { default as pLimit } from 'p-limit';
 export async function processWithConcurrency<T>(
   items: T[],
   processor: (item: T, index: number) => Promise<void>,
-  concurrency: number,
+  concurrency: number
 ): Promise<void> {
   const limit = pLimit(concurrency);
 
-  const promises = items.map((item, index) => limit(() => processor(item, index)));
+  const promises = items.map((item, index) =>
+    limit(() => processor(item, index))
+  );
 
   await Promise.all(promises);
 }

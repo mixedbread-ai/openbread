@@ -1,38 +1,41 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { Endpoint, endpoints, HandlerFunction, query } from './tools';
-import { CallToolRequestSchema, ListToolsRequestSchema, Tool } from '@modelcontextprotocol/sdk/types.js';
-import { ClientOptions } from '@mixedbread/sdk';
-import Mixedbread from '@mixedbread/sdk';
+import type { ClientOptions } from "@mixedbread/sdk";
+import Mixedbread from "@mixedbread/sdk";
+import type { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+  type Tool,
+} from "@modelcontextprotocol/sdk/types.js";
 import {
   applyCompatibilityTransformations,
-  ClientCapabilities,
+  type ClientCapabilities,
   defaultClientCapabilities,
   knownClients,
   parseEmbeddedJSON,
-} from './compat';
-import { dynamicTools } from './dynamic-tools';
-import { McpOptions } from './options';
+} from "./compat";
+import { dynamicTools } from "./dynamic-tools";
+import type { McpOptions } from "./options";
+import { type Endpoint, endpoints, type HandlerFunction, query } from "./tools";
 
-export { McpOptions } from './options';
-export { ClientType } from './compat';
-export { Filter } from './tools';
-export { ClientOptions } from '@mixedbread/sdk';
-export { endpoints } from './tools';
+export { ClientOptions } from "@mixedbread/sdk";
+export { ClientType } from "./compat";
+export { McpOptions } from "./options";
+export { endpoints, Filter } from "./tools";
 
 // Create server instance
 export const server = new McpServer(
   {
-    name: 'mixedbread_sdk_api',
-    version: '0.9.3',
+    name: "mixedbread_sdk_api",
+    version: "0.9.3",
   },
   {
     capabilities: {
       tools: {},
     },
-  },
+  }
 );
 
 /**
@@ -49,9 +52,16 @@ export function initMcpServer(params: {
   const client = new Mixedbread(params.clientOptions);
   const capabilities = {
     ...defaultClientCapabilities,
-    ...(params.mcpOptions.client ? knownClients[params.mcpOptions.client] : params.mcpOptions.capabilities),
+    ...(params.mcpOptions.client
+      ? knownClients[params.mcpOptions.client]
+      : params.mcpOptions.capabilities),
   };
-  init({ server: params.server, client, endpoints: transformedEndpoints, capabilities });
+  init({
+    server: params.server,
+    client,
+    endpoints: transformedEndpoints,
+    capabilities,
+  });
 }
 
 export function init(params: {
@@ -60,16 +70,19 @@ export function init(params: {
   endpoints?: { tool: Tool; handler: HandlerFunction }[];
   capabilities?: Partial<ClientCapabilities>;
 }) {
-  const server = params.server instanceof McpServer ? params.server.server : params.server;
+  const server =
+    params.server instanceof McpServer ? params.server.server : params.server;
   const providedEndpoints = params.endpoints || endpoints;
 
-  const endpointMap = Object.fromEntries(providedEndpoints.map((endpoint) => [endpoint.tool.name, endpoint]));
+  const endpointMap = Object.fromEntries(
+    providedEndpoints.map((endpoint) => [endpoint.tool.name, endpoint])
+  );
 
   const client =
     params.client ||
     new Mixedbread({
-      environment: (readEnv('MIXEDBREAD_ENVIRONMENT') || undefined) as any,
-      defaultHeaders: { 'X-Stainless-MCP': 'true' },
+      environment: (readEnv("MIXEDBREAD_ENVIRONMENT") || undefined) as any,
+      defaultHeaders: { "X-Stainless-MCP": "true" },
     });
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -85,7 +98,13 @@ export function init(params: {
       throw new Error(`Unknown tool: ${name}`);
     }
 
-    return executeHandler(endpoint.tool, endpoint.handler, client, args, params.capabilities);
+    return executeHandler(
+      endpoint.tool,
+      endpoint.handler,
+      client,
+      args,
+      params.capabilities
+    );
   });
 }
 
@@ -111,7 +130,10 @@ export function selectTools(endpoints: Endpoint[], options: McpOptions) {
     }
   }
 
-  const capabilities = { ...defaultClientCapabilities, ...options.capabilities };
+  const capabilities = {
+    ...defaultClientCapabilities,
+    ...options.capabilities,
+  };
   return applyCompatibilityTransformations(includedTools, capabilities);
 }
 
@@ -123,7 +145,7 @@ export async function executeHandler(
   handler: HandlerFunction,
   client: Mixedbread,
   args: Record<string, unknown> | undefined,
-  compatibilityOptions?: Partial<ClientCapabilities>,
+  compatibilityOptions?: Partial<ClientCapabilities>
 ) {
   const options = { ...defaultClientCapabilities, ...compatibilityOptions };
   if (options.validJson && args) {
@@ -133,16 +155,16 @@ export async function executeHandler(
 }
 
 export const readEnv = (env: string): string | undefined => {
-  if (typeof (globalThis as any).process !== 'undefined') {
+  if (typeof (globalThis as any).process !== "undefined") {
     return (globalThis as any).process.env?.[env]?.trim();
-  } else if (typeof (globalThis as any).Deno !== 'undefined') {
+  } else if (typeof (globalThis as any).Deno !== "undefined") {
     return (globalThis as any).Deno.env?.get?.(env)?.trim();
   }
   return;
 };
 
 export const readEnvOrError = (env: string): string => {
-  let envValue = readEnv(env);
+  const envValue = readEnv(env);
   if (envValue === undefined) {
     throw new Error(`Environment variable ${env} is not set`);
   }

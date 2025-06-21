@@ -5,11 +5,11 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format": "turbo run format",
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
-    "prettier": "^3.5.3",
+    "@biomejs/biome": "2.0.4",
     "turbo": "^2.5.4",
     "typescript": "5.8.2"
   },

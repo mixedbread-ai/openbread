@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { init, selectTools, server } from './server';
-import { Endpoint, endpoints } from './tools';
-import { McpOptions, parseOptions } from './options';
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { init, selectTools, server } from "./server";
+import { type Endpoint, endpoints } from "./tools";
+import { type McpOptions, parseOptions } from "./options";
 
 async function main() {
   const options = parseOptionsOrError();
@@ -17,19 +17,19 @@ async function main() {
 
   console.error(
     `MCP Server starting with ${includedTools.length} tools:`,
-    includedTools.map((e) => e.tool.name),
+    includedTools.map((e) => e.tool.name)
   );
 
   init({ server, endpoints: includedTools });
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error('MCP Server running on stdio');
+  console.error("MCP Server running on stdio");
 }
 
 if (require.main === module) {
   main().catch((error) => {
-    console.error('Fatal error in main():', error);
+    console.error("Fatal error in main():", error);
     process.exit(1);
   });
 }
@@ -38,7 +38,7 @@ function parseOptionsOrError() {
   try {
     return parseOptions();
   } catch (error) {
-    console.error('Error parsing options:', error);
+    console.error("Error parsing options:", error);
     process.exit(1);
   }
 }
@@ -47,15 +47,15 @@ function selectToolsOrError(endpoints: Endpoint[], options: McpOptions) {
   try {
     const includedTools = selectTools(endpoints, options);
     if (includedTools.length === 0) {
-      console.error('No tools match the provided filters.');
+      console.error("No tools match the provided filters.");
       process.exit(1);
     }
     return includedTools;
   } catch (error) {
     if (error instanceof Error) {
-      console.error('Error filtering tools:', error.message);
+      console.error("Error filtering tools:", error.message);
     } else {
-      console.error('Error filtering tools:', error);
+      console.error("Error filtering tools:", error);
     }
     process.exit(1);
   }
@@ -63,10 +63,10 @@ function selectToolsOrError(endpoints: Endpoint[], options: McpOptions) {
 
 function listAllTools() {
   if (endpoints.length === 0) {
-    console.log('No tools available.');
+    console.log("No tools available.");
     return;
   }
-  console.log('Available tools:\n');
+  console.log("Available tools:\n");
 
   // Group endpoints by resource
   const resourceGroups = new Map<string, typeof endpoints>();
@@ -96,9 +96,11 @@ function listAllTools() {
         metadata: { operation, tags },
       } = endpoint;
 
-      console.log(`  - ${tool.name} (${operation}) ${tags.length > 0 ? `tags: ${tags.join(', ')}` : ''}`);
+      console.log(
+        `  - ${tool.name} (${operation}) ${tags.length > 0 ? `tags: ${tags.join(", ")}` : ""}`
+      );
       console.log(`    Description: ${tool.description}`);
     }
-    console.log('');
+    console.log("");
   }
 }

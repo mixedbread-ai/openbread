@@ -1,11 +1,11 @@
-import { Command } from 'commander';
-import { createCreateCommand } from '../../../src/commands/vector-store/create';
-import * as clientUtils from '../../../src/utils/client';
-import * as outputUtils from '../../../src/utils/output';
+import type { Command } from "commander";
+import { createCreateCommand } from "../../../src/commands/vector-store/create";
+import * as clientUtils from "../../../src/utils/client";
+import * as outputUtils from "../../../src/utils/output";
 
 // Mock dependencies
-jest.mock('../../../src/utils/client');
-jest.mock('../../../src/utils/output');
+jest.mock("../../../src/utils/client");
+jest.mock("../../../src/utils/output");
 
 // Mock console methods
 const originalConsoleLog = console.log;
@@ -24,7 +24,7 @@ afterAll(() => {
   process.exit = originalProcessExit;
 });
 
-describe('Vector Store Create Command', () => {
+describe("Vector Store Create Command", () => {
   let command: Command;
   let mockClient: any;
 
@@ -46,11 +46,11 @@ describe('Vector Store Create Command', () => {
     jest.clearAllMocks();
   });
 
-  describe('Basic creation', () => {
-    it('should create vector store with name only', async () => {
+  describe("Basic creation", () => {
+    it("should create vector store with name only", async () => {
       const mockResponse = {
-        id: '550e8400-e29b-41d4-a716-446655440010',
-        name: 'test-store',
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "test-store",
         description: null,
         expires_after: null,
         metadata: {},
@@ -58,60 +58,68 @@ describe('Vector Store Create Command', () => {
 
       mockClient.vectorStores.create.mockResolvedValue(mockResponse);
 
-      await command.parseAsync(['node', 'create', 'test-store']);
+      await command.parseAsync(["node", "create", "test-store"]);
 
       expect(mockClient.vectorStores.create).toHaveBeenCalledWith({
-        name: 'test-store',
+        name: "test-store",
         description: undefined,
         expires_after: undefined,
         metadata: undefined,
       });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('✓'),
-        expect.stringContaining('Vector store "test-store" created successfully'),
+        expect.stringContaining("✓"),
+        expect.stringContaining(
+          'Vector store "test-store" created successfully'
+        )
       );
 
       expect(outputUtils.formatOutput).toHaveBeenCalledWith(
         {
-          id: '550e8400-e29b-41d4-a716-446655440010',
-          name: 'test-store',
+          id: "550e8400-e29b-41d4-a716-446655440010",
+          name: "test-store",
           description: null,
           expires_after: null,
           metadata: {},
         },
-        undefined,
+        undefined
       );
     });
 
-    it('should create vector store with description', async () => {
+    it("should create vector store with description", async () => {
       const mockResponse = {
-        id: '550e8400-e29b-41d4-a716-446655440010',
-        name: 'test-store',
-        description: 'Test description',
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "test-store",
+        description: "Test description",
         expires_after: null,
         metadata: {},
       };
 
       mockClient.vectorStores.create.mockResolvedValue(mockResponse);
 
-      await command.parseAsync(['node', 'create', 'test-store', '--description', 'Test description']);
+      await command.parseAsync([
+        "node",
+        "create",
+        "test-store",
+        "--description",
+        "Test description",
+      ]);
 
       expect(mockClient.vectorStores.create).toHaveBeenCalledWith({
-        name: 'test-store',
-        description: 'Test description',
+        name: "test-store",
+        description: "Test description",
         expires_after: undefined,
         metadata: undefined,
       });
     });
 
-    it('should create vector store with expiration', async () => {
+    it("should create vector store with expiration", async () => {
       const mockResponse = {
-        id: '550e8400-e29b-41d4-a716-446655440010',
-        name: 'temp-store',
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "temp-store",
         description: null,
         expires_after: {
-          anchor: 'last_active_at',
+          anchor: "last_active_at",
           days: 30,
         },
         metadata: {},
@@ -119,13 +127,19 @@ describe('Vector Store Create Command', () => {
 
       mockClient.vectorStores.create.mockResolvedValue(mockResponse);
 
-      await command.parseAsync(['node', 'create', 'temp-store', '--expires-after', '30']);
+      await command.parseAsync([
+        "node",
+        "create",
+        "temp-store",
+        "--expires-after",
+        "30",
+      ]);
 
       expect(mockClient.vectorStores.create).toHaveBeenCalledWith({
-        name: 'temp-store',
+        name: "temp-store",
         description: undefined,
         expires_after: {
-          anchor: 'last_active_at',
+          anchor: "last_active_at",
           days: 30,
         },
         metadata: undefined,
@@ -133,60 +147,69 @@ describe('Vector Store Create Command', () => {
     });
   });
 
-  describe('Metadata handling', () => {
-    it('should create vector store with metadata', async () => {
+  describe("Metadata handling", () => {
+    it("should create vector store with metadata", async () => {
       const mockResponse = {
-        id: '550e8400-e29b-41d4-a716-446655440010',
-        name: 'test-store',
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "test-store",
         description: null,
         expires_after: null,
         metadata: {
-          project: 'website',
-          team: 'engineering',
+          project: "website",
+          team: "engineering",
         },
       };
 
       mockClient.vectorStores.create.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
-        'node',
-        'create',
-        'test-store',
-        '--metadata',
+        "node",
+        "create",
+        "test-store",
+        "--metadata",
         '{"project":"website","team":"engineering"}',
       ]);
 
       expect(mockClient.vectorStores.create).toHaveBeenCalledWith({
-        name: 'test-store',
+        name: "test-store",
         description: undefined,
         expires_after: undefined,
         metadata: {
-          project: 'website',
-          team: 'engineering',
+          project: "website",
+          team: "engineering",
         },
       });
     });
 
-    it('should handle invalid metadata JSON', async () => {
-      await command.parseAsync(['node', 'create', 'test-store', '--metadata', 'invalid-json']);
+    it("should handle invalid metadata JSON", async () => {
+      await command.parseAsync([
+        "node",
+        "create",
+        "test-store",
+        "--metadata",
+        "invalid-json",
+      ]);
 
-      expect(console.error).toHaveBeenCalledWith(expect.any(String), 'Invalid JSON in metadata option');
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        "Invalid JSON in metadata option"
+      );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it('should handle complex metadata', async () => {
+    it("should handle complex metadata", async () => {
       const complexMetadata = {
-        tags: ['products', 'catalog'],
+        tags: ["products", "catalog"],
         config: {
           indexing: true,
           version: 2,
         },
-        last_updated: '2024-01-01',
+        last_updated: "2024-01-01",
       };
 
       const mockResponse = {
-        id: '550e8400-e29b-41d4-a716-446655440010',
-        name: 'test-store',
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "test-store",
         description: null,
         expires_after: null,
         metadata: complexMetadata,
@@ -195,15 +218,15 @@ describe('Vector Store Create Command', () => {
       mockClient.vectorStores.create.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
-        'node',
-        'create',
-        'test-store',
-        '--metadata',
+        "node",
+        "create",
+        "test-store",
+        "--metadata",
         JSON.stringify(complexMetadata),
       ]);
 
       expect(mockClient.vectorStores.create).toHaveBeenCalledWith({
-        name: 'test-store',
+        name: "test-store",
         description: undefined,
         expires_after: undefined,
         metadata: complexMetadata,
@@ -211,11 +234,11 @@ describe('Vector Store Create Command', () => {
     });
   });
 
-  describe('Output formatting', () => {
-    it('should format output as JSON when specified', async () => {
+  describe("Output formatting", () => {
+    it("should format output as JSON when specified", async () => {
       const mockResponse = {
-        id: '550e8400-e29b-41d4-a716-446655440010',
-        name: 'test-store',
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "test-store",
         description: null,
         expires_after: null,
         metadata: {},
@@ -223,15 +246,24 @@ describe('Vector Store Create Command', () => {
 
       mockClient.vectorStores.create.mockResolvedValue(mockResponse);
 
-      await command.parseAsync(['node', 'create', 'test-store', '--format', 'json']);
+      await command.parseAsync([
+        "node",
+        "create",
+        "test-store",
+        "--format",
+        "json",
+      ]);
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(expect.any(Object), 'json');
+      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
+        expect.any(Object),
+        "json"
+      );
     });
 
-    it('should format output as CSV when specified', async () => {
+    it("should format output as CSV when specified", async () => {
       const mockResponse = {
-        id: '550e8400-e29b-41d4-a716-446655440010',
-        name: 'test-store',
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "test-store",
         description: null,
         expires_after: null,
         metadata: {},
@@ -239,70 +271,100 @@ describe('Vector Store Create Command', () => {
 
       mockClient.vectorStores.create.mockResolvedValue(mockResponse);
 
-      await command.parseAsync(['node', 'create', 'test-store', '--format', 'csv']);
+      await command.parseAsync([
+        "node",
+        "create",
+        "test-store",
+        "--format",
+        "csv",
+      ]);
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(expect.any(Object), 'csv');
+      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
+        expect.any(Object),
+        "csv"
+      );
     });
   });
 
-  describe('Error handling', () => {
-    it('should handle API errors', async () => {
-      const error = new Error('API Error: Unauthorized');
+  describe("Error handling", () => {
+    it("should handle API errors", async () => {
+      const error = new Error("API Error: Unauthorized");
       mockClient.vectorStores.create.mockRejectedValue(error);
 
-      await command.parseAsync(['node', 'create', 'test-store']);
-
-      expect(console.error).toHaveBeenCalledWith(expect.any(String), 'API Error: Unauthorized');
-      expect(process.exit).toHaveBeenCalledWith(1);
-    });
-
-    it('should handle network errors', async () => {
-      const error = new Error('Network error');
-      mockClient.vectorStores.create.mockRejectedValue(error);
-
-      await command.parseAsync(['node', 'create', 'test-store']);
-
-      expect(console.error).toHaveBeenCalledWith(expect.any(String), 'Network error');
-      expect(process.exit).toHaveBeenCalledWith(1);
-    });
-
-    it('should handle non-Error rejections', async () => {
-      mockClient.vectorStores.create.mockRejectedValue('Unknown error');
-
-      await command.parseAsync(['node', 'create', 'test-store']);
-
-      expect(console.error).toHaveBeenCalledWith(expect.any(String), 'Failed to create vector store');
-      expect(process.exit).toHaveBeenCalledWith(1);
-    });
-  });
-
-  describe('Validation', () => {
-    it('should validate expires-after is a positive number', async () => {
-      await command.parseAsync(['node', 'create', 'test-store', '--expires-after', '-5']);
+      await command.parseAsync(["node", "create", "test-store"]);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining('"expires-after" must be positive'),
+        "API Error: Unauthorized"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it('should validate expires-after is an integer', async () => {
-      await command.parseAsync(['node', 'create', 'test-store', '--expires-after', '5.5']);
+    it("should handle network errors", async () => {
+      const error = new Error("Network error");
+      mockClient.vectorStores.create.mockRejectedValue(error);
+
+      await command.parseAsync(["node", "create", "test-store"]);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining('"expires-after" must be an integer'),
+        "Network error"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it('should validate name is not empty', async () => {
-      await command.parseAsync(['node', 'create', '']);
+    it("should handle non-Error rejections", async () => {
+      mockClient.vectorStores.create.mockRejectedValue("Unknown error");
+
+      await command.parseAsync(["node", "create", "test-store"]);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining('"name" is required'),
+        "Failed to create vector store"
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe("Validation", () => {
+    it("should validate expires-after is a positive number", async () => {
+      await command.parseAsync([
+        "node",
+        "create",
+        "test-store",
+        "--expires-after",
+        "-5",
+      ]);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining('"expires-after" must be positive')
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should validate expires-after is an integer", async () => {
+      await command.parseAsync([
+        "node",
+        "create",
+        "test-store",
+        "--expires-after",
+        "5.5",
+      ]);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining('"expires-after" must be an integer')
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should validate name is not empty", async () => {
+      await command.parseAsync(["node", "create", ""]);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining('"name" is required')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

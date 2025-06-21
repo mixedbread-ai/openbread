@@ -1,17 +1,19 @@
-import { Command } from 'commander';
-import { createListCommand } from './list';
-import { createCreateCommand } from './create';
-import { createGetCommand } from './get';
-import { createDeleteCommand } from './delete';
-import { createUpdateCommand } from './update';
-import { createUploadCommand } from './upload';
-import { createFilesCommand } from './files';
-import { createSearchCommand } from './search';
-import { createQACommand } from './qa';
-import { createSyncCommand } from './sync';
+import { Command } from "commander";
+import { createCreateCommand } from "./create";
+import { createDeleteCommand } from "./delete";
+import { createFilesCommand } from "./files";
+import { createGetCommand } from "./get";
+import { createListCommand } from "./list";
+import { createQACommand } from "./qa";
+import { createSearchCommand } from "./search";
+import { createSyncCommand } from "./sync";
+import { createUpdateCommand } from "./update";
+import { createUploadCommand } from "./upload";
 
 export function createVectorStoreCommand(): Command {
-  const vsCommand = new Command('vs').alias('vector-store').description('Manage vector stores');
+  const vsCommand = new Command("vs")
+    .alias("vector-store")
+    .description("Manage vector stores");
 
   // Add subcommands
   vsCommand.addCommand(createListCommand());

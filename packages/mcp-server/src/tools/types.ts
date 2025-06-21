@@ -1,27 +1,27 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import Mixedbread from '@mixedbread/sdk';
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
+import type Mixedbread from "@mixedbread/sdk";
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 type TextContentBlock = {
-  type: 'text';
+  type: "text";
   text: string;
 };
 
 type ImageContentBlock = {
-  type: 'image';
+  type: "image";
   data: string;
   mimeType: string;
 };
 
 type AudioContentBlock = {
-  type: 'audio';
+  type: "audio";
   data: string;
   mimeType: string;
 };
 
 type ResourceContentBlock = {
-  type: 'resource';
+  type: "resource";
   resource:
     | {
         uri: string;
@@ -35,7 +35,11 @@ type ResourceContentBlock = {
       };
 };
 
-export type ContentBlock = TextContentBlock | ImageContentBlock | AudioContentBlock | ResourceContentBlock;
+export type ContentBlock =
+  | TextContentBlock
+  | ImageContentBlock
+  | AudioContentBlock
+  | ResourceContentBlock;
 
 export type ToolCallResult = {
   content: ContentBlock[];
@@ -44,40 +48,42 @@ export type ToolCallResult = {
 
 export type HandlerFunction = (
   client: Mixedbread,
-  args: Record<string, unknown> | undefined,
+  args: Record<string, unknown> | undefined
 ) => Promise<ToolCallResult>;
 
 export function asTextContentResult(result: Object): ToolCallResult {
   return {
     content: [
       {
-        type: 'text',
+        type: "text",
         text: JSON.stringify(result, null, 2),
       },
     ],
   };
 }
 
-export async function asBinaryContentResult(response: Response): Promise<ToolCallResult> {
+export async function asBinaryContentResult(
+  response: Response
+): Promise<ToolCallResult> {
   const blob = await response.blob();
   const mimeType = blob.type;
-  const data = Buffer.from(await blob.arrayBuffer()).toString('base64');
-  if (mimeType.startsWith('image/')) {
+  const data = Buffer.from(await blob.arrayBuffer()).toString("base64");
+  if (mimeType.startsWith("image/")) {
     return {
-      content: [{ type: 'image', mimeType, data }],
+      content: [{ type: "image", mimeType, data }],
     };
-  } else if (mimeType.startsWith('audio/')) {
+  } else if (mimeType.startsWith("audio/")) {
     return {
-      content: [{ type: 'audio', mimeType, data }],
+      content: [{ type: "audio", mimeType, data }],
     };
   } else {
     return {
       content: [
         {
-          type: 'resource',
+          type: "resource",
           resource: {
             // We must give a URI, even though this isn't actually an MCP resource.
-            uri: 'resource://tool-response',
+            uri: "resource://tool-response",
             mimeType,
             blob: data,
           },
@@ -89,7 +95,7 @@ export async function asBinaryContentResult(response: Response): Promise<ToolCal
 
 export type Metadata = {
   resource: string;
-  operation: 'read' | 'write';
+  operation: "read" | "write";
   tags: string[];
   httpMethod?: string;
   httpPath?: string;

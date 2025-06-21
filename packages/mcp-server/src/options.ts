@@ -1,7 +1,11 @@
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
-import { endpoints, Filter } from './tools';
-import { ClientCapabilities, knownClients, ClientType } from './compat';
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { endpoints, type Filter } from "./tools";
+import {
+  type ClientCapabilities,
+  knownClients,
+  type ClientType,
+} from "./compat";
 
 export type CLIOptions = McpOptions & {
   list: boolean;
@@ -16,118 +20,127 @@ export type McpOptions = {
 };
 
 const CAPABILITY_CHOICES = [
-  'top-level-unions',
-  'valid-json',
-  'refs',
-  'unions',
-  'formats',
-  'tool-name-length',
+  "top-level-unions",
+  "valid-json",
+  "refs",
+  "unions",
+  "formats",
+  "tool-name-length",
 ] as const;
 
 type Capability = (typeof CAPABILITY_CHOICES)[number];
 
-function parseCapabilityValue(cap: string): { name: Capability; value?: number } {
-  if (cap.startsWith('tool-name-length=')) {
-    const parts = cap.split('=');
+function parseCapabilityValue(cap: string): {
+  name: Capability;
+  value?: number;
+} {
+  if (cap.startsWith("tool-name-length=")) {
+    const parts = cap.split("=");
     if (parts.length === 2) {
       const length = parseInt(parts[1]!, 10);
       if (!isNaN(length)) {
-        return { name: 'tool-name-length', value: length };
+        return { name: "tool-name-length", value: length };
       }
-      throw new Error(`Invalid tool-name-length value: ${parts[1]}. Expected a number.`);
+      throw new Error(
+        `Invalid tool-name-length value: ${parts[1]}. Expected a number.`
+      );
     }
-    throw new Error(`Invalid format for tool-name-length. Expected tool-name-length=N.`);
+    throw new Error(
+      `Invalid format for tool-name-length. Expected tool-name-length=N.`
+    );
   }
   if (!CAPABILITY_CHOICES.includes(cap as Capability)) {
-    throw new Error(`Unknown capability: ${cap}. Valid capabilities are: ${CAPABILITY_CHOICES.join(', ')}`);
+    throw new Error(
+      `Unknown capability: ${cap}. Valid capabilities are: ${CAPABILITY_CHOICES.join(", ")}`
+    );
   }
   return { name: cap as Capability };
 }
 
 export function parseOptions(): CLIOptions {
   const opts = yargs(hideBin(process.argv))
-    .option('tools', {
-      type: 'string',
+    .option("tools", {
+      type: "string",
       array: true,
-      choices: ['dynamic', 'all'],
-      description: 'Use dynamic tools or all tools',
+      choices: ["dynamic", "all"],
+      description: "Use dynamic tools or all tools",
     })
-    .option('no-tools', {
-      type: 'string',
+    .option("no-tools", {
+      type: "string",
       array: true,
-      choices: ['dynamic', 'all'],
-      description: 'Do not use any dynamic or all tools',
+      choices: ["dynamic", "all"],
+      description: "Do not use any dynamic or all tools",
     })
-    .option('tool', {
-      type: 'string',
+    .option("tool", {
+      type: "string",
       array: true,
-      description: 'Include tools matching the specified names',
+      description: "Include tools matching the specified names",
     })
-    .option('resource', {
-      type: 'string',
+    .option("resource", {
+      type: "string",
       array: true,
-      description: 'Include tools matching the specified resources',
+      description: "Include tools matching the specified resources",
     })
-    .option('operation', {
-      type: 'string',
+    .option("operation", {
+      type: "string",
       array: true,
-      choices: ['read', 'write'],
-      description: 'Include tools matching the specified operations',
+      choices: ["read", "write"],
+      description: "Include tools matching the specified operations",
     })
-    .option('tag', {
-      type: 'string',
+    .option("tag", {
+      type: "string",
       array: true,
-      description: 'Include tools with the specified tags',
+      description: "Include tools with the specified tags",
     })
-    .option('no-tool', {
-      type: 'string',
+    .option("no-tool", {
+      type: "string",
       array: true,
-      description: 'Exclude tools matching the specified names',
+      description: "Exclude tools matching the specified names",
     })
-    .option('no-resource', {
-      type: 'string',
+    .option("no-resource", {
+      type: "string",
       array: true,
-      description: 'Exclude tools matching the specified resources',
+      description: "Exclude tools matching the specified resources",
     })
-    .option('no-operation', {
-      type: 'string',
+    .option("no-operation", {
+      type: "string",
       array: true,
-      description: 'Exclude tools matching the specified operations',
+      description: "Exclude tools matching the specified operations",
     })
-    .option('no-tag', {
-      type: 'string',
+    .option("no-tag", {
+      type: "string",
       array: true,
-      description: 'Exclude tools with the specified tags',
+      description: "Exclude tools with the specified tags",
     })
-    .option('list', {
-      type: 'boolean',
-      description: 'List all tools and exit',
+    .option("list", {
+      type: "boolean",
+      description: "List all tools and exit",
     })
-    .option('client', {
-      type: 'string',
+    .option("client", {
+      type: "string",
       choices: Object.keys(knownClients),
-      description: 'Specify the MCP client being used',
+      description: "Specify the MCP client being used",
     })
-    .option('capability', {
-      type: 'string',
+    .option("capability", {
+      type: "string",
       array: true,
-      description: 'Specify client capabilities',
+      description: "Specify client capabilities",
       coerce: (values: string[]) => {
-        return values.flatMap((v) => v.split(','));
+        return values.flatMap((v) => v.split(","));
       },
     })
-    .option('no-capability', {
-      type: 'string',
+    .option("no-capability", {
+      type: "string",
       array: true,
-      description: 'Unset client capabilities',
+      description: "Unset client capabilities",
       choices: CAPABILITY_CHOICES,
       coerce: (values: string[]) => {
-        return values.flatMap((v) => v.split(','));
+        return values.flatMap((v) => v.split(","));
       },
     })
-    .option('describe-capabilities', {
-      type: 'boolean',
-      description: 'Print detailed explanation of client capabilities and exit',
+    .option("describe-capabilities", {
+      type: "boolean",
+      description: "Print detailed explanation of client capabilities and exit",
     })
     .help();
 
@@ -148,39 +161,39 @@ export function parseOptions(): CLIOptions {
   // Helper function to support comma-separated values
   const splitValues = (values: string[] | undefined): string[] => {
     if (!values) return [];
-    return values.flatMap((v) => v.split(','));
+    return values.flatMap((v) => v.split(","));
   };
 
   for (const tag of splitValues(argv.tag)) {
-    filters.push({ type: 'tag', op: 'include', value: tag });
+    filters.push({ type: "tag", op: "include", value: tag });
   }
 
   for (const tag of splitValues(argv.noTag)) {
-    filters.push({ type: 'tag', op: 'exclude', value: tag });
+    filters.push({ type: "tag", op: "exclude", value: tag });
   }
 
   for (const resource of splitValues(argv.resource)) {
-    filters.push({ type: 'resource', op: 'include', value: resource });
+    filters.push({ type: "resource", op: "include", value: resource });
   }
 
   for (const resource of splitValues(argv.noResource)) {
-    filters.push({ type: 'resource', op: 'exclude', value: resource });
+    filters.push({ type: "resource", op: "exclude", value: resource });
   }
 
   for (const tool of splitValues(argv.tool)) {
-    filters.push({ type: 'tool', op: 'include', value: tool });
+    filters.push({ type: "tool", op: "include", value: tool });
   }
 
   for (const tool of splitValues(argv.noTool)) {
-    filters.push({ type: 'tool', op: 'exclude', value: tool });
+    filters.push({ type: "tool", op: "exclude", value: tool });
   }
 
   for (const operation of splitValues(argv.operation)) {
-    filters.push({ type: 'operation', op: 'include', value: operation });
+    filters.push({ type: "operation", op: "include", value: operation });
   }
 
   for (const operation of splitValues(argv.noOperation)) {
-    filters.push({ type: 'operation', op: 'exclude', value: operation });
+    filters.push({ type: "operation", op: "exclude", value: operation });
   }
 
   // Parse client capabilities
@@ -197,17 +210,17 @@ export function parseOptions(): CLIOptions {
   if (Array.isArray(argv.capability)) {
     for (const cap of argv.capability) {
       const parsedCap = parseCapabilityValue(cap);
-      if (parsedCap.name === 'top-level-unions') {
+      if (parsedCap.name === "top-level-unions") {
         clientCapabilities.topLevelUnions = true;
-      } else if (parsedCap.name === 'valid-json') {
+      } else if (parsedCap.name === "valid-json") {
         clientCapabilities.validJson = true;
-      } else if (parsedCap.name === 'refs') {
+      } else if (parsedCap.name === "refs") {
         clientCapabilities.refs = true;
-      } else if (parsedCap.name === 'unions') {
+      } else if (parsedCap.name === "unions") {
         clientCapabilities.unions = true;
-      } else if (parsedCap.name === 'formats') {
+      } else if (parsedCap.name === "formats") {
         clientCapabilities.formats = true;
-      } else if (parsedCap.name === 'tool-name-length') {
+      } else if (parsedCap.name === "tool-name-length") {
         clientCapabilities.toolNameLength = parsedCap.value;
       }
     }
@@ -216,27 +229,29 @@ export function parseOptions(): CLIOptions {
   // Handle no-capability options to unset capabilities
   if (Array.isArray(argv.noCapability)) {
     for (const cap of argv.noCapability) {
-      if (cap === 'top-level-unions') {
+      if (cap === "top-level-unions") {
         clientCapabilities.topLevelUnions = false;
-      } else if (cap === 'valid-json') {
+      } else if (cap === "valid-json") {
         clientCapabilities.validJson = false;
-      } else if (cap === 'refs') {
+      } else if (cap === "refs") {
         clientCapabilities.refs = false;
-      } else if (cap === 'unions') {
+      } else if (cap === "unions") {
         clientCapabilities.unions = false;
-      } else if (cap === 'formats') {
+      } else if (cap === "formats") {
         clientCapabilities.formats = false;
-      } else if (cap === 'tool-name-length') {
+      } else if (cap === "tool-name-length") {
         clientCapabilities.toolNameLength = undefined;
       }
     }
   }
 
   const explicitTools = Boolean(argv.tools || argv.noTools);
-  const includeDynamicTools =
-    explicitTools ? argv.tools?.includes('dynamic') && !argv.noTools?.includes('dynamic') : undefined;
-  const includeAllTools =
-    explicitTools ? argv.tools?.includes('all') && !argv.noTools?.includes('all') : undefined;
+  const includeDynamicTools = explicitTools
+    ? argv.tools?.includes("dynamic") && !argv.noTools?.includes("dynamic")
+    : undefined;
+  const includeAllTools = explicitTools
+    ? argv.tools?.includes("all") && !argv.noTools?.includes("all")
+    : undefined;
 
   const client = argv.client as ClientType;
   return {
@@ -288,32 +303,37 @@ ${JSON.stringify(knownClients, null, 2)}
 function examples(): [string, string][] {
   const firstEndpoint = endpoints[0]!;
   const secondEndpoint =
-    endpoints.find((e) => e.metadata.resource !== firstEndpoint.metadata.resource) || endpoints[1];
-  const tag = endpoints.find((e) => e.metadata.tags.length > 0)?.metadata.tags[0];
+    endpoints.find(
+      (e) => e.metadata.resource !== firstEndpoint.metadata.resource
+    ) || endpoints[1];
+  const tag = endpoints.find((e) => e.metadata.tags.length > 0)?.metadata
+    .tags[0];
   const otherEndpoint = secondEndpoint || firstEndpoint;
 
   return [
     [
-      `--tool="${firstEndpoint.tool.name}" ${secondEndpoint ? `--tool="${secondEndpoint.tool.name}"` : ''}`,
-      'Include tools by name',
+      `--tool="${firstEndpoint.tool.name}" ${secondEndpoint ? `--tool="${secondEndpoint.tool.name}"` : ""}`,
+      "Include tools by name",
     ],
     [
       `--resource="${firstEndpoint.metadata.resource}" --operation="read"`,
-      'Filter by resource and operation',
+      "Filter by resource and operation",
     ],
     [
       `--resource="${otherEndpoint.metadata.resource}*" --no-tool="${otherEndpoint.tool.name}"`,
-      'Use resource wildcards and exclusions',
+      "Use resource wildcards and exclusions",
     ],
-    [`--client="cursor"`, 'Adjust schemas to be more compatible with Cursor'],
+    [`--client="cursor"`, "Adjust schemas to be more compatible with Cursor"],
     [
       `--capability="top-level-unions" --capability="tool-name-length=40"`,
-      'Specify individual client capabilities',
+      "Specify individual client capabilities",
     ],
     [
       `--client="cursor" --no-capability="tool-name-length"`,
-      'Use cursor client preset but remove tool name length limit',
+      "Use cursor client preset but remove tool name length limit",
     ],
-    ...(tag ? [[`--tag="${tag}"`, 'Filter based on tags'] as [string, string]] : []),
+    ...(tag
+      ? [[`--tag="${tag}"`, "Filter based on tags"] as [string, string]]
+      : []),
   ];
 }

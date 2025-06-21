@@ -1,13 +1,13 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
-import minimatch from 'minimatch';
+import { exec } from "node:child_process";
+import path from "node:path";
+import { promisify } from "node:util";
+import minimatch from "minimatch";
 
 const execAsync = promisify(exec);
 
 export interface GitFileChange {
   path: string;
-  status: 'added' | 'modified' | 'deleted';
+  status: "added" | "modified" | "deleted";
 }
 
 export interface GitInfo {
@@ -21,7 +21,7 @@ export interface GitInfo {
  */
 export async function isGitRepo(dir: string = process.cwd()): Promise<boolean> {
   try {
-    await execAsync('git rev-parse --is-inside-work-tree', { cwd: dir });
+    await execAsync("git rev-parse --is-inside-work-tree", { cwd: dir });
     return true;
   } catch {
     return false;
@@ -31,9 +31,11 @@ export async function isGitRepo(dir: string = process.cwd()): Promise<boolean> {
 /**
  * Get current git commit hash
  */
-export async function getCurrentCommit(dir: string = process.cwd()): Promise<string> {
+export async function getCurrentCommit(
+  dir: string = process.cwd()
+): Promise<string> {
   try {
-    const { stdout } = await execAsync('git rev-parse HEAD', { cwd: dir });
+    const { stdout } = await execAsync("git rev-parse HEAD", { cwd: dir });
     return stdout.trim();
   } catch (error) {
     throw new Error(`Failed to get current commit: ${error}`);
@@ -43,9 +45,13 @@ export async function getCurrentCommit(dir: string = process.cwd()): Promise<str
 /**
  * Get current git branch
  */
-export async function getCurrentBranch(dir: string = process.cwd()): Promise<string> {
+export async function getCurrentBranch(
+  dir: string = process.cwd()
+): Promise<string> {
   try {
-    const { stdout } = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: dir });
+    const { stdout } = await execAsync("git rev-parse --abbrev-ref HEAD", {
+      cwd: dir,
+    });
     return stdout.trim();
   } catch (error) {
     throw new Error(`Failed to get current branch: ${error}`);
@@ -55,18 +61,23 @@ export async function getCurrentBranch(dir: string = process.cwd()): Promise<str
 /**
  * Get git info for the current repository
  */
-export async function getGitInfo(dir: string = process.cwd()): Promise<GitInfo> {
+export async function getGitInfo(
+  dir: string = process.cwd()
+): Promise<GitInfo> {
   const isRepo = await isGitRepo(dir);
 
   if (!isRepo) {
     return {
-      commit: '',
-      branch: '',
+      commit: "",
+      branch: "",
       isRepo: false,
     };
   }
 
-  const [commit, branch] = await Promise.all([getCurrentCommit(dir), getCurrentBranch(dir)]);
+  const [commit, branch] = await Promise.all([
+    getCurrentCommit(dir),
+    getCurrentBranch(dir),
+  ]);
 
   return {
     commit,
@@ -81,7 +92,7 @@ export async function getGitInfo(dir: string = process.cwd()): Promise<GitInfo> 
 export async function getChangedFiles(
   fromCommit: string,
   patterns: string[],
-  dir: string = process.cwd(),
+  dir: string = process.cwd()
 ): Promise<GitFileChange[]> {
   try {
     // Get all changes first (without pathspec filtering since it doesn't work reliably)
@@ -95,28 +106,28 @@ export async function getChangedFiles(
 
     // Parse the output
     const allChanges: GitFileChange[] = [];
-    const lines = stdout.trim().split('\n');
+    const lines = stdout.trim().split("\n");
 
     for (const line of lines) {
-      const [status, ...pathParts] = line.split('\t');
-      const filePath = pathParts.join('\t'); // Handle filenames with tabs
+      const [status, ...pathParts] = line.split("\t");
+      const filePath = pathParts.join("\t"); // Handle filenames with tabs
 
       if (!filePath) continue;
 
-      let changeStatus: GitFileChange['status'];
+      let changeStatus: GitFileChange["status"];
       switch (status[0]) {
-        case 'A':
-          changeStatus = 'added';
+        case "A":
+          changeStatus = "added";
           break;
-        case 'M':
-          changeStatus = 'modified';
+        case "M":
+          changeStatus = "modified";
           break;
-        case 'D':
-          changeStatus = 'deleted';
+        case "D":
+          changeStatus = "deleted";
           break;
         default:
           // For renamed files (R), treat as modified
-          changeStatus = 'modified';
+          changeStatus = "modified";
       }
 
       allChanges.push({
@@ -132,15 +143,17 @@ export async function getChangedFiles(
 
     // Normalize patterns to work with git paths (remove leading ./ if present)
     const normalizedPatterns = patterns.map((pattern) => {
-      return pattern.startsWith('./') ? pattern.slice(2) : pattern;
+      return pattern.startsWith("./") ? pattern.slice(2) : pattern;
     });
 
     const filteredChanges = allChanges.filter((change) => {
-      return normalizedPatterns.some((pattern) => minimatch(change.path, pattern));
+      return normalizedPatterns.some((pattern) =>
+        minimatch(change.path, pattern)
+      );
     });
 
     return filteredChanges;
-  } catch (error) {
+  } catch (_error) {
     // If the commit doesn't exist or other git errors, return empty array
     return [];
   }
@@ -149,7 +162,10 @@ export async function getChangedFiles(
 /**
  * Check if a file is ignored by git
  */
-export async function isGitIgnored(filePath: string, dir: string = process.cwd()): Promise<boolean> {
+export async function isGitIgnored(
+  filePath: string,
+  dir: string = process.cwd()
+): Promise<boolean> {
   try {
     // Use git check-ignore to see if file is ignored
     await execAsync(`git check-ignore "${filePath}"`, { cwd: dir });
@@ -162,9 +178,13 @@ export async function isGitIgnored(filePath: string, dir: string = process.cwd()
 /**
  * Get the root directory of the git repository
  */
-export async function getGitRoot(dir: string = process.cwd()): Promise<string | null> {
+export async function getGitRoot(
+  dir: string = process.cwd()
+): Promise<string | null> {
   try {
-    const { stdout } = await execAsync('git rev-parse --show-toplevel', { cwd: dir });
+    const { stdout } = await execAsync("git rev-parse --show-toplevel", {
+      cwd: dir,
+    });
     return stdout.trim();
   } catch {
     return null;
@@ -176,7 +196,7 @@ export async function getGitRoot(dir: string = process.cwd()): Promise<string | 
  */
 export async function normalizeGitPatterns(
   patterns: string[],
-  dir: string = process.cwd(),
+  dir: string = process.cwd()
 ): Promise<string[]> {
   const gitRoot = await getGitRoot(dir);
   if (!gitRoot) {

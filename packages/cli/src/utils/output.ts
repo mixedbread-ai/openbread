@@ -1,17 +1,20 @@
-import Table from 'cli-table3';
-import chalk from 'chalk';
+import chalk from "chalk";
+import Table from "cli-table3";
 
-export type OutputFormat = 'table' | 'json' | 'csv';
+export type OutputFormat = "table" | "json" | "csv";
 
-export function formatOutput(data: unknown, format: OutputFormat = 'table'): void {
+export function formatOutput(
+  data: unknown,
+  format: OutputFormat = "table"
+): void {
   switch (format) {
-    case 'json':
+    case "json":
       console.log(JSON.stringify(data, null, 2));
       break;
-    case 'csv':
+    case "csv":
       formatCsv(data);
       break;
-    case 'table':
+    case "table":
     default:
       formatTable(data);
       break;
@@ -21,7 +24,7 @@ export function formatOutput(data: unknown, format: OutputFormat = 'table'): voi
 function formatTable(data: unknown): void {
   if (Array.isArray(data)) {
     if (data.length === 0) {
-      console.log(chalk.gray('No results found.'));
+      console.log(chalk.gray("No results found."));
       return;
     }
 
@@ -36,7 +39,7 @@ function formatTable(data: unknown): void {
     });
 
     console.log(table.toString());
-  } else if (typeof data === 'object' && data !== null) {
+  } else if (typeof data === "object" && data !== null) {
     const table = new Table({
       style: { head: [], border: [] },
     });
@@ -58,13 +61,15 @@ function formatCsv(data: unknown): void {
     }
 
     const headers = Object.keys(data[0]);
-    console.log(headers.join(','));
+    console.log(headers.join(","));
 
     data.forEach((item) => {
-      console.log(headers.map((h) => escapeCsv(formatValue(item[h]))).join(','));
+      console.log(
+        headers.map((h) => escapeCsv(formatValue(item[h]))).join(",")
+      );
     });
-  } else if (typeof data === 'object' && data !== null) {
-    console.log('key,value');
+  } else if (typeof data === "object" && data !== null) {
+    console.log("key,value");
     Object.entries(data).forEach(([key, value]) => {
       console.log(`${escapeCsv(key)},${escapeCsv(formatValue(value))}`);
     });
@@ -73,36 +78,38 @@ function formatCsv(data: unknown): void {
 
 function formatValue(value: unknown): string {
   if (value === null || value === undefined) {
-    return '';
+    return "";
   }
-  if (typeof value === 'boolean') {
-    return value ? 'Yes' : 'No';
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
   }
-  if (typeof value === 'object') {
+  if (typeof value === "object") {
     return JSON.stringify(value);
   }
   return String(value);
 }
 
 function escapeCsv(value: string): string {
-  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
     return `"${value.replace(/"/g, '""')}"`;
   }
   return value;
 }
 
 export function formatBytes(bytes: number | undefined): string {
-  if (bytes === 0 || bytes === undefined || bytes === null || isNaN(bytes)) return '0 B';
+  if (bytes === 0 || bytes === undefined || bytes === null || isNaN(bytes))
+    return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(Math.abs(bytes)) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / k ** i).toFixed(2)) + " " + sizes[i];
 }
 
 export function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
   if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-  if (ms < 3600000) return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
+  if (ms < 3600000)
+    return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
   return `${Math.floor(ms / 3600000)}h ${Math.floor((ms % 3600000) / 60000)}m`;
 }
 

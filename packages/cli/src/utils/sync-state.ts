@@ -1,4 +1,4 @@
-import Mixedbread from '@mixedbread/sdk';
+import type Mixedbread from "@mixedbread/sdk";
 
 export interface SyncState {
   last_sync: string;
@@ -22,9 +22,12 @@ export interface FileSyncMetadata {
  */
 export async function getSyncedFiles(
   client: Mixedbread,
-  vectorStoreId: string,
+  vectorStoreId: string
 ): Promise<Map<string, { fileId: string; metadata: FileSyncMetadata }>> {
-  const fileMap = new Map<string, { fileId: string; metadata: FileSyncMetadata }>();
+  const fileMap = new Map<
+    string,
+    { fileId: string; metadata: FileSyncMetadata }
+  >();
 
   try {
     // Get all files in the vector store
@@ -56,7 +59,7 @@ export async function getSyncedFiles(
 export function buildFileSyncMetadata(
   filePath: string,
   fileHash: string,
-  gitInfo?: { commit: string; branch: string },
+  gitInfo?: { commit: string; branch: string }
 ): FileSyncMetadata {
   const metadata: FileSyncMetadata = {
     file_path: filePath,

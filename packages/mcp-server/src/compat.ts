@@ -1,5 +1,5 @@
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import { Endpoint } from './tools';
+import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import type { Endpoint } from "./tools";
 
 export interface ClientCapabilities {
   topLevelUnions: boolean;
@@ -19,13 +19,13 @@ export const defaultClientCapabilities: ClientCapabilities = {
   toolNameLength: undefined,
 };
 
-export type ClientType = 'openai-agents' | 'claude' | 'claude-code' | 'cursor';
+export type ClientType = "openai-agents" | "claude" | "claude-code" | "cursor";
 
 // Client presets for compatibility
 // Note that these could change over time as models get better, so this is
 // a best effort.
 export const knownClients: Record<ClientType, ClientCapabilities> = {
-  'openai-agents': {
+  "openai-agents": {
     topLevelUnions: false,
     validJson: true,
     refs: true,
@@ -41,7 +41,7 @@ export const knownClients: Record<ClientType, ClientCapabilities> = {
     formats: true,
     toolNameLength: undefined,
   },
-  'claude-code': {
+  "claude-code": {
     topLevelUnions: false,
     validJson: true,
     refs: true,
@@ -62,12 +62,15 @@ export const knownClients: Record<ClientType, ClientCapabilities> = {
 /**
  * Attempts to parse strings into JSON objects
  */
-export function parseEmbeddedJSON(args: Record<string, unknown>, schema: Record<string, unknown>) {
+export function parseEmbeddedJSON(
+  args: Record<string, unknown>,
+  schema: Record<string, unknown>
+) {
   let updated = false;
   const newArgs: Record<string, unknown> = Object.assign({}, args);
 
   for (const [key, value] of Object.entries(newArgs)) {
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       try {
         const parsed = JSON.parse(value);
         newArgs[key] = parsed;
@@ -99,7 +102,10 @@ export type JSONSchema = {
  * Truncates tool names to the specified length while ensuring uniqueness.
  * If truncation would cause duplicate names, appends a number to make them unique.
  */
-export function truncateToolNames(names: string[], maxLength: number): Map<string, string> {
+export function truncateToolNames(
+  names: string[],
+  maxLength: number
+): Map<string, string> {
   if (maxLength <= 0) {
     return new Map();
   }
@@ -114,7 +120,8 @@ export function truncateToolNames(names: string[], maxLength: number): Map<strin
   }
 
   const willCollide =
-    new Set(toTruncate.map((name) => name.slice(0, maxLength - 1))).size < toTruncate.length;
+    new Set(toTruncate.map((name) => name.slice(0, maxLength - 1))).size <
+    toTruncate.length;
 
   if (!willCollide) {
     for (const name of toTruncate) {
@@ -159,7 +166,7 @@ export function removeTopLevelUnions(tool: Tool): Tool[] {
     const variantSchema: JSONSchema = {
       ...inputSchema,
       ...variant,
-      type: 'object',
+      type: "object",
       properties: {
         ...(inputSchema.properties || {}),
         ...(variant.properties || {}),
@@ -168,8 +175,8 @@ export function removeTopLevelUnions(tool: Tool): Tool[] {
 
     delete variantSchema.anyOf;
 
-    if (!variantSchema['description']) {
-      variantSchema['description'] = tool.description;
+    if (!variantSchema["description"]) {
+      variantSchema["description"] = tool.description;
     }
 
     const usedDefs = findUsedDefs(variant, defs);
@@ -181,8 +188,8 @@ export function removeTopLevelUnions(tool: Tool): Tool[] {
 
     return {
       ...tool,
-      name: `${tool.name}_${toSnakeCase(variant['title'] || `variant${index + 1}`)}`,
-      description: variant['description'] || tool.description,
+      name: `${tool.name}_${toSnakeCase(variant["title"] || `variant${index + 1}`)}`,
+      description: variant["description"] || tool.description,
       inputSchema: variantSchema,
     } as Tool;
   });
@@ -191,17 +198,17 @@ export function removeTopLevelUnions(tool: Tool): Tool[] {
 function findUsedDefs(
   schema: JSONSchema,
   defs: Record<string, JSONSchema>,
-  visited: Set<string> = new Set(),
+  visited: Set<string> = new Set()
 ): Record<string, JSONSchema> {
   const usedDefs: Record<string, JSONSchema> = {};
 
-  if (typeof schema !== 'object' || schema === null) {
+  if (typeof schema !== "object" || schema === null) {
     return usedDefs;
   }
 
   if (schema.$ref) {
-    const refParts = schema.$ref.split('/');
-    if (refParts[0] === '#' && refParts[1] === '$defs' && refParts[2]) {
+    const refParts = schema.$ref.split("/");
+    if (refParts[0] === "#" && refParts[1] === "$defs" && refParts[2]) {
       const defName = refParts[2];
       const def = defs[defName];
       if (def && !visited.has(schema.$ref)) {
@@ -215,8 +222,15 @@ function findUsedDefs(
   }
 
   for (const key in schema) {
-    if (key !== '$defs' && typeof schema[key] === 'object' && schema[key] !== null) {
-      Object.assign(usedDefs, findUsedDefs(schema[key] as JSONSchema, defs, visited));
+    if (
+      key !== "$defs" &&
+      typeof schema[key] === "object" &&
+      schema[key] !== null
+    ) {
+      Object.assign(
+        usedDefs,
+        findUsedDefs(schema[key] as JSONSchema, defs, visited)
+      );
     }
   }
 
@@ -231,7 +245,7 @@ export { findUsedDefs };
  * If a circular reference is detected, the circular property is removed.
  */
 export function inlineRefs(schema: JSONSchema): JSONSchema {
-  if (!schema || typeof schema !== 'object') {
+  if (!schema || typeof schema !== "object") {
     return schema;
   }
 
@@ -248,9 +262,9 @@ export function inlineRefs(schema: JSONSchema): JSONSchema {
 function inlineRefsRecursive(
   schema: JSONSchema,
   defs: Record<string, JSONSchema>,
-  refPath: Set<string>,
+  refPath: Set<string>
 ): JSONSchema | null {
-  if (!schema || typeof schema !== 'object') {
+  if (!schema || typeof schema !== "object") {
     return schema;
   }
 
@@ -263,9 +277,9 @@ function inlineRefsRecursive(
 
   const result = { ...schema };
 
-  if ('$ref' in result && typeof result.$ref === 'string') {
-    if (result.$ref.startsWith('#/$defs/')) {
-      const refName = result.$ref.split('/').pop() as string;
+  if ("$ref" in result && typeof result.$ref === "string") {
+    if (result.$ref.startsWith("#/$defs/")) {
+      const refName = result.$ref.split("/").pop() as string;
       const def = defs[refName];
 
       // If we've already seen this ref in our path, we have a circular reference
@@ -297,8 +311,12 @@ function inlineRefsRecursive(
   }
 
   for (const key in result) {
-    if (result[key] && typeof result[key] === 'object') {
-      const processed = inlineRefsRecursive(result[key] as JSONSchema, defs, refPath);
+    if (result[key] && typeof result[key] === "object") {
+      const processed = inlineRefsRecursive(
+        result[key] as JSONSchema,
+        defs,
+        refPath
+      );
       if (processed === null) {
         // Remove properties that would cause circular references
         delete result[key];
@@ -315,7 +333,7 @@ function inlineRefsRecursive(
  * Removes anyOf fields from a schema, using only the first variant.
  */
 export function removeAnyOf(schema: JSONSchema): JSONSchema {
-  if (!schema || typeof schema !== 'object') {
+  if (!schema || typeof schema !== "object") {
     return schema;
   }
 
@@ -325,10 +343,14 @@ export function removeAnyOf(schema: JSONSchema): JSONSchema {
 
   const result = { ...schema };
 
-  if ('anyOf' in result && Array.isArray(result.anyOf) && result.anyOf.length > 0) {
+  if (
+    "anyOf" in result &&
+    Array.isArray(result.anyOf) &&
+    result.anyOf.length > 0
+  ) {
     const firstVariant = result.anyOf[0];
 
-    if (firstVariant && typeof firstVariant === 'object') {
+    if (firstVariant && typeof firstVariant === "object") {
       // Special handling for properties to ensure deep merge
       if (firstVariant.properties && result.properties) {
         result.properties = {
@@ -340,7 +362,7 @@ export function removeAnyOf(schema: JSONSchema): JSONSchema {
       }
 
       for (const key in firstVariant) {
-        if (key !== 'properties') {
+        if (key !== "properties") {
           result[key] = firstVariant[key];
         }
       }
@@ -350,7 +372,7 @@ export function removeAnyOf(schema: JSONSchema): JSONSchema {
   }
 
   for (const key in result) {
-    if (result[key] && typeof result[key] === 'object') {
+    if (result[key] && typeof result[key] === "object") {
       result[key] = removeAnyOf(result[key] as JSONSchema);
     }
   }
@@ -361,35 +383,40 @@ export function removeAnyOf(schema: JSONSchema): JSONSchema {
 /**
  * Removes format fields from a schema and appends them to the description.
  */
-export function removeFormats(schema: JSONSchema, formatsCapability: boolean): JSONSchema {
+export function removeFormats(
+  schema: JSONSchema,
+  formatsCapability: boolean
+): JSONSchema {
   if (formatsCapability) {
     return schema;
   }
 
-  if (!schema || typeof schema !== 'object') {
+  if (!schema || typeof schema !== "object") {
     return schema;
   }
 
   if (Array.isArray(schema)) {
-    return schema.map((item) => removeFormats(item, formatsCapability)) as JSONSchema;
+    return schema.map((item) =>
+      removeFormats(item, formatsCapability)
+    ) as JSONSchema;
   }
 
   const result = { ...schema };
 
-  if ('format' in result && typeof result['format'] === 'string') {
-    const formatStr = `(format: "${result['format']}")`;
+  if ("format" in result && typeof result["format"] === "string") {
+    const formatStr = `(format: "${result["format"]}")`;
 
-    if ('description' in result && typeof result['description'] === 'string') {
-      result['description'] = `${result['description']} ${formatStr}`;
+    if ("description" in result && typeof result["description"] === "string") {
+      result["description"] = `${result["description"]} ${formatStr}`;
     } else {
-      result['description'] = formatStr;
+      result["description"] = formatStr;
     }
 
-    delete result['format'];
+    delete result["format"];
   }
 
   for (const key in result) {
-    if (result[key] && typeof result[key] === 'object') {
+    if (result[key] && typeof result[key] === "object") {
       result[key] = removeFormats(result[key] as JSONSchema, formatsCapability);
     }
   }
@@ -402,7 +429,7 @@ export function removeFormats(schema: JSONSchema, formatsCapability: boolean): J
  */
 export function applyCompatibilityTransformations(
   endpoints: Endpoint[],
-  capabilities: ClientCapabilities,
+  capabilities: ClientCapabilities
 ): Endpoint[] {
   let transformedEndpoints = [...endpoints];
 
@@ -429,7 +456,9 @@ export function applyCompatibilityTransformations(
   }
 
   if (capabilities.toolNameLength) {
-    const toolNames = transformedEndpoints.map((endpoint) => endpoint.tool.name);
+    const toolNames = transformedEndpoints.map(
+      (endpoint) => endpoint.tool.name
+    );
     const renameMap = truncateToolNames(toolNames, capabilities.toolNameLength);
 
     transformedEndpoints = transformedEndpoints.map((endpoint) => ({
@@ -472,7 +501,7 @@ export function applyCompatibilityTransformations(
 
 function toSnakeCase(str: string): string {
   return str
-    .replace(/\s+/g, '_')
-    .replace(/([a-z])([A-Z])/g, '$1_$2')
+    .replace(/\s+/g, "_")
+    .replace(/([a-z])([A-Z])/g, "$1_$2")
     .toLowerCase();
 }

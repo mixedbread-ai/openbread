@@ -1,16 +1,18 @@
-import { Command } from 'commander';
-import { GlobalOptions } from '../../../utils/global-options';
-import { createListCommand } from './list';
-import { createGetCommand } from './get';
-import { createDeleteCommand } from './delete';
+import { Command } from "commander";
+import type { GlobalOptions } from "../../../utils/global-options";
+import { createDeleteCommand } from "./delete";
+import { createGetCommand } from "./get";
+import { createListCommand } from "./list";
 
 export interface FilesOptions extends GlobalOptions {
-  status?: 'all' | 'completed' | 'in_progress' | 'failed';
+  status?: "all" | "completed" | "in_progress" | "failed";
   limit?: number;
 }
 
 export function createFilesCommand(): Command {
-  const filesCommand = new Command('files').description('Manage files in vector stores');
+  const filesCommand = new Command("files").description(
+    "Manage files in vector stores"
+  );
 
   // Add subcommands
   filesCommand.addCommand(createListCommand());

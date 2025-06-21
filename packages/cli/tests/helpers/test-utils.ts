@@ -1,11 +1,11 @@
-import { Command } from 'commander';
+import type { Command } from "commander";
 
 /**
  * Helper to parse command arguments and capture errors
  */
 export async function parseCommand(
   command: Command,
-  args: string[],
+  args: string[]
 ): Promise<{
   error?: Error;
   exitCode?: number;
@@ -20,9 +20,9 @@ export async function parseCommand(
   }) as any;
 
   try {
-    await command.parseAsync(['node', 'test', ...args]);
+    await command.parseAsync(["node", "test", ...args]);
   } catch (e) {
-    if (e instanceof Error && e.message.startsWith('Process exited')) {
+    if (e instanceof Error && e.message.startsWith("Process exited")) {
       // Expected exit, not an error
     } else {
       error = e as Error;
@@ -47,15 +47,15 @@ export function mockConsole() {
   const warns: string[] = [];
 
   console.log = jest.fn((...args) => {
-    logs.push(args.map(String).join(' '));
+    logs.push(args.map(String).join(" "));
   });
 
   console.error = jest.fn((...args) => {
-    errors.push(args.map(String).join(' '));
+    errors.push(args.map(String).join(" "));
   });
 
   console.warn = jest.fn((...args) => {
-    warns.push(args.map(String).join(' '));
+    warns.push(args.map(String).join(" "));
   });
 
   return {
@@ -116,7 +116,7 @@ export function createMockFiles(files: Record<string, string | Buffer>) {
   const mockFiles: Record<string, any> = {};
 
   for (const [path, content] of Object.entries(files)) {
-    const dirs = path.split('/').slice(0, -1);
+    const dirs = path.split("/").slice(0, -1);
     let current = mockFiles;
 
     for (const dir of dirs) {
@@ -126,7 +126,7 @@ export function createMockFiles(files: Record<string, string | Buffer>) {
       current = current[dir];
     }
 
-    const filename = path.split('/').pop()!;
+    const filename = path.split("/").pop()!;
     current[filename] = content;
   }
 
@@ -145,14 +145,16 @@ export function expectExit(code: number) {
  */
 export function expectOutput(
   mockConsoleOutput: ReturnType<typeof mockConsole>,
-  type: 'log' | 'error' | 'warn',
-  text: string,
+  type: "log" | "error" | "warn",
+  text: string
 ) {
   const output = mockConsoleOutput[`${type}s`];
   const found = output.some((line) => line.includes(text));
 
   if (!found) {
-    throw new Error(`Expected ${type} output to contain "${text}" but got:\n${output.join('\n')}`);
+    throw new Error(
+      `Expected ${type} output to contain "${text}" but got:\n${output.join("\n")}`
+    );
   }
 }
 
@@ -161,10 +163,10 @@ export function expectOutput(
  */
 export function createTestConfig(overrides: any = {}) {
   return {
-    version: '1.0',
+    version: "1.0",
     defaults: {
       upload: {
-        strategy: 'fast',
+        strategy: "fast",
         contextualization: false,
         parallel: 5,
       },

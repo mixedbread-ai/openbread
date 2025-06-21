@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import chalk from "chalk";
 
 /**
  * Validates and parses a JSON metadata string
@@ -6,7 +6,9 @@ import chalk from 'chalk';
  * @returns Parsed metadata object or undefined if input is undefined
  * @throws Exits process with code 1 if JSON is invalid
  */
-export function validateMetadata(metadataString?: string): Record<string, unknown> | undefined {
+export function validateMetadata(
+  metadataString?: string
+): Record<string, unknown> | undefined {
   if (!metadataString) {
     return undefined;
   }
@@ -14,7 +16,7 @@ export function validateMetadata(metadataString?: string): Record<string, unknow
   try {
     return JSON.parse(metadataString);
   } catch (error) {
-    console.error(chalk.red('Error:'), 'Invalid JSON in metadata option');
+    console.error(chalk.red("Error:"), "Invalid JSON in metadata option");
     process.exit(1);
   }
 }
