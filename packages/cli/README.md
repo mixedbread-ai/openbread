@@ -177,7 +177,7 @@ This CLI is built on top of the `@mixedbread/sdk` and provides a convenient comm
 #### Prerequisites
 
 - Node.js 20+
-- Yarn package manager
+- A package manager
 - Git
 
 #### Setup
@@ -192,7 +192,7 @@ This CLI is built on top of the `@mixedbread/sdk` and provides a convenient comm
 2. **Install dependencies:**
 
    ```bash
-   yarn install
+   pnpm install
    ```
 
 3. **Set up your API key:**
@@ -200,7 +200,7 @@ This CLI is built on top of the `@mixedbread/sdk` and provides a convenient comm
    ```bash
    export MXBAI_API_KEY=mxb_xxxxx
    # Or create a config file
-   cd packages/cli && yarn build && yarn mxbai config set api_key mxb_xxxxx
+   cd packages/cli && pnpm build && pnpm mxbai config set api_key mxb_xxxxx
    ```
 
 #### Development Workflow
@@ -208,35 +208,35 @@ This CLI is built on top of the `@mixedbread/sdk` and provides a convenient comm
 1. **Start development mode** (auto-rebuild on changes):
 
    ```bash
-   cd packages/cli && yarn dev
+   cd packages/cli && pnpm dev
    ```
 
 2. **In another terminal, test your changes:**
 
    ```bash
-   yarn mxbai vs --help
-   yarn mxbai vs list
+   pnpm mxbai vs --help
+   pnpm mxbai vs list
    ```
 
 3. **Run tests:**
 
    ```bash
    # Run all tests
-   yarn test
+   pnpm test
 
    # Run specific test file
-   yarn test tests/commands/vector-store/upload.test.ts
+   pnpm test tests/commands/vector-store/upload.test.ts
 
    # Run tests in watch mode
-   yarn test --watch
+   pnpm test --watch
    ```
 
 4. **Lint and format:**
 
    ```bash
-   yarn lint          # Check for issues
-   yarn lint --fix    # Auto-fix issues
-   yarn format        # Format code
+   pnpm lint          # Check for issues
+   pnpm lint --fix    # Auto-fix issues
+   pnpm format        # Format code
    ```
 
 #### Project Structure
@@ -330,7 +330,7 @@ tests/
 
 #### Debugging
 
-- Use `--debug` flag for verbose output: `yarn mxbai --debug vs list`
+- Use `--debug` flag for verbose output: `pnpm mxbai --debug vs list`
 - Set `MXBAI_DEBUG=true` environment variable for debug output
 - Debug output includes command hierarchy options and merged options
 - Tests include detailed error messages and mock setups
