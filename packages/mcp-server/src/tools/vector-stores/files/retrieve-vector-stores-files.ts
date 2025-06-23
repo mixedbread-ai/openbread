@@ -1,10 +1,9 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
 import { asTextContentResult } from "@mixedbread/mcp/tools/types";
-
+import type Mixedbread from "@mixedbread/sdk";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { Metadata } from "../../";
-import type Mixedbread from "@mixedbread/sdk";
 
 export const metadata: Metadata = {
   resource: "vector_stores.files",
@@ -40,9 +39,17 @@ export const handler = async (
   client: Mixedbread,
   args: Record<string, unknown> | undefined
 ) => {
-  const { file_id, ...body } = args as any;
+  const { file_id, vector_store_identifier } = args as Record<
+    string,
+    unknown
+  > & {
+    file_id: string;
+    vector_store_identifier: string;
+  };
   return asTextContentResult(
-    await client.vectorStores.files.retrieve(file_id, body)
+    await client.vectorStores.files.retrieve(file_id, {
+      vector_store_identifier,
+    })
   );
 };
 

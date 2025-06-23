@@ -1,13 +1,5 @@
 import type Mixedbread from "@mixedbread/sdk";
 
-export interface SyncState {
-  last_sync: string;
-  git_commit?: string;
-  git_branch?: string;
-  file_count: number;
-  patterns: string[];
-}
-
 export interface FileSyncMetadata {
   file_path: string;
   file_hash: string;

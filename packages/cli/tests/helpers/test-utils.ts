@@ -14,10 +14,10 @@ export async function parseCommand(
   let error: Error | undefined;
   let exitCode: number | undefined;
 
-  process.exit = ((code: number) => {
+  process.exit = (code: number) => {
     exitCode = code;
     throw new Error(`Process exited with code ${code}`);
-  }) as any;
+  };
 
   try {
     await command.parseAsync(["node", "test", ...args]);
@@ -109,21 +109,25 @@ export function createMockClient() {
   };
 }
 
+type MockFileSystem = {
+  [key: string]: string | Buffer | MockFileSystem;
+};
+
 /**
  * Create a mock file system structure
  */
 export function createMockFiles(files: Record<string, string | Buffer>) {
-  const mockFiles: Record<string, any> = {};
+  const mockFiles: MockFileSystem = {};
 
   for (const [path, content] of Object.entries(files)) {
     const dirs = path.split("/").slice(0, -1);
-    let current = mockFiles;
+    let current: MockFileSystem = mockFiles;
 
     for (const dir of dirs) {
       if (!current[dir]) {
         current[dir] = {};
       }
-      current = current[dir];
+      current = current[dir] as MockFileSystem;
     }
 
     const filename = path.split("/").pop()!;
@@ -161,7 +165,7 @@ export function expectOutput(
 /**
  * Create a test configuration
  */
-export function createTestConfig(overrides: any = {}) {
+export function createTestConfig(overrides: Record<string, unknown> = {}) {
   return {
     version: "1.0",
     defaults: {

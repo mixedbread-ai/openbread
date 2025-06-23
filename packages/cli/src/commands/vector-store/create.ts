@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
@@ -41,7 +41,7 @@ export function createCreateCommand(): Command {
   );
 
   command.action(async (name: string, options: CreateOptions) => {
-    let spinner;
+    let spinner: Ora;
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);

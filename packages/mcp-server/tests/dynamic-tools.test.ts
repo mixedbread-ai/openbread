@@ -1,8 +1,9 @@
+import type Mixedbread from "@mixedbread/sdk";
 import { dynamicTools } from "../src/dynamic-tools";
 import type { Endpoint } from "../src/tools";
 
 describe("dynamicTools", () => {
-  const fakeClient = {} as any;
+  const fakeClient = {} as unknown as Mixedbread;
 
   const endpoints: Endpoint[] = [
     makeEndpoint("test_read_endpoint", "test_resource", "read", ["test"]),
@@ -22,7 +23,8 @@ describe("dynamicTools", () => {
   describe("list_api_endpoints", () => {
     it("should return all endpoints when no search query is provided", async () => {
       const content = await toolsMap.list_api_endpoints.handler(fakeClient, {});
-      const result = JSON.parse(content.content[0].text);
+      const textContent = content.content[0] as { type: "text"; text: string };
+      const result = JSON.parse(textContent.text);
 
       expect(result.tools).toHaveLength(endpoints.length);
       expect(result.tools.map((t: { name: string }) => t.name)).toContain(
@@ -43,7 +45,8 @@ describe("dynamicTools", () => {
       const content = await toolsMap.list_api_endpoints.handler(fakeClient, {
         search_query: "user",
       });
-      const result = JSON.parse(content.content[0].text);
+      const textContent = content.content[0] as { type: "text"; text: string };
+      const result = JSON.parse(textContent.text);
 
       expect(result.tools).toHaveLength(1);
       expect(result.tools[0].name).toBe("user_endpoint");
@@ -53,7 +56,8 @@ describe("dynamicTools", () => {
       const content = await toolsMap.list_api_endpoints.handler(fakeClient, {
         search_query: "admin",
       });
-      const result = JSON.parse(content.content[0].text);
+      const textContent = content.content[0] as { type: "text"; text: string };
+      const result = JSON.parse(textContent.text);
 
       expect(
         result.tools.some((t: { resource: string }) => t.resource === "admin")
@@ -64,7 +68,8 @@ describe("dynamicTools", () => {
       const content = await toolsMap.list_api_endpoints.handler(fakeClient, {
         search_query: "admin",
       });
-      const result = JSON.parse(content.content[0].text);
+      const textContent = content.content[0] as { type: "text"; text: string };
+      const result = JSON.parse(textContent.text);
 
       expect(
         result.tools.some((t: { tags: string[] }) => t.tags.includes("admin"))
@@ -75,7 +80,8 @@ describe("dynamicTools", () => {
       const content = await toolsMap.list_api_endpoints.handler(fakeClient, {
         search_query: "ADMIN",
       });
-      const result = JSON.parse(content.content[0].text);
+      const textContent = content.content[0] as { type: "text"; text: string };
+      const result = JSON.parse(textContent.text);
 
       expect(result.tools.length).toBe(2);
       result.tools.forEach(
@@ -95,7 +101,8 @@ describe("dynamicTools", () => {
       const content = await toolsMap.list_api_endpoints.handler(fakeClient, {
         search_query: "Test endpoint for user_endpoint",
       });
-      const result = JSON.parse(content.content[0].text);
+      const textContent = content.content[0] as { type: "text"; text: string };
+      const result = JSON.parse(textContent.text);
 
       expect(result.tools).toHaveLength(1);
       expect(result.tools[0].name).toBe("user_endpoint");
@@ -108,7 +115,8 @@ describe("dynamicTools", () => {
       const content = await toolsMap.list_api_endpoints.handler(fakeClient, {
         search_query: "endpoint for user",
       });
-      const result = JSON.parse(content.content[0].text);
+      const textContent = content.content[0] as { type: "text"; text: string };
+      const result = JSON.parse(textContent.text);
 
       expect(result.tools).toHaveLength(1);
       expect(result.tools[0].name).toBe("user_endpoint");
@@ -123,7 +131,8 @@ describe("dynamicTools", () => {
           endpoint: "test_read_endpoint",
         }
       );
-      const result = JSON.parse(content.content[0].text);
+      const textContent = content.content[0] as { type: "text"; text: string };
+      const result = JSON.parse(textContent.text);
 
       expect(result).toEqual(endpoints[0]?.tool);
     });

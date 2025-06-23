@@ -1,7 +1,7 @@
+import { homedir } from "node:os";
+import { join } from "node:path";
 import type { Command } from "commander";
 import mockFs from "mock-fs";
-import { homedir } from "os";
-import { join } from "path";
 import { createSetCommand } from "../../../src/commands/config/set";
 import { loadConfig } from "../../../src/utils/config";
 

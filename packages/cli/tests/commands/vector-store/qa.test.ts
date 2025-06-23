@@ -1,9 +1,9 @@
 import type { Command } from "commander";
 import { createQACommand } from "../../../src/commands/vector-store/qa";
 import * as clientUtils from "../../../src/utils/client";
-import * as vectorStoreUtils from "../../../src/utils/vector-store";
-import * as outputUtils from "../../../src/utils/output";
 import * as configUtils from "../../../src/utils/config";
+import * as outputUtils from "../../../src/utils/output";
+import * as vectorStoreUtils from "../../../src/utils/vector-store";
 
 // Mock dependencies
 jest.mock("../../../src/utils/client");
@@ -22,7 +22,7 @@ const originalProcessExit = process.exit;
 beforeAll(() => {
   console.log = jest.fn();
   console.error = jest.fn();
-  process.exit = jest.fn() as any;
+  process.exit = jest.fn();
 });
 
 afterAll(() => {
@@ -33,7 +33,11 @@ afterAll(() => {
 
 describe("Vector Store QA Command", () => {
   let command: Command;
-  let mockClient: any;
+  let mockClient: {
+    vectorStores: {
+      questionAnswering: jest.Mock;
+    };
+  };
 
   beforeEach(() => {
     command = createQACommand();

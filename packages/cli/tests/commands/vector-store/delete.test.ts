@@ -15,7 +15,7 @@ const originalProcessExit = process.exit;
 beforeAll(() => {
   console.log = jest.fn();
   console.error = jest.fn();
-  process.exit = jest.fn() as any;
+  process.exit = jest.fn();
 });
 
 afterAll(() => {
@@ -26,7 +26,11 @@ afterAll(() => {
 
 describe("Vector Store Delete Command", () => {
   let command: Command;
-  let mockClient: any;
+  let mockClient: {
+    vectorStores: {
+      delete: jest.Mock;
+    };
+  };
 
   beforeEach(() => {
     command = createDeleteCommand();

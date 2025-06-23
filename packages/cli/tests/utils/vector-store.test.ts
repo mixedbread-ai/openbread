@@ -1,5 +1,17 @@
-import { resolveVectorStore } from "../../src/utils/vector-store";
+// Import Jest globals directly
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
+import type { Mixedbread } from "@mixedbread/sdk";
 import * as configUtils from "../../src/utils/config";
+import { resolveVectorStore } from "../../src/utils/vector-store";
 
 // Mock config utils
 jest.mock("../../src/utils/config");
@@ -10,7 +22,7 @@ const originalProcessExit = process.exit;
 
 beforeAll(() => {
   console.error = jest.fn();
-  process.exit = jest.fn() as any;
+  process.exit = jest.fn();
 });
 
 afterAll(() => {
@@ -20,7 +32,12 @@ afterAll(() => {
 
 describe("Vector Store Utils", () => {
   describe("resolveVectorStore", () => {
-    let mockClient: any;
+    let mockClient: {
+      vectorStores: {
+        list: jest.MockedFunction<() => Promise<{ data: unknown[] }>>;
+        retrieve: jest.MockedFunction<(id: string) => Promise<unknown>>;
+      };
+    };
 
     beforeEach(() => {
       mockClient = {
@@ -49,7 +66,7 @@ describe("Vector Store Utils", () => {
       mockClient.vectorStores.list.mockResolvedValue({ data: [] });
 
       const result = await resolveVectorStore(
-        mockClient,
+        mockClient as unknown as Mixedbread,
         "550e8400-e29b-41d4-a716-446655440010"
       );
 
@@ -69,7 +86,10 @@ describe("Vector Store Utils", () => {
       // Names are valid identifiers, so retrieve should succeed
       mockClient.vectorStores.retrieve.mockResolvedValue(mockVectorStore);
 
-      const result = await resolveVectorStore(mockClient, "my-store");
+      const result = await resolveVectorStore(
+        mockClient as unknown as Mixedbread,
+        "my-store"
+      );
 
       expect(result).toEqual(mockVectorStore);
       expect(mockClient.vectorStores.retrieve).toHaveBeenCalledWith("my-store");
@@ -88,7 +108,10 @@ describe("Vector Store Utils", () => {
       mockClient.vectorStores.retrieve.mockResolvedValue(mockVectorStore);
       mockClient.vectorStores.list.mockResolvedValue({ data: [] });
 
-      const result = await resolveVectorStore(mockClient, "myalias");
+      const result = await resolveVectorStore(
+        mockClient as unknown as Mixedbread,
+        "myalias"
+      );
 
       expect(configUtils.resolveVectorStoreName).toHaveBeenCalledWith(
         "myalias"
@@ -106,7 +129,7 @@ describe("Vector Store Utils", () => {
       mockClient.vectorStores.list.mockResolvedValue({ data: [] });
 
       await resolveVectorStore(
-        mockClient,
+        mockClient as unknown as Mixedbread,
         "550e8400-e29b-41d4-a716-446655440002"
       );
 
@@ -132,7 +155,10 @@ describe("Vector Store Utils", () => {
         ],
       });
 
-      await resolveVectorStore(mockClient, "nonexistent-store");
+      await resolveVectorStore(
+        mockClient as unknown as Mixedbread,
+        "nonexistent-store"
+      );
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
@@ -148,7 +174,10 @@ describe("Vector Store Utils", () => {
 
       mockClient.vectorStores.list.mockResolvedValue({ data: [] });
 
-      await resolveVectorStore(mockClient, "any-store");
+      await resolveVectorStore(
+        mockClient as unknown as Mixedbread,
+        "any-store"
+      );
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
@@ -166,7 +195,7 @@ describe("Vector Store Utils", () => {
       );
 
       await expect(
-        resolveVectorStore(mockClient, "some-store")
+        resolveVectorStore(mockClient as unknown as Mixedbread, "some-store")
       ).rejects.toThrow("API Error: Unauthorized");
     });
 
@@ -179,7 +208,10 @@ describe("Vector Store Utils", () => {
       // Names are valid identifiers, so retrieve should succeed
       mockClient.vectorStores.retrieve.mockResolvedValue(mockVectorStore);
 
-      const result = await resolveVectorStore(mockClient, "mystore");
+      const result = await resolveVectorStore(
+        mockClient as unknown as Mixedbread,
+        "mystore"
+      );
 
       expect(result).toEqual(mockVectorStore);
       expect(mockClient.vectorStores.retrieve).toHaveBeenCalledWith("mystore");
@@ -195,7 +227,10 @@ describe("Vector Store Utils", () => {
       // Names with special characters are still valid identifiers
       mockClient.vectorStores.retrieve.mockResolvedValue(mockVectorStore);
 
-      const result = await resolveVectorStore(mockClient, "my-store_v2.0");
+      const result = await resolveVectorStore(
+        mockClient as unknown as Mixedbread,
+        "my-store_v2.0"
+      );
 
       expect(result).toEqual(mockVectorStore);
       expect(mockClient.vectorStores.retrieve).toHaveBeenCalledWith(
@@ -212,7 +247,7 @@ describe("Vector Store Utils", () => {
       mockClient.vectorStores.list.mockResolvedValue({ data: [] });
 
       await resolveVectorStore(
-        mockClient,
+        mockClient as unknown as Mixedbread,
         "550e8400-e29b-41d4-a716-446655440003"
       );
 
@@ -231,7 +266,10 @@ describe("Vector Store Utils", () => {
       // Names are valid identifiers, so retrieve should succeed
       mockClient.vectorStores.retrieve.mockResolvedValue(mockVectorStore);
 
-      const result = await resolveVectorStore(mockClient, "test");
+      const result = await resolveVectorStore(
+        mockClient as unknown as Mixedbread,
+        "test"
+      );
 
       expect(result).toEqual(mockVectorStore);
       expect(mockClient.vectorStores.retrieve).toHaveBeenCalledWith("test");

@@ -1,3 +1,4 @@
+import type { VectorStoreFile } from "@mixedbread/sdk/resources/vector-stores";
 import chalk from "chalk";
 import { Command } from "commander";
 import ora from "ora";
@@ -71,7 +72,7 @@ export function createListCommand(): Command {
       // Apply status filter
       if (parsedOptions.status && parsedOptions.status !== "all") {
         files = files.filter(
-          (file: any) => file.status === parsedOptions.status
+          (file: VectorStoreFile) => file.status === parsedOptions.status
         );
       }
 

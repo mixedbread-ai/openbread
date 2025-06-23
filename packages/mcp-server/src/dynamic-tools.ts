@@ -1,17 +1,17 @@
+import { Cabidela } from "@cloudflare/cabidela";
 import type Mixedbread from "@mixedbread/sdk";
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import {
-  type Endpoint,
   asTextContentResult,
+  type Endpoint,
   type ToolCallResult,
 } from "./tools/types";
-import { zodToJsonSchema } from "zod-to-json-schema";
-import { z } from "zod";
-import { Cabidela } from "@cloudflare/cabidela";
 
 function zodToInputSchema(schema: z.ZodSchema) {
   return {
     type: "object" as const,
-    ...(zodToJsonSchema(schema) as any),
+    ...(zodToJsonSchema(schema) as Record<string, unknown>),
   };
 }
 
@@ -47,7 +47,7 @@ export function dynamicTools(endpoints: Endpoint[]): Endpoint[] {
       inputSchema: zodToInputSchema(listEndpointsSchema),
     },
     handler: async (
-      client: Mixedbread,
+      _client: Mixedbread,
       args: Record<string, unknown> | undefined
     ): Promise<ToolCallResult> => {
       const query =
@@ -63,9 +63,8 @@ export function dynamicTools(endpoints: Endpoint[]): Endpoint[] {
                 endpoint.metadata.operation,
                 ...endpoint.metadata.tags,
               ];
-              return fieldsToMatch.some(
-                (field) =>
-                  field && field.toLowerCase().includes(query.toLowerCase())
+              return fieldsToMatch.some((field) =>
+                field?.toLowerCase().includes(query.toLowerCase())
               );
             })
           : endpoints;
@@ -100,7 +99,7 @@ export function dynamicTools(endpoints: Endpoint[]): Endpoint[] {
       inputSchema: zodToInputSchema(getEndpointSchema),
     },
     handler: async (
-      client: Mixedbread,
+      _client: Mixedbread,
       args: Record<string, unknown> | undefined
     ) => {
       if (!args) {

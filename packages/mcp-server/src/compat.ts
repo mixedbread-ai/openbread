@@ -64,7 +64,7 @@ export const knownClients: Record<ClientType, ClientCapabilities> = {
  */
 export function parseEmbeddedJSON(
   args: Record<string, unknown>,
-  schema: Record<string, unknown>
+  _schema: Record<string, unknown>
 ) {
   let updated = false;
   const newArgs: Record<string, unknown> = Object.assign({}, args);
@@ -75,7 +75,7 @@ export function parseEmbeddedJSON(
         const parsed = JSON.parse(value);
         newArgs[key] = parsed;
         updated = true;
-      } catch (e) {
+      } catch (_e) {
         // Not valid JSON, leave as is
       }
     }
@@ -95,7 +95,10 @@ export type JSONSchema = {
   anyOf?: JSONSchema[];
   $ref?: string;
   $defs?: Record<string, JSONSchema>;
-  [key: string]: any;
+  description?: string;
+  title?: string;
+  format?: string;
+  [key: string]: unknown;
 };
 
 /**
@@ -175,8 +178,8 @@ export function removeTopLevelUnions(tool: Tool): Tool[] {
 
     delete variantSchema.anyOf;
 
-    if (!variantSchema["description"]) {
-      variantSchema["description"] = tool.description;
+    if (!variantSchema.description) {
+      variantSchema.description = tool.description || "";
     }
 
     const usedDefs = findUsedDefs(variant, defs);
@@ -188,8 +191,8 @@ export function removeTopLevelUnions(tool: Tool): Tool[] {
 
     return {
       ...tool,
-      name: `${tool.name}_${toSnakeCase(variant["title"] || `variant${index + 1}`)}`,
-      description: variant["description"] || tool.description,
+      name: `${tool.name}_${toSnakeCase(variant.title || `variant${index + 1}`)}`,
+      description: variant.description || tool.description,
       inputSchema: variantSchema,
     } as Tool;
   });
@@ -272,7 +275,7 @@ function inlineRefsRecursive(
     return schema.map((item) => {
       const processed = inlineRefsRecursive(item, defs, refPath);
       return processed === null ? {} : processed;
-    }) as JSONSchema;
+    }) as unknown as JSONSchema;
   }
 
   const result = { ...schema };
@@ -301,7 +304,7 @@ function inlineRefsRecursive(
 
         // Merge the inlined definition with the original schema's properties
         // but preserve things like description, etc.
-        const { $ref, ...rest } = result;
+        const { $ref: _$ref, ...rest } = result;
         return { ...inlinedDef, ...rest };
       }
     }
@@ -338,7 +341,7 @@ export function removeAnyOf(schema: JSONSchema): JSONSchema {
   }
 
   if (Array.isArray(schema)) {
-    return schema.map((item) => removeAnyOf(item)) as JSONSchema;
+    return schema.map((item) => removeAnyOf(item)) as unknown as JSONSchema;
   }
 
   const result = { ...schema };
@@ -398,21 +401,21 @@ export function removeFormats(
   if (Array.isArray(schema)) {
     return schema.map((item) =>
       removeFormats(item, formatsCapability)
-    ) as JSONSchema;
+    ) as unknown as JSONSchema;
   }
 
   const result = { ...schema };
 
-  if ("format" in result && typeof result["format"] === "string") {
-    const formatStr = `(format: "${result["format"]}")`;
+  if ("format" in result && typeof result.format === "string") {
+    const formatStr = `(format: "${result.format}")`;
 
-    if ("description" in result && typeof result["description"] === "string") {
-      result["description"] = `${result["description"]} ${formatStr}`;
+    if ("description" in result && typeof result.description === "string") {
+      result.description = `${result.description} ${formatStr}`;
     } else {
-      result["description"] = formatStr;
+      result.description = formatStr;
     }
 
-    delete result["format"];
+    delete result.format;
   }
 
   for (const key in result) {

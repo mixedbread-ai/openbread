@@ -1,5 +1,5 @@
 import Table from "cli-table3";
-import { formatOutput, formatBytes } from "../../src/utils/output";
+import { formatBytes, formatOutput } from "../../src/utils/output";
 
 // Mock cli-table3
 jest.mock("cli-table3");

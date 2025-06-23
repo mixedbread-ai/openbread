@@ -1,11 +1,11 @@
+import { readFileSync, statSync } from "node:fs";
+import { basename, relative } from "node:path";
 import type { Mixedbread } from "@mixedbread/sdk";
 import chalk from "chalk";
 import { Command } from "commander";
-import { readFileSync, statSync } from "fs";
 import { glob } from "glob";
 import { lookup } from "mime-types";
 import ora from "ora";
-import { basename, relative } from "path";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
@@ -182,8 +182,16 @@ export function createUploadCommand(): Command {
             );
             existingFiles = new Map(
               filesResponse.data
-                .filter((f: any) => files.includes(f.metadata?.file_path))
-                .map((f: any) => [f.metadata.file_path as string, f.id])
+                .filter((f) => {
+                  const filePath = (f.metadata as { file_path?: string })
+                    ?.file_path;
+                  return filePath && files.includes(filePath);
+                })
+                .map((f) => {
+                  const filePath = (f.metadata as { file_path: string })
+                    .file_path;
+                  return [filePath, f.id];
+                })
             );
             spinner.succeed(
               `Found ${formatCountWithSuffix(existingFiles.size, "existing file")}`
@@ -225,7 +233,7 @@ async function uploadFiles(
     strategy: string;
     contextualization: boolean;
     parallel: number;
-    additionalMetadata: Record<string, any>;
+    additionalMetadata: Record<string, unknown>;
     unique: boolean;
     existingFiles: Map<string, string>;
   }
@@ -306,7 +314,7 @@ async function uploadFiles(
   }
 
   // Summary
-  console.log("\n" + chalk.bold("Upload Summary:"));
+  console.log(`\n${chalk.bold("Upload Summary:")}`);
   if (results.uploaded > 0) {
     console.log(
       chalk.green(

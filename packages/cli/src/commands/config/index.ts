@@ -1,6 +1,6 @@
 import { Command } from "commander";
-import { createSetCommand } from "./set";
 import { createGetCommand } from "./get";
+import { createSetCommand } from "./set";
 
 export function createConfigCommand(): Command {
   const configCommand = new Command("config").description(

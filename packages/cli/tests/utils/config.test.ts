@@ -1,14 +1,14 @@
+import { readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import mockFs from "mock-fs";
-import { readFileSync } from "fs";
-import { homedir } from "os";
-import { join } from "path";
 import {
-  loadConfig,
-  saveConfig,
-  getApiKey,
-  resolveVectorStoreName,
-  parseConfigValue,
   type CliConfig,
+  getApiKey,
+  loadConfig,
+  parseConfigValue,
+  resolveVectorStoreName,
+  saveConfig,
 } from "../../src/utils/config";
 
 describe("Config Utils", () => {

@@ -1,8 +1,8 @@
 import type { Command } from "commander";
 import { createUpdateCommand } from "../../../src/commands/vector-store/update";
 import * as clientUtils from "../../../src/utils/client";
-import * as vectorStoreUtils from "../../../src/utils/vector-store";
 import * as outputUtils from "../../../src/utils/output";
+import * as vectorStoreUtils from "../../../src/utils/vector-store";
 
 // Mock dependencies
 jest.mock("../../../src/utils/client");
@@ -20,7 +20,7 @@ const originalProcessExit = process.exit;
 beforeAll(() => {
   console.log = jest.fn();
   console.error = jest.fn();
-  process.exit = jest.fn() as any;
+  process.exit = jest.fn();
 });
 
 afterAll(() => {
@@ -31,7 +31,11 @@ afterAll(() => {
 
 describe("Vector Store Update Command", () => {
   let command: Command;
-  let mockClient: any;
+  let mockClient: {
+    vectorStores: {
+      update: jest.Mock;
+    };
+  };
 
   beforeEach(() => {
     command = createUpdateCommand();

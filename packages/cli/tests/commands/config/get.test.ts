@@ -1,7 +1,7 @@
+import { homedir } from "node:os";
+import { join } from "node:path";
 import type { Command } from "commander";
 import mockFs from "mock-fs";
-import { homedir } from "os";
-import { join } from "path";
 import { createGetCommand } from "../../../src/commands/config/get";
 
 describe("Config Get Command", () => {

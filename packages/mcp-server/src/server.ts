@@ -81,7 +81,9 @@ export function init(params: {
   const client =
     params.client ||
     new Mixedbread({
-      environment: (readEnv("MIXEDBREAD_ENVIRONMENT") || undefined) as any,
+      environment: readEnv(
+        "MIXEDBREAD_ENVIRONMENT"
+      ) as ClientOptions["environment"],
       defaultHeaders: { "X-Stainless-MCP": "true" },
     });
 
@@ -155,10 +157,15 @@ export async function executeHandler(
 }
 
 export const readEnv = (env: string): string | undefined => {
-  if (typeof (globalThis as any).process !== "undefined") {
-    return (globalThis as any).process.env?.[env]?.trim();
-  } else if (typeof (globalThis as any).Deno !== "undefined") {
-    return (globalThis as any).Deno.env?.get?.(env)?.trim();
+  const global = globalThis as {
+    process?: { env?: Record<string, string> };
+    Deno?: { env?: { get?: (key: string) => string | undefined } };
+  };
+
+  if (typeof global.process !== "undefined") {
+    return global.process.env?.[env]?.trim();
+  } else if (typeof global.Deno !== "undefined") {
+    return global.Deno.env?.get?.(env)?.trim();
   }
   return;
 };

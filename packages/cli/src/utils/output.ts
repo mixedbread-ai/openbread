@@ -14,7 +14,6 @@ export function formatOutput(
     case "csv":
       formatCsv(data);
       break;
-    case "table":
     default:
       formatTable(data);
       break;
@@ -97,12 +96,17 @@ function escapeCsv(value: string): string {
 }
 
 export function formatBytes(bytes: number | undefined): string {
-  if (bytes === 0 || bytes === undefined || bytes === null || isNaN(bytes))
+  if (
+    bytes === 0 ||
+    bytes === undefined ||
+    bytes === null ||
+    Number.isNaN(bytes)
+  )
     return "0 B";
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(Math.abs(bytes)) / Math.log(k));
-  return parseFloat((bytes / k ** i).toFixed(2)) + " " + sizes[i];
+  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
 export function formatDuration(ms: number): string {

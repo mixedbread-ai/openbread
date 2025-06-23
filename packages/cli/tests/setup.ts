@@ -9,7 +9,7 @@ beforeEach(() => {
   console.warn = jest.fn();
   console.error = jest.fn();
   console.log = jest.fn();
-  process.exit = jest.fn() as any;
+  process.exit = jest.fn();
 });
 
 afterEach(() => {

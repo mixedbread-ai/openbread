@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const { execSync } = require("child_process");
-const path = require("path");
-const fs = require("fs");
+const { execSync } = require("node:child_process");
+const path = require("node:path");
+const fs = require("node:fs");
 
 // Check if we're in a CI environment or if the user has opted out
 if (process.env.CI || process.env.MXBAI_SKIP_CLI_INSTALL === "true") {
@@ -28,7 +28,7 @@ try {
   try {
     execSync("mxbai --version", { stdio: "ignore" });
     console.log("mxbai CLI is already installed");
-  } catch (error) {
+  } catch (_error) {
     // mxbai is not installed, install it
     console.log("Installing mxbai CLI globally...");
 

@@ -1,11 +1,11 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { endpoints, type Filter } from "./tools";
 import {
   type ClientCapabilities,
-  knownClients,
   type ClientType,
+  knownClients,
 } from "./compat";
+import { endpoints, type Filter } from "./tools";
 
 export type CLIOptions = McpOptions & {
   list: boolean;
@@ -38,7 +38,7 @@ function parseCapabilityValue(cap: string): {
     const parts = cap.split("=");
     if (parts.length === 2) {
       const length = parseInt(parts[1]!, 10);
-      if (!isNaN(length)) {
+      if (!Number.isNaN(length)) {
         return { name: "tool-name-length", value: length };
       }
       throw new Error(

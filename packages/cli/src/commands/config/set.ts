@@ -1,6 +1,6 @@
-import { Command } from "commander";
 import chalk from "chalk";
-import { loadConfig, saveConfig, parseConfigValue } from "../../utils/config";
+import { Command } from "commander";
+import { loadConfig, parseConfigValue, saveConfig } from "../../utils/config";
 
 export function createSetCommand(): Command {
   const setCommand = new Command("set")

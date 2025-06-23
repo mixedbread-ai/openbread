@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-const { execSync } = require("child_process");
-const readline = require("readline");
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+const { execSync } = require("node:child_process");
+const readline = require("node:readline");
+const fs = require("node:fs");
+const path = require("node:path");
+const os = require("node:os");
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -26,7 +26,7 @@ async function main() {
     const version = execSync("mxbai --version", { encoding: "utf8" }).trim();
     console.log(`✅ mxbai CLI is already installed (${version})`);
     isInstalled = true;
-  } catch (error) {
+  } catch (_error) {
     console.log("❌ mxbai CLI is not installed");
   }
 
@@ -57,7 +57,7 @@ async function main() {
         console.log(`Running: ${installCommand}`);
         execSync(installCommand, { stdio: "inherit" });
         console.log("\n✅ mxbai CLI installed successfully!");
-      } catch (error) {
+      } catch (_error) {
         console.error("\n❌ Failed to install mxbai CLI");
         console.error("Please try installing manually with:");
         console.error("  npm install -g @mixedbread/cli");
@@ -87,7 +87,7 @@ async function main() {
       const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
       configApiKey = config.api_key;
     }
-  } catch (error) {
+  } catch (_error) {
     // Ignore config read errors
   }
 
@@ -107,7 +107,7 @@ async function main() {
         "Enter your Mixedbread API key (starts with mxb_): "
       );
 
-      if (apiKey && apiKey.startsWith("mxb_")) {
+      if (apiKey?.startsWith("mxb_")) {
         const saveLocation = await question(
           "\nWhere would you like to save the API key?\n1. Environment variable (add to shell profile)\n2. Config file (~/.config/mixedbread/config.json)\n3. Both\nEnter choice (1-3): "
         );

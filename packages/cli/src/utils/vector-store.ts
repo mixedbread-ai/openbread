@@ -14,7 +14,7 @@ export async function resolveVectorStore(
 
   try {
     return await client.vectorStores.retrieve(resolved);
-  } catch (error) {
+  } catch (_error) {
     // If not found by identifier, fall through to fuzzy search
   }
 

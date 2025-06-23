@@ -1,15 +1,15 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
-import { Metadata, Endpoint, HandlerFunction } from "./types";
+import { Endpoint, HandlerFunction, Metadata } from "./types";
 
 export { Metadata, Endpoint, HandlerFunction };
 
-import retrieve_vector_stores from "./vector-stores/retrieve-vector-stores";
+import list_vector_stores_files from "./vector-stores/files/list-vector-stores-files";
+import retrieve_vector_stores_files from "./vector-stores/files/retrieve-vector-stores-files";
 import list_vector_stores from "./vector-stores/list-vector-stores";
 import question_answering_vector_stores from "./vector-stores/question-answering-vector-stores";
+import retrieve_vector_stores from "./vector-stores/retrieve-vector-stores";
 import search_vector_stores from "./vector-stores/search-vector-stores";
-import retrieve_vector_stores_files from "./vector-stores/files/retrieve-vector-stores-files";
-import list_vector_stores_files from "./vector-stores/files/list-vector-stores-files";
 
 export const endpoints: Endpoint[] = [];
 
@@ -66,8 +66,7 @@ export function query(filters: Filter[], endpoints: Endpoint[]): Endpoint[] {
 function match({ type, value }: Filter, endpoint: Endpoint): boolean {
   switch (type) {
     case "resource": {
-      const regexStr =
-        "^" + normalizeResource(value).replace(/\*/g, ".*") + "$";
+      const regexStr = `^${normalizeResource(value).replace(/\*/g, ".*")}$`;
       const regex = new RegExp(regexStr);
       return regex.test(normalizeResource(endpoint.metadata.resource));
     }

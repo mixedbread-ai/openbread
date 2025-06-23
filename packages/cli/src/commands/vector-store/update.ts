@@ -1,7 +1,7 @@
 import type { VectorStoreUpdateParams } from "@mixedbread/sdk/resources/index";
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
@@ -49,7 +49,7 @@ export function createUpdateCommand(): Command {
   );
 
   command.action(async (nameOrId: string, options: UpdateOptions) => {
-    let spinner;
+    let spinner: Ora;
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);

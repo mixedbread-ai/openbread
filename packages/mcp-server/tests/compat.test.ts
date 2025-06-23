@@ -1077,7 +1077,9 @@ describe("applyCompatibilityTransformations", () => {
     );
     const schema = transformed[0]!.tool.inputSchema as JSONSchema;
 
-    if (schema.properties && schema.properties["field"]) {
+    // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
+    if (schema.properties?.["field"]) {
+      // biome-ignore lint/complexity/useLiteralKeys: TypeScript requires bracket notation for index signatures
       const field = schema.properties["field"];
       expect(field.anyOf).toBeUndefined();
       expect(field.type).toBe("string");
@@ -1171,13 +1173,13 @@ describe("applyCompatibilityTransformations", () => {
     expect(schema.$defs).toBeUndefined();
 
     // Safely access nested properties
-    if (schema.properties && schema.properties["user"]) {
+    if (schema.properties?.["user"]) {
       const user = schema.properties["user"];
       // User should be inlined
       expect(user.type).toBe("object");
 
       // AnyOf in the inlined user.preference should be removed
-      if (user.properties && user.properties["preference"]) {
+      if (user.properties?.["preference"]) {
         const preference = user.properties["preference"];
         expect(preference.anyOf).toBeUndefined();
         expect(preference.type).toBe("string");
@@ -1212,10 +1214,10 @@ describe("applyCompatibilityTransformations", () => {
     );
     const schema = transformed[0]!.tool.inputSchema as JSONSchema;
 
-    if (schema.properties && schema.properties["date"]) {
+    if (schema.properties?.["date"]) {
       const dateField = schema.properties["date"];
-      expect(dateField["format"]).toBeUndefined();
-      expect(dateField["description"]).toBe('A date (format: "date")');
+      expect(dateField.format).toBeUndefined();
+      expect(dateField.description).toBe('A date (format: "date")');
     }
   });
 });

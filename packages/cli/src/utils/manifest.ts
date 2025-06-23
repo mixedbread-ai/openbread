@@ -173,7 +173,7 @@ export async function uploadFromManifest(
           if (Object.keys(file.metadata).length > 0) {
             console.log(`    Metadata: ${JSON.stringify(file.metadata)}`);
           }
-        } catch (error) {
+        } catch (_error) {
           console.log(`  ${file.path} (${chalk.red("Error: File not found")})`);
         }
       });
@@ -325,7 +325,7 @@ async function uploadManifestFiles(
   }
 
   // Summary
-  console.log("\n" + chalk.bold("Manifest Upload Summary:"));
+  console.log(`\n${chalk.bold("Manifest Upload Summary:")}`);
   if (results.uploaded > 0) {
     console.log(
       chalk.green(

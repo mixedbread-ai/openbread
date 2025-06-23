@@ -1,5 +1,5 @@
-import { Command } from "commander";
 import chalk from "chalk";
+import { Command } from "commander";
 import { loadConfig } from "../../utils/config";
 
 export function createGetCommand(): Command {
@@ -32,7 +32,7 @@ export function createGetCommand(): Command {
           }
         }
 
-        console.log(chalk.cyan(key + ":"), JSON.stringify(current, null, 2));
+        console.log(chalk.cyan(`${key}:`), JSON.stringify(current, null, 2));
       } catch (error) {
         console.error(
           chalk.red("Error:"),

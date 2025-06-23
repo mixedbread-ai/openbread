@@ -1,10 +1,9 @@
 // File generated from our OpenAPI spec by Stainless. See CONTRIBUTING.md for details.
 
 import { asTextContentResult } from "@mixedbread/mcp/tools/types";
-
+import type Mixedbread from "@mixedbread/sdk";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { Metadata } from "../";
-import type Mixedbread from "@mixedbread/sdk";
 
 export const metadata: Metadata = {
   resource: "vector_stores",
@@ -294,8 +293,9 @@ export const handler = async (
   client: Mixedbread,
   args: Record<string, unknown> | undefined
 ) => {
-  const body = args as any;
-  return asTextContentResult(await client.vectorStores.questionAnswering(body));
+  const body = args as Record<string, unknown>;
+  const result = await client.vectorStores.questionAnswering(body);
+  return asTextContentResult(result);
 };
 
 export default { metadata, tool, handler };

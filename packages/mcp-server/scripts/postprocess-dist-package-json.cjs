@@ -1,11 +1,11 @@
-const fs = require("fs");
+const fs = require("node:fs");
 const pkgJson = require("../dist/package.json");
 const parentPkgJson = require("../../../package.json");
 
 for (const dep in pkgJson.dependencies) {
   // ensure we point to NPM instead of a local directory
   if (dep === "@mixedbread/sdk") {
-    pkgJson.dependencies[dep] = "^" + parentPkgJson.version;
+    pkgJson.dependencies[dep] = `^${parentPkgJson.version}`;
   }
 }
 

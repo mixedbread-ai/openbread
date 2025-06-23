@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { type McpOptions, parseOptions } from "./options";
 import { init, selectTools, server } from "./server";
 import { type Endpoint, endpoints } from "./tools";
-import { type McpOptions, parseOptions } from "./options";
 
 async function main() {
   const options = parseOptionsOrError();

@@ -215,16 +215,6 @@ export function createSyncCommand(): Command {
           concurrency: parsedOptions.concurrency,
         });
 
-        // Update sync state
-        const newSyncState = {
-          last_sync: new Date().toISOString(),
-          git_commit: fromGit && gitInfo.isRepo ? gitInfo.commit : undefined,
-          git_branch: fromGit && gitInfo.isRepo ? gitInfo.branch : undefined,
-          file_count:
-            syncedFiles.size + analysis.added.length - analysis.deleted.length,
-          patterns,
-        };
-
         // Summary
         console.log("");
         console.log(chalk.bold("Summary:"));

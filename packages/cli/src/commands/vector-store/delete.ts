@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { Command } from "commander";
 import inquirer from "inquirer";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
@@ -32,7 +32,7 @@ export function createDeleteCommand(): Command {
   );
 
   command.action(async (nameOrId: string, options: DeleteOptions) => {
-    let spinner;
+    let spinner: Ora;
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);

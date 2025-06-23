@@ -1,10 +1,10 @@
 import type { Command } from "commander";
+import { glob } from "glob";
 import mockFs from "mock-fs";
 import { createUploadCommand } from "../../../src/commands/vector-store/upload";
 import * as clientUtils from "../../../src/utils/client";
-import * as vectorStoreUtils from "../../../src/utils/vector-store";
 import * as configUtils from "../../../src/utils/config";
-import { glob } from "glob";
+import * as vectorStoreUtils from "../../../src/utils/vector-store";
 
 // Mock dependencies
 jest.mock("../../../src/utils/client");
@@ -21,7 +21,7 @@ const originalProcessExit = process.exit;
 beforeAll(() => {
   console.log = jest.fn();
   console.error = jest.fn();
-  process.exit = jest.fn() as any;
+  process.exit = jest.fn();
 });
 
 afterAll(() => {
@@ -32,7 +32,15 @@ afterAll(() => {
 
 describe("Vector Store Upload Command", () => {
   let command: Command;
-  let mockClient: any;
+  let mockClient: {
+    vectorStores: {
+      files: {
+        list: jest.Mock;
+        upload: jest.Mock;
+        delete: jest.Mock;
+      };
+    };
+  };
 
   beforeEach(() => {
     command = createUploadCommand();

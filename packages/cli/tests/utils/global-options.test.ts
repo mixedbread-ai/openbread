@@ -1,10 +1,10 @@
 import { Command } from "commander";
 import { z } from "zod";
 import {
-  setupGlobalOptions,
+  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
-  GlobalOptionsSchema,
+  setupGlobalOptions,
 } from "../../src/utils/global-options";
 
 // Mock console methods
@@ -15,7 +15,7 @@ const originalProcessExit = process.exit;
 beforeAll(() => {
   console.log = jest.fn();
   console.error = jest.fn();
-  process.exit = jest.fn() as any;
+  process.exit = jest.fn();
 });
 
 afterAll(() => {
@@ -47,7 +47,12 @@ describe("Global Options", () => {
       setupGlobalOptions(command);
 
       // Mock the hook behavior
-      const hookCallback = command["_hooks"].preAction[0];
+      const commandWithHooks = command as Command & {
+        _hooks: {
+          preAction: ((thisCommand: unknown, actionCommand: unknown) => void)[];
+        };
+      };
+      const hookCallback = commandWithHooks._hooks.preAction[0];
       hookCallback({ opts: () => ({ debug: true }) }, command);
 
       expect(process.env.MXBAI_DEBUG).toBe("true");
@@ -60,7 +65,12 @@ describe("Global Options", () => {
       const command = new Command();
       setupGlobalOptions(command);
 
-      const hookCallback = command["_hooks"].preAction[0];
+      const commandWithHooks = command as Command & {
+        _hooks: {
+          preAction: ((thisCommand: unknown, actionCommand: unknown) => void)[];
+        };
+      };
+      const hookCallback = commandWithHooks._hooks.preAction[0];
       hookCallback({ opts: () => ({ debug: false }) }, command);
 
       expect(process.env.MXBAI_DEBUG).toBe("true");
