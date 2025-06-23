@@ -1,19 +1,19 @@
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import Table from "cli-table3";
 import { formatBytes, formatOutput } from "../../src/utils/output";
 
 // Mock cli-table3
 jest.mock("cli-table3");
 
-// Mock console methods
-const originalConsoleLog = console.log;
+// Explicit mock definition
+const MockTable = Table as jest.MockedClass<typeof Table>;
 
-beforeAll(() => {
-  console.log = jest.fn();
-});
-
-afterAll(() => {
-  console.log = originalConsoleLog;
-});
 
 describe("Output Utils", () => {
   beforeEach(() => {
@@ -51,7 +51,7 @@ describe("Output Utils", () => {
           push: jest.fn(),
           toString: jest.fn().mockReturnValue("table output"),
         };
-        (Table as unknown as jest.Mock).mockReturnValue(mockTableInstance);
+        MockTable.mockReturnValue(mockTableInstance as any);
 
         const data = {
           id: "vs_123",
@@ -80,7 +80,7 @@ describe("Output Utils", () => {
           push: jest.fn(),
           toString: jest.fn().mockReturnValue("table output"),
         };
-        (Table as unknown as jest.Mock).mockReturnValue(mockTableInstance);
+        MockTable.mockReturnValue(mockTableInstance as any);
 
         const data = {
           id: "vs_123",
@@ -102,7 +102,7 @@ describe("Output Utils", () => {
           push: jest.fn(),
           toString: jest.fn().mockReturnValue("table output"),
         };
-        (Table as unknown as jest.Mock).mockReturnValue(mockTableInstance);
+        MockTable.mockReturnValue(mockTableInstance as any);
 
         const data = {
           id: "vs_123",
@@ -126,7 +126,7 @@ describe("Output Utils", () => {
           push: jest.fn(),
           toString: jest.fn().mockReturnValue("table output"),
         };
-        (Table as unknown as jest.Mock).mockReturnValue(mockTableInstance);
+        MockTable.mockReturnValue(mockTableInstance as any);
 
         const data = [
           { id: "vs_1", name: "store1", size: 100 },
@@ -163,7 +163,7 @@ describe("Output Utils", () => {
           push: jest.fn(),
           toString: jest.fn().mockReturnValue("table output"),
         };
-        (Table as unknown as jest.Mock).mockReturnValue(mockTableInstance);
+        MockTable.mockReturnValue(mockTableInstance as any);
 
         const data = [
           { id: "vs_1", name: "store1" },
@@ -293,7 +293,7 @@ describe("Output Utils", () => {
           push: jest.fn(),
           toString: jest.fn().mockReturnValue("table output"),
         };
-        (Table as unknown as jest.Mock).mockReturnValue(mockTableInstance);
+        MockTable.mockReturnValue(mockTableInstance as any);
 
         const data = { id: "vs_123" };
 

@@ -1,3 +1,10 @@
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import { Command } from "commander";
 import { z } from "zod";
 import {
@@ -7,22 +14,6 @@ import {
   setupGlobalOptions,
 } from "../../src/utils/global-options";
 
-// Mock console methods
-const originalConsoleLog = console.log;
-const originalConsoleError = console.error;
-const originalProcessExit = process.exit;
-
-beforeAll(() => {
-  console.log = jest.fn();
-  console.error = jest.fn();
-  process.exit = jest.fn();
-});
-
-afterAll(() => {
-  console.log = originalConsoleLog;
-  console.error = originalConsoleError;
-  process.exit = originalProcessExit;
-});
 
 describe("Global Options", () => {
   describe("setupGlobalOptions", () => {
@@ -91,8 +82,8 @@ describe("Global Options", () => {
     beforeEach(() => {
       parentCommand = new Command();
       parentCommand.opts = jest
-        .fn()
-        .mockReturnValue({ apiKey: "parent_key", format: "json" });
+        .fn<() => Record<string, unknown>>()
+        .mockReturnValue({ apiKey: "parent_key", format: "json" }) as any;
 
       childCommand = new Command();
       childCommand.parent = parentCommand;

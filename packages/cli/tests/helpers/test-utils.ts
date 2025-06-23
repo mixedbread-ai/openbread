@@ -1,3 +1,4 @@
+import { expect, jest } from "@jest/globals";
 import type { Command } from "commander";
 
 /**
@@ -183,3 +184,56 @@ export function createTestConfig(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+// Utility type for flexible mock functions in tests
+// This allows mocks to accept any arguments without strict typing constraints
+export type FlexibleMock = jest.MockedFunction<any>;
+
+// Utility type for partial mock functions that preserve some type safety
+export type PartialMock<T> = T extends (...args: any[]) => infer R
+  ? jest.MockedFunction<(...args: any[]) => R>
+  : jest.MockedFunction<any>;
+
+// Helper type for mocking API client methods with flexible arguments
+export type MockedAPIClient<T> = {
+  [K in keyof T]: T[K] extends (...args: any[]) => any
+    ? FlexibleMock
+    : T[K] extends object
+      ? MockedAPIClient<T[K]>
+      : T[K];
+};
+
+// Common mock setup helpers
+export const createMockConsole = () => {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+  const originalProcessExit = process.exit;
+
+  return {
+    setup: () => {
+      console.log = jest.fn();
+      console.error = jest.fn();
+      process.exit = jest.fn() as never;
+    },
+    restore: () => {
+      console.log = originalConsoleLog;
+      console.error = originalConsoleError;
+      process.exit = originalProcessExit;
+    },
+  };
+};
+
+// Helper to create mock vector store data with required fields
+export const createMockVectorStore = (overrides: Record<string, any> = {}) => ({
+  id: "550e8400-e29b-41d4-a716-446655440000",
+  name: "test-store",
+  created_at: "2021-01-01T00:00:00Z",
+  updated_at: "2021-01-01T00:00:00Z",
+  ...overrides,
+});
+
+// Helper to create mock config with required version field
+export const createMockConfig = (overrides: Record<string, any> = {}) => ({
+  version: "1.0",
+  ...overrides,
+});

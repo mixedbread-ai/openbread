@@ -1,3 +1,5 @@
+import { afterAll, afterEach, beforeEach, jest } from "@jest/globals";
+
 // Mock console methods globally to reduce noise in tests
 const originalConsoleWarn = console.warn;
 const originalConsoleError = console.error;
@@ -9,7 +11,7 @@ beforeEach(() => {
   console.warn = jest.fn();
   console.error = jest.fn();
   console.log = jest.fn();
-  process.exit = jest.fn();
+  process.exit = jest.fn() as never;
 });
 
 afterEach(() => {

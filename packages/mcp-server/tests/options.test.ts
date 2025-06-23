@@ -1,5 +1,25 @@
+// Import Jest globals directly
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import { parseOptions } from "../src/options";
 import type { Filter } from "../src/tools";
+
+// Mock console methods
+const originalConsoleError = console.error;
+
+beforeAll(() => {
+  console.error = jest.fn();
+});
+
+afterAll(() => {
+  console.error = originalConsoleError;
+});
 
 // Mock process.argv
 const mockArgv = (args: string[]) => {
@@ -166,26 +186,16 @@ describe("parseOptions", () => {
   it("should handle invalid tool-name-length format", () => {
     const cleanup = mockArgv(["--capability=tool-name-length=invalid"]);
 
-    // Mock console.error to prevent output during test
-    const originalError = console.error;
-    console.error = jest.fn();
-
     expect(() => parseOptions()).toThrow();
 
-    console.error = originalError;
     cleanup();
   });
 
   it("should handle unknown capability", () => {
     const cleanup = mockArgv(["--capability=unknown-capability"]);
 
-    // Mock console.error to prevent output during test
-    const originalError = console.error;
-    console.error = jest.fn();
-
     expect(() => parseOptions()).toThrow();
 
-    console.error = originalError;
     cleanup();
   });
 });

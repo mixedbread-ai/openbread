@@ -1,3 +1,12 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
+import type Mixedbread from "@mixedbread/sdk";
 import type { Command } from "commander";
 import { createQACommand } from "../../../src/commands/vector-store/qa";
 import * as clientUtils from "../../../src/utils/client";
@@ -9,59 +18,61 @@ import * as vectorStoreUtils from "../../../src/utils/vector-store";
 jest.mock("../../../src/utils/client");
 jest.mock("../../../src/utils/vector-store");
 jest.mock("../../../src/utils/output", () => ({
-  ...jest.requireActual("../../../src/utils/output"),
+  ...(jest.requireActual("../../../src/utils/output") as object),
   formatOutput: jest.fn(),
 }));
 jest.mock("../../../src/utils/config");
 
-// Mock console methods
-const originalConsoleLog = console.log;
-const originalConsoleError = console.error;
-const originalProcessExit = process.exit;
 
-beforeAll(() => {
-  console.log = jest.fn();
-  console.error = jest.fn();
-  process.exit = jest.fn();
-});
+// Explicit mock definitions
+const mockResolveVectorStore =
+  vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
+    typeof vectorStoreUtils.resolveVectorStore
+  >;
+const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
+  typeof clientUtils.createClient
+>;
+const mockLoadConfig = configUtils.loadConfig as jest.MockedFunction<
+  typeof configUtils.loadConfig
+>;
+const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
+  typeof outputUtils.formatOutput
+>;
 
-afterAll(() => {
-  console.log = originalConsoleLog;
-  console.error = originalConsoleError;
-  process.exit = originalProcessExit;
-});
 
-describe("Vector Store QA Command", () => {
+describe("QA Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
-      questionAnswering: jest.Mock;
+      questionAnswering: jest.MockedFunction<any>;
     };
   };
 
   beforeEach(() => {
     command = createQACommand();
-
-    // Setup mock client
     mockClient = {
       vectorStores: {
         questionAnswering: jest.fn(),
       },
     };
 
-    (clientUtils.createClient as jest.Mock).mockReturnValue(mockClient);
-    (vectorStoreUtils.resolveVectorStore as jest.Mock).mockResolvedValue({
+    // Setup default mocks
+    mockCreateClient.mockReturnValue(mockClient as unknown as Mixedbread);
+    mockResolveVectorStore.mockResolvedValue({
       id: "550e8400-e29b-41d4-a716-446655440090",
       name: "test-store",
+      created_at: "2021-01-01",
+      updated_at: "2021-01-01",
     });
-    (configUtils.loadConfig as jest.Mock).mockReturnValue({
+    mockLoadConfig.mockReturnValue({
+      version: "1.0",
       defaults: {
         search: {
           top_k: 5,
         },
       },
     });
-    (outputUtils.formatOutput as jest.Mock).mockImplementation(() => {});
+    mockFormatOutput.mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -89,9 +100,7 @@ describe("Vector Store QA Command", () => {
     };
 
     it("should ask question with default options", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(
-        mockQAResponse
-      );
+      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockQAResponse);
 
       await command.parseAsync([
         "node",
@@ -100,7 +109,7 @@ describe("Vector Store QA Command", () => {
         "What is machine learning?",
       ]);
 
-      expect(vectorStoreUtils.resolveVectorStore).toHaveBeenCalledWith(
+      expect(mockResolveVectorStore).toHaveBeenCalledWith(
         mockClient,
         "test-store"
       );
@@ -122,7 +131,7 @@ describe("Vector Store QA Command", () => {
         expect.stringContaining("Sources:")
       );
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
+      expect(mockFormatOutput).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             filename: "ml-guide.pdf",
@@ -140,9 +149,7 @@ describe("Vector Store QA Command", () => {
     });
 
     it("should ask question with custom top-k", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(
-        mockQAResponse
-      );
+      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockQAResponse);
 
       await command.parseAsync([
         "node",
@@ -161,9 +168,7 @@ describe("Vector Store QA Command", () => {
     });
 
     it("should ask question with threshold", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(
-        mockQAResponse
-      );
+      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockQAResponse);
 
       await command.parseAsync([
         "node",
@@ -184,9 +189,7 @@ describe("Vector Store QA Command", () => {
     });
 
     it("should ask question with return metadata enabled", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(
-        mockQAResponse
-      );
+      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockQAResponse);
 
       await command.parseAsync([
         "node",
@@ -204,9 +207,8 @@ describe("Vector Store QA Command", () => {
         })
       );
 
-      const formattedData = (outputUtils.formatOutput as jest.Mock).mock
-        .calls[0][0];
-      expect(formattedData[0]).toHaveProperty("metadata");
+      const formattedData = mockFormatOutput.mock.calls[0]?.[0];
+      expect(formattedData?.[0]).toHaveProperty("metadata");
     });
 
     it("should handle response without sources", async () => {
@@ -234,7 +236,7 @@ describe("Vector Store QA Command", () => {
       expect(console.log).not.toHaveBeenCalledWith(
         expect.stringContaining("Sources:")
       );
-      expect(outputUtils.formatOutput).not.toHaveBeenCalled();
+      expect(mockFormatOutput).not.toHaveBeenCalled();
     });
 
     it("should handle response with undefined sources", async () => {
@@ -262,7 +264,7 @@ describe("Vector Store QA Command", () => {
       expect(console.log).not.toHaveBeenCalledWith(
         expect.stringContaining("Sources:")
       );
-      expect(outputUtils.formatOutput).not.toHaveBeenCalled();
+      expect(mockFormatOutput).not.toHaveBeenCalled();
     });
   });
 
@@ -284,7 +286,7 @@ describe("Vector Store QA Command", () => {
 
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
+      expect(mockFormatOutput).toHaveBeenCalledWith(
         expect.any(Array),
         undefined
       );
@@ -302,7 +304,7 @@ describe("Vector Store QA Command", () => {
         "json",
       ]);
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
+      expect(mockFormatOutput).toHaveBeenCalledWith(
         expect.any(Array),
         "json"
       );
@@ -320,7 +322,7 @@ describe("Vector Store QA Command", () => {
         "csv",
       ]);
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
+      expect(mockFormatOutput).toHaveBeenCalledWith(
         expect.any(Array),
         "csv"
       );
@@ -337,8 +339,7 @@ describe("Vector Store QA Command", () => {
         "--return-metadata",
       ]);
 
-      const formattedData = (outputUtils.formatOutput as jest.Mock).mock
-        .calls[0][0];
+      const formattedData = mockFormatOutput.mock.calls[0]?.[0];
       expect(typeof formattedData[0].metadata).toBe("object");
       expect(formattedData[0].metadata).toEqual({ key: "value" });
     });
@@ -356,8 +357,7 @@ describe("Vector Store QA Command", () => {
         "json",
       ]);
 
-      const formattedData = (outputUtils.formatOutput as jest.Mock).mock
-        .calls[0][0];
+      const formattedData = mockFormatOutput.mock.calls[0]?.[0];
       expect(typeof formattedData[0].metadata).toBe("object");
       expect(formattedData[0].metadata).toEqual({ key: "value" });
     });
@@ -367,8 +367,7 @@ describe("Vector Store QA Command", () => {
 
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
-      const formattedData = (outputUtils.formatOutput as jest.Mock).mock
-        .calls[0][0];
+      const formattedData = mockFormatOutput.mock.calls[0]?.[0];
       expect(formattedData[0]).not.toHaveProperty("metadata");
     });
   });
@@ -498,9 +497,7 @@ describe("Vector Store QA Command", () => {
 
     it("should handle vector store resolution errors", async () => {
       const error = new Error("Vector store not found");
-      (vectorStoreUtils.resolveVectorStore as jest.Mock).mockRejectedValue(
-        error
-      );
+      mockResolveVectorStore.mockRejectedValue(error);
 
       await command.parseAsync(["node", "qa", "nonexistent-store", "question"]);
 
@@ -512,9 +509,7 @@ describe("Vector Store QA Command", () => {
     });
 
     it("should handle non-Error rejections", async () => {
-      mockClient.vectorStores.questionAnswering.mockRejectedValue(
-        "Unknown error"
-      );
+      mockClient.vectorStores.questionAnswering.mockRejectedValue("Unknown error");
 
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
@@ -551,7 +546,7 @@ describe("Vector Store QA Command", () => {
         "mxb_test123",
       ]);
 
-      expect(clientUtils.createClient).toHaveBeenCalledWith(
+      expect(mockCreateClient).toHaveBeenCalledWith(
         expect.objectContaining({
           apiKey: "mxb_test123",
         })
@@ -566,7 +561,7 @@ describe("Vector Store QA Command", () => {
     };
 
     it("should use config defaults when options not provided", async () => {
-      (configUtils.loadConfig as jest.Mock).mockReturnValue({
+      mockLoadConfig.mockReturnValue({
         defaults: {
           search: {
             top_k: 12,
@@ -586,7 +581,7 @@ describe("Vector Store QA Command", () => {
     });
 
     it("should override config defaults with command options", async () => {
-      (configUtils.loadConfig as jest.Mock).mockReturnValue({
+      mockLoadConfig.mockReturnValue({
         defaults: {
           search: {
             top_k: 12,
@@ -613,7 +608,7 @@ describe("Vector Store QA Command", () => {
     });
 
     it("should use fallback defaults when config is empty", async () => {
-      (configUtils.loadConfig as jest.Mock).mockReturnValue({});
+      mockLoadConfig.mockReturnValue({});
 
       mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
 
@@ -667,7 +662,7 @@ describe("Vector Store QA Command", () => {
         },
       });
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
+      expect(mockFormatOutput).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             filename: "complex.pdf",

@@ -1,3 +1,12 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
+import type Mixedbread from "@mixedbread/sdk";
 import type { Command } from "commander";
 import { createListCommand } from "../../../src/commands/vector-store/list";
 import * as clientUtils from "../../../src/utils/client";
@@ -6,32 +15,25 @@ import * as outputUtils from "../../../src/utils/output";
 // Mock dependencies
 jest.mock("../../../src/utils/client");
 jest.mock("../../../src/utils/output", () => ({
-  ...jest.requireActual("../../../src/utils/output"),
+  ...(jest.requireActual("../../../src/utils/output") as object),
   formatOutput: jest.fn(),
 }));
 
-// Mock console methods
-const originalConsoleLog = console.log;
-const originalConsoleError = console.error;
-const originalProcessExit = process.exit;
 
-beforeAll(() => {
-  console.log = jest.fn();
-  console.error = jest.fn();
-  process.exit = jest.fn();
-});
+// Explicit mock definitions
+const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
+  typeof clientUtils.createClient
+>;
+const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
+  typeof outputUtils.formatOutput
+>;
 
-afterAll(() => {
-  console.log = originalConsoleLog;
-  console.error = originalConsoleError;
-  process.exit = originalProcessExit;
-});
 
 describe("Vector Store List Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
-      list: jest.Mock;
+      list: jest.MockedFunction<Mixedbread["vectorStores"]["list"]>;
     };
   };
 
@@ -45,8 +47,9 @@ describe("Vector Store List Command", () => {
       },
     };
 
-    (clientUtils.createClient as jest.Mock).mockReturnValue(mockClient);
-    (outputUtils.formatOutput as jest.Mock).mockImplementation(() => {});
+    // Setup default mocks
+    mockCreateClient.mockReturnValue(mockClient as unknown as Mixedbread);
+    mockFormatOutput.mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -60,6 +63,7 @@ describe("Vector Store List Command", () => {
           id: "550e8400-e29b-41d4-a716-446655440021",
           name: "store1",
           created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
           file_counts: { total: 10 },
           usage_bytes: 1048576,
           expires_at: null,
@@ -68,13 +72,14 @@ describe("Vector Store List Command", () => {
           id: "550e8400-e29b-41d4-a716-446655440022",
           name: "store2",
           created_at: "2024-01-02T00:00:00Z",
+          updated_at: "2024-01-02T00:00:00Z",
           file_counts: { total: 5 },
           usage_bytes: 524288,
           expires_at: null,
         },
       ];
 
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData });
+      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
 
       await command.parseAsync(["node", "list"]);
 
@@ -82,7 +87,7 @@ describe("Vector Store List Command", () => {
         limit: 10,
       });
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
+      expect(mockFormatOutput).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             name: expect.any(String),
@@ -103,6 +108,7 @@ describe("Vector Store List Command", () => {
           id: "550e8400-e29b-41d4-a716-446655440021",
           name: "small",
           created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
           file_counts: { total: 1 },
           usage_bytes: 1024, // 1 KB
           expires_at: null,
@@ -111,6 +117,7 @@ describe("Vector Store List Command", () => {
           id: "550e8400-e29b-41d4-a716-446655440022",
           name: "medium",
           created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
           file_counts: { total: 1 },
           usage_bytes: 1048576, // 1 MB
           expires_at: null,
@@ -119,18 +126,18 @@ describe("Vector Store List Command", () => {
           id: "550e8400-e29b-41d4-a716-446655440023",
           name: "large",
           created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
           file_counts: { total: 1 },
           usage_bytes: 1073741824, // 1 GB
           expires_at: null,
         },
       ];
 
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData });
+      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
 
       await command.parseAsync(["node", "list"]);
 
-      const formattedData = (outputUtils.formatOutput as jest.Mock).mock
-        .calls[0][0];
+      const formattedData = mockFormatOutput.mock.calls[0]?.[0] as any;
 
       expect(formattedData[0].usage).toBe("1 KB");
       expect(formattedData[1].usage).toBe("1 MB");
@@ -138,18 +145,18 @@ describe("Vector Store List Command", () => {
     });
 
     it("should handle empty results", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] });
+      mockClient.vectorStores.list.mockResolvedValue({ data: [] } as any);
 
       await command.parseAsync(["node", "list"]);
 
       expect(console.log).toHaveBeenCalledWith("No vector stores found.");
-      expect(outputUtils.formatOutput).not.toHaveBeenCalled();
+      expect(mockFormatOutput).not.toHaveBeenCalled();
     });
   });
 
   describe("Pagination", () => {
     it("should handle custom limit", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] });
+      mockClient.vectorStores.list.mockResolvedValue({ data: [] } as any);
 
       await command.parseAsync(["node", "list", "--limit", "50"]);
 
@@ -175,6 +182,7 @@ describe("Vector Store List Command", () => {
         id: "550e8400-e29b-41d4-a716-446655440021",
         name: "store1",
         created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
         file_counts: { total: 10 },
         usage_bytes: 1048576,
         expires_at: null,
@@ -182,36 +190,30 @@ describe("Vector Store List Command", () => {
     ];
 
     it("should format as table by default", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData });
+      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
 
       await command.parseAsync(["node", "list"]);
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
+      expect(mockFormatOutput).toHaveBeenCalledWith(
         expect.any(Array),
         undefined
       );
     });
 
     it("should format as JSON when specified", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData });
+      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
 
       await command.parseAsync(["node", "list", "--format", "json"]);
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
-        expect.any(Array),
-        "json"
-      );
+      expect(mockFormatOutput).toHaveBeenCalledWith(expect.any(Array), "json");
     });
 
     it("should format as CSV when specified", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData });
+      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
 
       await command.parseAsync(["node", "list", "--format", "csv"]);
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
-        expect.any(Array),
-        "csv"
-      );
+      expect(mockFormatOutput).toHaveBeenCalledWith(expect.any(Array), "csv");
     });
   });
 
@@ -257,11 +259,11 @@ describe("Vector Store List Command", () => {
 
   describe("API key handling", () => {
     it("should use API key from command line", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] });
+      mockClient.vectorStores.list.mockResolvedValue({ data: [] } as any);
 
       await command.parseAsync(["node", "list", "--api-key", "mxb_test123"]);
 
-      expect(clientUtils.createClient).toHaveBeenCalledWith(
+      expect(mockCreateClient).toHaveBeenCalledWith(
         expect.objectContaining({
           apiKey: "mxb_test123",
         })
@@ -269,11 +271,11 @@ describe("Vector Store List Command", () => {
     });
 
     it("should work without explicit API key (uses env/config)", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] });
+      mockClient.vectorStores.list.mockResolvedValue({ data: [] } as any);
 
       await command.parseAsync(["node", "list"]);
 
-      expect(clientUtils.createClient).toHaveBeenCalled();
+      expect(mockCreateClient).toHaveBeenCalled();
     });
   });
 
@@ -284,17 +286,17 @@ describe("Vector Store List Command", () => {
           id: "550e8400-e29b-41d4-a716-446655440021",
           name: "store1",
           created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
           expires_at: null,
           // Missing file_counts and usage_bytes
         },
       ];
 
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData });
+      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
 
       await command.parseAsync(["node", "list"]);
 
-      const formattedData = (outputUtils.formatOutput as jest.Mock).mock
-        .calls[0][0];
+      const formattedData = mockFormatOutput.mock.calls[0]?.[0] as any;
 
       expect(formattedData[0]).toMatchObject({
         id: "550e8400-e29b-41d4-a716-446655440021",
@@ -312,18 +314,18 @@ describe("Vector Store List Command", () => {
           id: "550e8400-e29b-41d4-a716-446655440021",
           name: "huge-store",
           created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
           file_counts: { total: 1000000 },
           usage_bytes: 1099511627776, // 1 TB
           expires_at: null,
         },
       ];
 
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData });
+      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
 
       await command.parseAsync(["node", "list"]);
 
-      const formattedData = (outputUtils.formatOutput as jest.Mock).mock
-        .calls[0][0];
+      const formattedData = mockFormatOutput.mock.calls[0]?.[0] as any;
 
       expect(formattedData[0].files).toBe(1000000);
       expect(formattedData[0].usage).toMatch(/TB$/);

@@ -1,8 +1,17 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import type { Command } from "commander";
 import mockFs from "mock-fs";
 import { createGetCommand } from "../../../src/commands/config/get";
+
 
 describe("Config Get Command", () => {
   const configDir = join(homedir(), ".config", "mixedbread");
@@ -45,7 +54,9 @@ describe("Config Get Command", () => {
       );
 
       // Check that the JSON output contains all expected properties (order-independent)
-      const secondCall = (console.log as jest.Mock).mock.calls[1][0];
+      const secondCall = (
+        console.log as jest.MockedFunction<typeof console.log>
+      ).mock.calls[1][0];
       const parsedOutput = JSON.parse(secondCall);
       expect(parsedOutput).toEqual(testConfig);
     });
@@ -58,7 +69,8 @@ describe("Config Get Command", () => {
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining("Current configuration:")
       );
-      const output = (console.log as jest.Mock).mock.calls[1][0];
+      const output = (console.log as jest.MockedFunction<typeof console.log>)
+        .mock.calls[1][0];
       const config = JSON.parse(output);
       expect(config.version).toBe("1.0");
       expect(config.defaults.upload.strategy).toBe("fast");
@@ -208,7 +220,8 @@ describe("Config Get Command", () => {
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining("Current configuration:")
       );
-      const output = (console.log as jest.Mock).mock.calls[1][0];
+      const output = (console.log as jest.MockedFunction<typeof console.log>)
+        .mock.calls[1][0];
       const config = JSON.parse(output);
       expect(config.version).toBe("1.0");
     });

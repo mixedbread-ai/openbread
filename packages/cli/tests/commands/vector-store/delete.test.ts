@@ -1,3 +1,12 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
+import type Mixedbread from "@mixedbread/sdk";
 import type { Command } from "commander";
 import { createDeleteCommand } from "../../../src/commands/vector-store/delete";
 import * as clientUtils from "../../../src/utils/client";
@@ -7,45 +16,39 @@ import * as vectorStoreUtils from "../../../src/utils/vector-store";
 jest.mock("../../../src/utils/client");
 jest.mock("../../../src/utils/vector-store");
 
-// Mock console methods
-const originalConsoleLog = console.log;
-const originalConsoleError = console.error;
-const originalProcessExit = process.exit;
+// Explicit mock definitions
+const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
+  typeof clientUtils.createClient
+>;
+const mockResolveVectorStore =
+  vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
+    typeof vectorStoreUtils.resolveVectorStore
+  >;
 
-beforeAll(() => {
-  console.log = jest.fn();
-  console.error = jest.fn();
-  process.exit = jest.fn();
-});
-
-afterAll(() => {
-  console.log = originalConsoleLog;
-  console.error = originalConsoleError;
-  process.exit = originalProcessExit;
-});
-
-describe("Vector Store Delete Command", () => {
+describe("Delete Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
-      delete: jest.Mock;
+      delete: jest.MockedFunction<Mixedbread["vectorStores"]["delete"]>;
     };
   };
 
   beforeEach(() => {
     command = createDeleteCommand();
 
-    // Setup mock client
     mockClient = {
       vectorStores: {
         delete: jest.fn(),
       },
     };
 
-    (clientUtils.createClient as jest.Mock).mockReturnValue(mockClient);
-    (vectorStoreUtils.resolveVectorStore as jest.Mock).mockResolvedValue({
+    // Setup default mocks
+    mockCreateClient.mockReturnValue(mockClient as unknown as Mixedbread);
+    mockResolveVectorStore.mockResolvedValue({
       id: "550e8400-e29b-41d4-a716-446655440040",
       name: "test-store",
+      created_at: "2021-01-01",
+      updated_at: "2021-01-01",
     });
   });
 
@@ -55,11 +58,11 @@ describe("Vector Store Delete Command", () => {
 
   describe("Basic deletion", () => {
     it("should delete vector store with force flag", async () => {
-      mockClient.vectorStores.delete.mockResolvedValue({});
+      mockClient.vectorStores.delete.mockResolvedValue({ id: "550e8400-e29b-41d4-a716-446655440040", deleted: true });
 
       await command.parseAsync(["node", "delete", "test-store", "--force"]);
 
-      expect(vectorStoreUtils.resolveVectorStore).toHaveBeenCalledWith(
+      expect(mockResolveVectorStore).toHaveBeenCalledWith(
         mockClient,
         "test-store"
       );
@@ -75,7 +78,7 @@ describe("Vector Store Delete Command", () => {
     });
 
     it("should skip confirmation when force flag is used", async () => {
-      mockClient.vectorStores.delete.mockResolvedValue({});
+      mockClient.vectorStores.delete.mockResolvedValue({ id: "550e8400-e29b-41d4-a716-446655440040", deleted: true });
 
       await command.parseAsync(["node", "delete", "test-store", "--force"]);
 
@@ -101,9 +104,7 @@ describe("Vector Store Delete Command", () => {
 
     it("should handle vector store resolution errors", async () => {
       const error = new Error("Vector store not found");
-      (vectorStoreUtils.resolveVectorStore as jest.Mock).mockRejectedValue(
-        error
-      );
+      mockResolveVectorStore.mockRejectedValue(error);
 
       await command.parseAsync([
         "node",
@@ -134,7 +135,7 @@ describe("Vector Store Delete Command", () => {
 
   describe("Global options", () => {
     it("should support API key option", async () => {
-      mockClient.vectorStores.delete.mockResolvedValue({});
+      mockClient.vectorStores.delete.mockResolvedValue({ id: "550e8400-e29b-41d4-a716-446655440040", deleted: true });
 
       await command.parseAsync([
         "node",
@@ -145,7 +146,7 @@ describe("Vector Store Delete Command", () => {
         "mxb_test123",
       ]);
 
-      expect(clientUtils.createClient).toHaveBeenCalledWith(
+      expect(mockCreateClient).toHaveBeenCalledWith(
         expect.objectContaining({
           apiKey: "mxb_test123",
         })

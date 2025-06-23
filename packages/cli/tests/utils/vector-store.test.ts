@@ -1,8 +1,6 @@
 // Import Jest globals directly
 import {
-  afterAll,
   afterEach,
-  beforeAll,
   beforeEach,
   describe,
   expect,
@@ -16,19 +14,6 @@ import { resolveVectorStore } from "../../src/utils/vector-store";
 // Mock config utils
 jest.mock("../../src/utils/config");
 
-// Mock console methods
-const originalConsoleError = console.error;
-const originalProcessExit = process.exit;
-
-beforeAll(() => {
-  console.error = jest.fn();
-  process.exit = jest.fn();
-});
-
-afterAll(() => {
-  console.error = originalConsoleError;
-  process.exit = originalProcessExit;
-});
 
 describe("Vector Store Utils", () => {
   describe("resolveVectorStore", () => {
@@ -47,9 +32,11 @@ describe("Vector Store Utils", () => {
         },
       };
 
-      (configUtils.resolveVectorStoreName as jest.Mock).mockImplementation(
-        (name) => name
-      );
+      (
+        configUtils.resolveVectorStoreName as jest.MockedFunction<
+          typeof configUtils.resolveVectorStoreName
+        >
+      ).mockImplementation((name) => name);
     });
 
     afterEach(() => {
@@ -102,9 +89,11 @@ describe("Vector Store Utils", () => {
         name: "aliased-store",
       };
 
-      (configUtils.resolveVectorStoreName as jest.Mock).mockReturnValue(
-        "550e8400-e29b-41d4-a716-446655440001"
-      );
+      (
+        configUtils.resolveVectorStoreName as jest.MockedFunction<
+          typeof configUtils.resolveVectorStoreName
+        >
+      ).mockReturnValue("550e8400-e29b-41d4-a716-446655440001");
       mockClient.vectorStores.retrieve.mockResolvedValue(mockVectorStore);
       mockClient.vectorStores.list.mockResolvedValue({ data: [] });
 

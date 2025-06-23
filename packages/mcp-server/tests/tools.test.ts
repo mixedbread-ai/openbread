@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@jest/globals";
 import { type Endpoint, type Filter, type Metadata, query } from "../src/tools";
 
 describe("Endpoint filtering", () => {

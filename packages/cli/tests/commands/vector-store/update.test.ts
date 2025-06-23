@@ -1,3 +1,12 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
+import type Mixedbread from "@mixedbread/sdk";
 import type { Command } from "commander";
 import { createUpdateCommand } from "../../../src/commands/vector-store/update";
 import * as clientUtils from "../../../src/utils/client";
@@ -8,32 +17,29 @@ import * as vectorStoreUtils from "../../../src/utils/vector-store";
 jest.mock("../../../src/utils/client");
 jest.mock("../../../src/utils/vector-store");
 jest.mock("../../../src/utils/output", () => ({
-  ...jest.requireActual("../../../src/utils/output"),
+  ...(jest.requireActual("../../../src/utils/output") as object),
   formatOutput: jest.fn(),
 }));
 
-// Mock console methods
-const originalConsoleLog = console.log;
-const originalConsoleError = console.error;
-const originalProcessExit = process.exit;
 
-beforeAll(() => {
-  console.log = jest.fn();
-  console.error = jest.fn();
-  process.exit = jest.fn();
-});
+// Explicit mock definitions
+const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
+  typeof clientUtils.createClient
+>;
+const mockResolveVectorStore =
+  vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
+    typeof vectorStoreUtils.resolveVectorStore
+  >;
+const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
+  typeof outputUtils.formatOutput
+>;
 
-afterAll(() => {
-  console.log = originalConsoleLog;
-  console.error = originalConsoleError;
-  process.exit = originalProcessExit;
-});
 
 describe("Vector Store Update Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
-      update: jest.Mock;
+      update: jest.MockedFunction<Mixedbread["vectorStores"]["update"]>;
     };
   };
 
@@ -47,12 +53,15 @@ describe("Vector Store Update Command", () => {
       },
     };
 
-    (clientUtils.createClient as jest.Mock).mockReturnValue(mockClient);
-    (vectorStoreUtils.resolveVectorStore as jest.Mock).mockResolvedValue({
+    // Setup default mocks
+    mockCreateClient.mockReturnValue(mockClient as unknown as Mixedbread);
+    mockResolveVectorStore.mockResolvedValue({
       id: "550e8400-e29b-41d4-a716-446655440060",
       name: "test-store",
+      created_at: "2021-01-01",
+      updated_at: "2021-01-01",
     });
-    (outputUtils.formatOutput as jest.Mock).mockImplementation(() => {});
+    mockFormatOutput.mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -67,6 +76,8 @@ describe("Vector Store Update Command", () => {
         description: null,
         expires_after: null,
         metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
       };
 
       mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
@@ -79,7 +90,7 @@ describe("Vector Store Update Command", () => {
         "updated-store",
       ]);
 
-      expect(vectorStoreUtils.resolveVectorStore).toHaveBeenCalledWith(
+      expect(mockResolveVectorStore).toHaveBeenCalledWith(
         mockClient,
         "test-store"
       );
@@ -95,7 +106,7 @@ describe("Vector Store Update Command", () => {
           'Vector store "test-store" updated successfully'
         )
       );
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
+      expect(mockFormatOutput).toHaveBeenCalledWith(
         updatedVectorStore,
         undefined
       );
@@ -108,6 +119,8 @@ describe("Vector Store Update Command", () => {
         description: "Updated description",
         expires_after: null,
         metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
       };
 
       mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
@@ -133,8 +146,10 @@ describe("Vector Store Update Command", () => {
         id: "550e8400-e29b-41d4-a716-446655440060",
         name: "test-store",
         description: null,
-        expires_after: { anchor: "last_active_at", days: 30 },
+        expires_after: { anchor: "last_active_at" as const, days: 30 },
         metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
       };
 
       mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
@@ -166,6 +181,8 @@ describe("Vector Store Update Command", () => {
         description: null,
         expires_after: null,
         metadata,
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
       };
 
       mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
@@ -192,8 +209,10 @@ describe("Vector Store Update Command", () => {
         id: "550e8400-e29b-41d4-a716-446655440060",
         name: "new-name",
         description: "New description",
-        expires_after: { anchor: "last_active_at", days: 7 },
+        expires_after: { anchor: "last_active_at" as const, days: 7 },
         metadata,
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
       };
 
       mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
@@ -257,6 +276,8 @@ describe("Vector Store Update Command", () => {
         description: null,
         expires_after: null,
         metadata: complexMetadata,
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
       };
 
       mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
@@ -285,6 +306,8 @@ describe("Vector Store Update Command", () => {
       description: "Updated",
       expires_after: null,
       metadata: {},
+      created_at: "2021-01-01T00:00:00Z",
+      updated_at: "2021-01-01T00:00:00Z",
     };
 
     it("should format as table by default", async () => {
@@ -298,7 +321,7 @@ describe("Vector Store Update Command", () => {
         "Updated",
       ]);
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
+      expect(mockFormatOutput).toHaveBeenCalledWith(
         updatedVectorStore,
         undefined
       );
@@ -317,10 +340,7 @@ describe("Vector Store Update Command", () => {
         "json",
       ]);
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
-        updatedVectorStore,
-        "json"
-      );
+      expect(mockFormatOutput).toHaveBeenCalledWith(updatedVectorStore, "json");
     });
 
     it("should format as CSV when specified", async () => {
@@ -336,10 +356,7 @@ describe("Vector Store Update Command", () => {
         "csv",
       ]);
 
-      expect(outputUtils.formatOutput).toHaveBeenCalledWith(
-        updatedVectorStore,
-        "csv"
-      );
+      expect(mockFormatOutput).toHaveBeenCalledWith(updatedVectorStore, "csv");
     });
   });
 
@@ -421,9 +438,7 @@ describe("Vector Store Update Command", () => {
 
     it("should handle vector store resolution errors", async () => {
       const error = new Error("Vector store not found");
-      (vectorStoreUtils.resolveVectorStore as jest.Mock).mockRejectedValue(
-        error
-      );
+      mockResolveVectorStore.mockRejectedValue(error);
 
       await command.parseAsync([
         "node",
@@ -466,6 +481,8 @@ describe("Vector Store Update Command", () => {
       description: null,
       expires_after: null,
       metadata: {},
+      created_at: "2021-01-01T00:00:00Z",
+      updated_at: "2021-01-01T00:00:00Z",
     };
 
     it("should support API key option", async () => {
@@ -481,7 +498,7 @@ describe("Vector Store Update Command", () => {
         "mxb_test123",
       ]);
 
-      expect(clientUtils.createClient).toHaveBeenCalledWith(
+      expect(mockCreateClient).toHaveBeenCalledWith(
         expect.objectContaining({
           apiKey: "mxb_test123",
         })

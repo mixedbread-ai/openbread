@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
 import { dynamicTools } from "../src/dynamic-tools";
 import type { Endpoint } from "../src/tools";
@@ -154,7 +155,7 @@ describe("dynamicTools", () => {
 
   describe("invoke_api_endpoint", () => {
     it("should successfully invoke endpoint with valid arguments", async () => {
-      const mockHandler = endpoints[0]?.handler as jest.Mock;
+      const mockHandler = endpoints[0]?.handler as jest.MockedFunction<any>;
       mockHandler.mockClear();
 
       await toolsMap.invoke_api_endpoint.handler(fakeClient, {
@@ -222,6 +223,8 @@ function makeEndpoint(
         required: ["testParam"],
       },
     },
-    handler: jest.fn().mockResolvedValue({ success: true }),
+    handler: (jest.fn() as any).mockResolvedValue({
+      content: [{ type: "text" as const, text: "success" }],
+    }),
   };
 }

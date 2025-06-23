@@ -1,3 +1,5 @@
+// Import Jest globals directly
+import { describe, expect, it } from "@jest/globals";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { JSONSchema } from "../src/compat";
 import {
