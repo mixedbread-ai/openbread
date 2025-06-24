@@ -1,0 +1,76 @@
+name: Prerelease
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Prerelease tag (e.g., beta, alpha, rc)'
+        required: true
+        default: 'beta'
+        type: choice
+        options:
+          - beta
+          - alpha
+          - rc
+          - canary
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  prerelease:
+    name: Prerelease
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm run build
+
+      - name: Enter prerelease mode
+        run: pnpm changeset pre enter ${{ inputs.tag }}
+
+      - name: Version packages
+        run: pnpm changeset version
+
+      - name: Commit version changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore: version packages for ${{ inputs.tag }} release" || echo "No changes to commit"
+
+      - name: Publish prerelease packages
+        run: pnpm changeset publish --tag ${{ inputs.tag }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+
+      - name: Push tags
+        run: git push --follow-tags
+
+      - name: Exit prerelease mode
+        run: |
+          pnpm changeset pre exit || echo "Not in pre mode"
+          git add .
+          git commit -m "chore: exit prerelease mode" || echo "No changes to commit"
+          git push || echo "No changes to push"

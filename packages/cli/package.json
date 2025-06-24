@@ -38,6 +38,7 @@
     "test": "jest",
     "lint": "biome lint --write .",
     "format": "biome format --write .",
+    "check-types": "tsc --noEmit",
     "mxbai": "npx tsx src/bin/mxbai.ts",
     "postinstall": "node ./scripts/postinstall.js",
     "setup-cli": "node ./scripts/setup-cli.js"

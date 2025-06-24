@@ -1,0 +1,39 @@
+name: Changeset Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  validate:
+    name: Validate Changeset
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for changeset
+        run: |
+          # Check if this PR has a changeset
+          if pnpm changeset status --since=origin/main 2>&1 | grep -q "No changesets present"; then
+            echo "⚠️ No changeset found. If this PR includes changes that should be released, please add a changeset."
+            echo "Run 'pnpm changeset' to create one."
+          else
+            echo "✅ Changeset found!"
+          fi
