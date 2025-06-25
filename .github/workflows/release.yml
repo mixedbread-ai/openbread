@@ -51,7 +51,7 @@ jobs:
           version: pnpm changeset version
           commit: 'chore: release packages'
           title: 'chore: release packages'
-          createGithubReleases: aggregate
+          createGithubReleases: "aggregate"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
