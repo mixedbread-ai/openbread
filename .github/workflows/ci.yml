@@ -14,6 +14,7 @@ jobs:
   ci:
     name: CI
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         node-version: [20.x, 22.x]
@@ -52,3 +53,4 @@ jobs:
 
       - name: Test
         run: pnpm run test
+        timeout-minutes: 10
