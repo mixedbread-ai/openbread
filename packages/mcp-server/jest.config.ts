@@ -6,6 +6,7 @@ const config: JestConfigWithTsJest = {
   moduleNameMapper: {
     "^@mixedbread/mcp$": "<rootDir>/src/index.ts",
     "^@mixedbread/mcp/(.*)$": "<rootDir>/src/$1",
+    "^@cloudflare/cabidela$": "<rootDir>/tests/__mocks__/@cloudflare/cabidela.ts",
   },
   modulePathIgnorePatterns: ["<rootDir>/dist/"],
   testPathIgnorePatterns: ["scripts"],
