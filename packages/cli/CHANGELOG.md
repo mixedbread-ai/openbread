@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1
+
+### Patch Changes
+
+- 051bd82: - Removed `--show-chunks` and add `--file-search`
+  - Changed `rerank` default value to `false`
+
 ## 0.1.5
 
 ### Patch Changes
