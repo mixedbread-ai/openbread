@@ -31,7 +31,7 @@ const SearchVectorStoreSchema = GlobalOptionsSchema.extend({
     .optional(),
   returnMetadata: z.boolean().optional(),
   rerank: z.boolean().optional(),
-  showChunks: z.boolean().optional(),
+  fileSearch: z.boolean().optional(),
 });
 
 type ParsedSearchOptions = z.infer<typeof SearchVectorStoreSchema> & {
@@ -75,7 +75,7 @@ interface SearchOptions extends GlobalOptions {
   threshold?: number;
   returnMetadata?: boolean;
   rerank?: boolean;
-  showChunks?: boolean;
+  fileSearch?: boolean;
 }
 
 export function createSearchCommand(): Command {
@@ -88,7 +88,7 @@ export function createSearchCommand(): Command {
       .option("--threshold <score>", "Minimum score threshold")
       .option("--return-metadata", "Return metadata")
       .option("--rerank", "Enable reranking")
-      .option("--show-chunks", "Display matching chunks", false)
+      .option("--file-search", "Search files instead of chunks", false)
   );
 
   command.action(
@@ -115,14 +115,14 @@ export function createSearchCommand(): Command {
         const rerank =
           parsedOptions.rerank ?? config.defaults?.search?.rerank ?? false;
 
-        const results = parsedOptions.showChunks
-          ? await searchVectorStoreChunks(client, {
+        const results = parsedOptions.fileSearch
+          ? await searchVectorStoreFiles(client, {
               ...parsedOptions,
               vectorStoreId: vectorStore.id,
               topK,
               rerank,
             })
-          : await searchVectorStoreFiles(client, {
+          : await searchVectorStoreChunks(client, {
               ...parsedOptions,
               vectorStoreId: vectorStore.id,
               topK,
@@ -150,7 +150,7 @@ export function createSearchCommand(): Command {
             vector_store_id: result.vector_store_id,
           };
 
-          if (parsedOptions.showChunks) {
+          if (!parsedOptions.fileSearch) {
             output.chunk_index = result.chunk_index;
           }
 

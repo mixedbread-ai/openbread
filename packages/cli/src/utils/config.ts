@@ -77,7 +77,7 @@ const DEFAULT_CONFIG: CliConfig = {
     },
     search: {
       top_k: 10,
-      rerank: true,
+      rerank: false,
     },
   },
   aliases: {},
