@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5
+
+### Patch Changes
+
+- a9d45ff: Added publishing flow
+
 ## 0.1.3 (2025-06-20)
 
 ### Fixed
