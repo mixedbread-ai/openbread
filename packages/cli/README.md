@@ -63,7 +63,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.json
 ### Search & Query
 
 - `mxbai vs search <name-or-id> <query>` - Search vector store
-  - Options: `--top-k <n>`, `--threshold <score>`, `--return-metadata`, `--rerank`, `--show-chunks`
+  - Options: `--top-k <n>`, `--threshold <score>`, `--return-metadata`, `--rerank`, `--file-search`
 - `mxbai vs qa <name-or-id> <question>` - Ask questions about content
   - Options: `--top-k <n>`, `--threshold <score>`, `--return-metadata`
 

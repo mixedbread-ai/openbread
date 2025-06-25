@@ -88,7 +88,7 @@ describe("Vector Store Search Command", () => {
     jest.clearAllMocks();
   });
 
-  describe("Basic file search", () => {
+  describe("Basic chunk search (default)", () => {
     const mockSearchResults: FileSearchResponse = {
       data: [
         {
@@ -112,8 +112,32 @@ describe("Vector Store Search Command", () => {
       ],
     };
 
-    it("should search files in vector store with default options", async () => {
-      mockClient.vectorStores.files.search.mockResolvedValue(mockSearchResults);
+    it("should search chunks in vector store with default options", async () => {
+      const mockChunkResults: VectorStoreSearchResponse = {
+        data: [
+          {
+            filename: "document1.pdf",
+            score: 0.95,
+            vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
+            chunk_index: 0,
+            metadata: { page: 1 },
+            type: "text",
+            file_id: "123",
+            text: "This is a test text",
+          },
+          {
+            filename: "document2.txt",
+            score: 0.87,
+            vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
+            chunk_index: 1,
+            metadata: { category: "manual" },
+            type: "text",
+            file_id: "456",
+            text: "Another test text",
+          },
+        ],
+      };
+      mockClient.vectorStores.search.mockResolvedValue(mockChunkResults);
 
       await command.parseAsync([
         "node",
@@ -124,11 +148,11 @@ describe("Vector Store Search Command", () => {
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
         expect.objectContaining({
-          vectorStores: expect.any(Object)
+          vectorStores: expect.any(Object),
         }),
         "test-store"
       );
-      expect(mockClient.vectorStores.files.search).toHaveBeenCalledWith({
+      expect(mockClient.vectorStores.search).toHaveBeenCalledWith({
         query: "machine learning",
         vector_store_ids: ["550e8400-e29b-41d4-a716-446655440080"],
         top_k: 5,
@@ -150,11 +174,13 @@ describe("Vector Store Search Command", () => {
             filename: "document1.pdf",
             score: "0.95",
             vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
+            chunk_index: 0,
           }),
           expect.objectContaining({
             filename: "document2.txt",
             score: "0.87",
             vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
+            chunk_index: 1,
           }),
         ]),
         undefined
@@ -173,7 +199,7 @@ describe("Vector Store Search Command", () => {
         "20",
       ]);
 
-      expect(mockClient.vectorStores.files.search).toHaveBeenCalledWith(
+      expect(mockClient.vectorStores.search).toHaveBeenCalledWith(
         expect.objectContaining({
           top_k: 20,
         })
@@ -192,7 +218,7 @@ describe("Vector Store Search Command", () => {
         "0.8",
       ]);
 
-      expect(mockClient.vectorStores.files.search).toHaveBeenCalledWith(
+      expect(mockClient.vectorStores.search).toHaveBeenCalledWith(
         expect.objectContaining({
           search_options: expect.objectContaining({
             score_threshold: 0.8,
@@ -235,7 +261,7 @@ describe("Vector Store Search Command", () => {
         "--rerank",
       ]);
 
-      expect(mockClient.vectorStores.files.search).toHaveBeenCalledWith(
+      expect(mockClient.vectorStores.search).toHaveBeenCalledWith(
         expect.objectContaining({
           search_options: expect.objectContaining({
             rerank: true,
@@ -261,44 +287,41 @@ describe("Vector Store Search Command", () => {
     });
   });
 
-  describe("Chunk search", () => {
-    const mockChunkResults: VectorStoreSearchResponse = {
-      data: [
-        {
-          filename: "document1.pdf",
-          score: 0.95,
-          vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
-          chunk_index: 0,
-          metadata: { page: 1 },
-          type: "text",
-          file_id: "123",
-          text: "This is a test text",
-        },
-        {
-          filename: "document1.pdf",
-          score: 0.88,
-          vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
-          chunk_index: 3,
-          metadata: { page: 2 },
-          type: "text",
-          file_id: "123",
-          text: "This is a test text",
-        },
-      ],
-    };
-
-    it("should search chunks when show-chunks flag is enabled", async () => {
-      mockClient.vectorStores.search.mockResolvedValue(mockChunkResults);
+  describe("File search", () => {
+    it("should search files when file-search flag is enabled", async () => {
+      const mockFileResults: FileSearchResponse = {
+        data: [
+          {
+            filename: "document1.pdf",
+            score: 0.95,
+            vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
+            metadata: { author: "John Doe" },
+            id: "123",
+            created_at: "2021-01-01",
+            chunks: [],
+          },
+          {
+            filename: "document2.txt",
+            score: 0.87,
+            vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
+            metadata: { category: "manual" },
+            id: "456",
+            created_at: "2021-01-01",
+            chunks: [],
+          },
+        ],
+      };
+      mockClient.vectorStores.files.search.mockResolvedValue(mockFileResults);
 
       await command.parseAsync([
         "node",
         "search",
         "test-store",
         "query",
-        "--show-chunks",
+        "--file-search",
       ]);
 
-      expect(mockClient.vectorStores.search).toHaveBeenCalledWith({
+      expect(mockClient.vectorStores.files.search).toHaveBeenCalledWith({
         query: "query",
         vector_store_ids: ["550e8400-e29b-41d4-a716-446655440080"],
         top_k: 5,
@@ -310,19 +333,32 @@ describe("Vector Store Search Command", () => {
       });
 
       const formattedData = mockFormatOutput.mock.calls[0]?.[0];
-      expect(formattedData?.[0]).toHaveProperty("chunk_index", 0);
-      expect(formattedData?.[1]).toHaveProperty("chunk_index", 3);
+      expect(formattedData?.[0]).not.toHaveProperty("chunk_index");
+      expect(formattedData?.[1]).not.toHaveProperty("chunk_index");
     });
 
-    it("should search chunks with all options", async () => {
-      mockClient.vectorStores.search.mockResolvedValue(mockChunkResults);
+    it("should search files with all options", async () => {
+      const mockFileResults: FileSearchResponse = {
+        data: [
+          {
+            filename: "document1.pdf",
+            score: 0.95,
+            vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
+            metadata: { author: "John Doe" },
+            id: "123",
+            created_at: "2021-01-01",
+            chunks: [],
+          },
+        ],
+      };
+      mockClient.vectorStores.files.search.mockResolvedValue(mockFileResults);
 
       await command.parseAsync([
         "node",
         "search",
         "test-store",
         "query",
-        "--show-chunks",
+        "--file-search",
         "--top-k",
         "15",
         "--threshold",
@@ -331,7 +367,7 @@ describe("Vector Store Search Command", () => {
         "--rerank",
       ]);
 
-      expect(mockClient.vectorStores.search).toHaveBeenCalledWith({
+      expect(mockClient.vectorStores.files.search).toHaveBeenCalledWith({
         query: "query",
         vector_store_ids: ["550e8400-e29b-41d4-a716-446655440080"],
         top_k: 15,
@@ -345,22 +381,23 @@ describe("Vector Store Search Command", () => {
   });
 
   describe("Output formatting", () => {
-    const mockResults: FileSearchResponse = {
+    const mockResults: VectorStoreSearchResponse = {
       data: [
         {
           filename: "test.pdf",
           score: 0.9,
           vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
+          chunk_index: 0,
           metadata: { key: "value" },
-          id: "123",
-          created_at: "2021-01-01",
-          chunks: [],
+          type: "text",
+          file_id: "123",
+          text: "This is a test text",
         },
       ],
     };
 
     it("should format as table by default", async () => {
-      mockClient.vectorStores.files.search.mockResolvedValue(mockResults);
+      mockClient.vectorStores.search.mockResolvedValue(mockResults);
 
       await command.parseAsync(["node", "search", "test-store", "query"]);
 
@@ -371,7 +408,7 @@ describe("Vector Store Search Command", () => {
     });
 
     it("should format as JSON when specified", async () => {
-      mockClient.vectorStores.files.search.mockResolvedValue(mockResults);
+      mockClient.vectorStores.search.mockResolvedValue(mockResults);
 
       await command.parseAsync([
         "node",
@@ -386,7 +423,7 @@ describe("Vector Store Search Command", () => {
     });
 
     it("should format as CSV when specified", async () => {
-      mockClient.vectorStores.files.search.mockResolvedValue(mockResults);
+      mockClient.vectorStores.search.mockResolvedValue(mockResults);
 
       await command.parseAsync([
         "node",
@@ -513,7 +550,7 @@ describe("Vector Store Search Command", () => {
   describe("Error handling", () => {
     it("should handle search API errors", async () => {
       const error = new Error("API Error: Rate limit exceeded");
-      mockClient.vectorStores.files.search.mockRejectedValue(error);
+      mockClient.vectorStores.search.mockRejectedValue(error);
 
       await command.parseAsync(["node", "search", "test-store", "query"]);
 
@@ -543,7 +580,7 @@ describe("Vector Store Search Command", () => {
     });
 
     it("should handle non-Error rejections", async () => {
-      mockClient.vectorStores.files.search.mockRejectedValue("Unknown error");
+      mockClient.vectorStores.search.mockRejectedValue("Unknown error");
 
       await command.parseAsync(["node", "search", "test-store", "query"]);
 
@@ -556,22 +593,23 @@ describe("Vector Store Search Command", () => {
   });
 
   describe("Global options", () => {
-    const mockResults: FileSearchResponse = {
+    const mockResults: VectorStoreSearchResponse = {
       data: [
         {
           filename: "test.pdf",
           score: 0.9,
           vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
+          chunk_index: 0,
           metadata: {},
-          id: "123",
-          created_at: "2021-01-01",
-          chunks: [],
+          type: "text",
+          file_id: "123",
+          text: "This is a test text",
         },
       ],
     };
 
     it("should support API key option", async () => {
-      mockClient.vectorStores.files.search.mockResolvedValue(mockResults);
+      mockClient.vectorStores.search.mockResolvedValue(mockResults);
 
       await command.parseAsync([
         "node",
@@ -602,11 +640,11 @@ describe("Vector Store Search Command", () => {
         version: "1.0.0",
       });
 
-      mockClient.vectorStores.files.search.mockResolvedValue({ data: [] });
+      mockClient.vectorStores.search.mockResolvedValue({ data: [] });
 
       await command.parseAsync(["node", "search", "test-store", "query"]);
 
-      expect(mockClient.vectorStores.files.search).toHaveBeenCalledWith(
+      expect(mockClient.vectorStores.search).toHaveBeenCalledWith(
         expect.objectContaining({
           top_k: 15,
           search_options: expect.objectContaining({
@@ -627,7 +665,7 @@ describe("Vector Store Search Command", () => {
         version: "1.0.0",
       });
 
-      mockClient.vectorStores.files.search.mockResolvedValue({ data: [] });
+      mockClient.vectorStores.search.mockResolvedValue({ data: [] });
 
       await command.parseAsync([
         "node",
@@ -638,7 +676,7 @@ describe("Vector Store Search Command", () => {
         "25",
       ]);
 
-      expect(mockClient.vectorStores.files.search).toHaveBeenCalledWith(
+      expect(mockClient.vectorStores.search).toHaveBeenCalledWith(
         expect.objectContaining({
           top_k: 25,
           search_options: expect.objectContaining({
