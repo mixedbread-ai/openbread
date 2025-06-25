@@ -34,6 +34,9 @@ pkg.types = pkg.types.replace('dist/', '');
 pkg.files = ['*.js', '*.mjs', '*.d.ts', 'README.md', 'LICENSE', 'CHANGELOG.md'];
 // Remove dev dependencies
 delete pkg.devDependencies;
+// Remove scripts that prevent publishing
+delete pkg.scripts.prepublishOnly;
+delete pkg.scripts.prepack;
 // Fix exports paths
 if (pkg.exports) {
   for (const key in pkg.exports) {
