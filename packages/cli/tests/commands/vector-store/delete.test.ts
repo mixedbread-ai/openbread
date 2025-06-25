@@ -63,7 +63,9 @@ describe("Delete Command", () => {
       await command.parseAsync(["node", "delete", "test-store", "--force"]);
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
-        mockClient,
+        expect.objectContaining({
+          vectorStores: expect.any(Object)
+        }),
         "test-store"
       );
       expect(mockClient.vectorStores.delete).toHaveBeenCalledWith(

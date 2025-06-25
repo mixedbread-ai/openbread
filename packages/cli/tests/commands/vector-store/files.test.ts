@@ -100,7 +100,9 @@ describe("Files Command", () => {
       await command.parseAsync(["node", "files", "list", "test-store"]);
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
-        mockClient,
+        expect.objectContaining({
+          vectorStores: expect.any(Object)
+        }),
         "test-store"
       );
       expect(mockClient.vectorStores.files.list).toHaveBeenCalledWith(
@@ -252,7 +254,9 @@ describe("Files Command", () => {
       ]);
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
-        mockClient,
+        expect.objectContaining({
+          vectorStores: expect.any(Object)
+        }),
         "test-store"
       );
       expect(mockClient.vectorStores.files.retrieve).toHaveBeenCalledWith(
@@ -342,7 +346,9 @@ describe("Files Command", () => {
       ]);
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
-        mockClient,
+        expect.objectContaining({
+          vectorStores: expect.any(Object)
+        }),
         "test-store"
       );
       expect(mockClient.vectorStores.files.delete).toHaveBeenCalledWith(

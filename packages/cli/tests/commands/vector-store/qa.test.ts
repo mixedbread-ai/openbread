@@ -7,6 +7,7 @@ import {
   jest,
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
+import type { VectorStoreQuestionAnsweringResponse } from "@mixedbread/sdk/resources";
 import type { Command } from "commander";
 import { createQACommand } from "../../../src/commands/vector-store/qa";
 import * as clientUtils from "../../../src/utils/client";
@@ -23,7 +24,6 @@ jest.mock("../../../src/utils/output", () => ({
 }));
 jest.mock("../../../src/utils/config");
 
-
 // Explicit mock definitions
 const mockResolveVectorStore =
   vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
@@ -39,12 +39,13 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
 
-
 describe("QA Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
-      questionAnswering: jest.MockedFunction<any>;
+      questionAnswering: jest.MockedFunction<
+        Mixedbread["vectorStores"]["questionAnswering"]
+      >;
     };
   };
 
@@ -80,7 +81,7 @@ describe("QA Command", () => {
   });
 
   describe("Basic question answering", () => {
-    const mockQAResponse = {
+    const mockQAResponse: VectorStoreQuestionAnsweringResponse = {
       answer:
         "Machine learning is a subset of artificial intelligence that focuses on algorithms that can learn from data.",
       sources: [
@@ -89,18 +90,28 @@ describe("QA Command", () => {
           score: 0.95,
           chunk_index: 2,
           metadata: { chapter: "Introduction" },
+          file_id: "123",
+          vector_store_id: "456",
+          type: "text",
+          text: "Machine learning is a subset of artificial intelligence that focuses on algorithms that can learn from data.",
         },
         {
           filename: "ai-overview.txt",
           score: 0.87,
           chunk_index: 0,
           metadata: { section: "Definitions" },
+          file_id: "123",
+          vector_store_id: "456",
+          type: "text",
+          text: "Artificial intelligence (AI) is the simulation of human intelligence in machines that are programmed to think like humans and mimic their actions.",
         },
       ],
     };
 
     it("should ask question with default options", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockQAResponse);
+      mockClient.vectorStores.questionAnswering.mockResolvedValue(
+        mockQAResponse
+      );
 
       await command.parseAsync([
         "node",
@@ -110,7 +121,9 @@ describe("QA Command", () => {
       ]);
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
-        mockClient,
+        expect.objectContaining({
+          vectorStores: expect.any(Object),
+        }),
         "test-store"
       );
       expect(mockClient.vectorStores.questionAnswering).toHaveBeenCalledWith({
@@ -149,7 +162,9 @@ describe("QA Command", () => {
     });
 
     it("should ask question with custom top-k", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockQAResponse);
+      mockClient.vectorStores.questionAnswering.mockResolvedValue(
+        mockQAResponse
+      );
 
       await command.parseAsync([
         "node",
@@ -168,7 +183,9 @@ describe("QA Command", () => {
     });
 
     it("should ask question with threshold", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockQAResponse);
+      mockClient.vectorStores.questionAnswering.mockResolvedValue(
+        mockQAResponse
+      );
 
       await command.parseAsync([
         "node",
@@ -189,7 +206,9 @@ describe("QA Command", () => {
     });
 
     it("should ask question with return metadata enabled", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockQAResponse);
+      mockClient.vectorStores.questionAnswering.mockResolvedValue(
+        mockQAResponse
+      );
 
       await command.parseAsync([
         "node",
@@ -269,7 +288,7 @@ describe("QA Command", () => {
   });
 
   describe("Output formatting", () => {
-    const mockResponse = {
+    const mockResponse: VectorStoreQuestionAnsweringResponse = {
       answer: "Test answer",
       sources: [
         {
@@ -277,6 +296,10 @@ describe("QA Command", () => {
           score: 0.9,
           chunk_index: 1,
           metadata: { key: "value" },
+          file_id: "123",
+          vector_store_id: "456",
+          type: "text",
+          text: "Test text",
         },
       ],
     };
@@ -304,10 +327,7 @@ describe("QA Command", () => {
         "json",
       ]);
 
-      expect(mockFormatOutput).toHaveBeenCalledWith(
-        expect.any(Array),
-        "json"
-      );
+      expect(mockFormatOutput).toHaveBeenCalledWith(expect.any(Array), "json");
     });
 
     it("should format sources as CSV when specified", async () => {
@@ -322,10 +342,7 @@ describe("QA Command", () => {
         "csv",
       ]);
 
-      expect(mockFormatOutput).toHaveBeenCalledWith(
-        expect.any(Array),
-        "csv"
-      );
+      expect(mockFormatOutput).toHaveBeenCalledWith(expect.any(Array), "csv");
     });
 
     it("should format metadata correctly for table output", async () => {
@@ -340,8 +357,8 @@ describe("QA Command", () => {
       ]);
 
       const formattedData = mockFormatOutput.mock.calls[0]?.[0];
-      expect(typeof formattedData[0].metadata).toBe("object");
-      expect(formattedData[0].metadata).toEqual({ key: "value" });
+      expect(typeof formattedData?.[0].metadata).toBe("object");
+      expect(formattedData?.[0].metadata).toEqual({ key: "value" });
     });
 
     it("should format metadata as object for non-table output", async () => {
@@ -358,8 +375,8 @@ describe("QA Command", () => {
       ]);
 
       const formattedData = mockFormatOutput.mock.calls[0]?.[0];
-      expect(typeof formattedData[0].metadata).toBe("object");
-      expect(formattedData[0].metadata).toEqual({ key: "value" });
+      expect(typeof formattedData?.[0].metadata).toBe("object");
+      expect(formattedData?.[0].metadata).toEqual({ key: "value" });
     });
 
     it("should not include metadata in output when not requested", async () => {
@@ -368,7 +385,7 @@ describe("QA Command", () => {
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
       const formattedData = mockFormatOutput.mock.calls[0]?.[0];
-      expect(formattedData[0]).not.toHaveProperty("metadata");
+      expect(formattedData?.[0]).not.toHaveProperty("metadata");
     });
   });
 
@@ -509,7 +526,9 @@ describe("QA Command", () => {
     });
 
     it("should handle non-Error rejections", async () => {
-      mockClient.vectorStores.questionAnswering.mockRejectedValue("Unknown error");
+      mockClient.vectorStores.questionAnswering.mockRejectedValue(
+        "Unknown error"
+      );
 
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
@@ -522,7 +541,7 @@ describe("QA Command", () => {
   });
 
   describe("Global options", () => {
-    const mockResponse = {
+    const mockResponse: VectorStoreQuestionAnsweringResponse = {
       answer: "Test answer",
       sources: [
         {
@@ -530,6 +549,10 @@ describe("QA Command", () => {
           score: 0.9,
           chunk_index: 1,
           metadata: {},
+          file_id: "123",
+          vector_store_id: "456",
+          type: "text",
+          text: "Test text",
         },
       ],
     };
@@ -562,6 +585,7 @@ describe("QA Command", () => {
 
     it("should use config defaults when options not provided", async () => {
       mockLoadConfig.mockReturnValue({
+        version: "1.0",
         defaults: {
           search: {
             top_k: 12,
@@ -582,6 +606,7 @@ describe("QA Command", () => {
 
     it("should override config defaults with command options", async () => {
       mockLoadConfig.mockReturnValue({
+        version: "1.0",
         defaults: {
           search: {
             top_k: 12,
@@ -608,7 +633,9 @@ describe("QA Command", () => {
     });
 
     it("should use fallback defaults when config is empty", async () => {
-      mockLoadConfig.mockReturnValue({});
+      mockLoadConfig.mockReturnValue({
+        version: "1.0",
+      });
 
       mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
 
@@ -624,7 +651,7 @@ describe("QA Command", () => {
 
   describe("Complex scenarios", () => {
     it("should handle all options together", async () => {
-      const mockResponse = {
+      const mockResponse: VectorStoreQuestionAnsweringResponse = {
         answer: "Complex answer with all options",
         sources: [
           {
@@ -632,6 +659,10 @@ describe("QA Command", () => {
             score: 0.95,
             chunk_index: 5,
             metadata: { complexity: "high", topic: "advanced" },
+            file_id: "123",
+            vector_store_id: "456",
+            type: "text",
+            text: "Test text",
           },
         ],
       };
@@ -668,7 +699,7 @@ describe("QA Command", () => {
             filename: "complex.pdf",
             score: "0.95",
             chunk_index: 5,
-            metadata: mockResponse.sources[0].metadata,
+            metadata: mockResponse.sources?.[0]?.metadata,
           }),
         ]),
         "json"

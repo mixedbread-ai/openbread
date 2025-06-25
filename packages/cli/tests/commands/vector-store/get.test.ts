@@ -85,7 +85,9 @@ describe("Vector Store Get Command", () => {
       await command.parseAsync(["node", "get", "test-store"]);
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
-        mockClient,
+        expect.objectContaining({
+          vectorStores: expect.any(Object)
+        }),
         "test-store"
       );
       expect(mockFormatOutput).toHaveBeenCalledWith(

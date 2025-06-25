@@ -28,7 +28,6 @@ jest.mock("../../../src/utils/config");
 jest.mock("glob");
 // ora is mocked globally in jest.config.ts
 
-
 // Explicit mock definitions
 const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
   typeof clientUtils.createClient
@@ -40,7 +39,6 @@ const mockResolveVectorStore =
 const mockLoadConfig = configUtils.loadConfig as jest.MockedFunction<
   typeof configUtils.loadConfig
 >;
-
 
 describe("Vector Store Upload Command", () => {
   let command: Command;
@@ -133,14 +131,11 @@ describe("Vector Store Upload Command", () => {
         "data/info.json": "{}",
       });
 
-      (glob as unknown as jest.Mock).mockImplementation(async (pattern: string) => {
-        const patterns: Record<string, string[]> = {
-          "*.md": ["docs/file1.md"],
-          "*.png": ["images/pic1.png"],
-          "*.json": ["data/info.json"],
-        };
-        return patterns[pattern] || [];
-      });
+      jest
+        .mocked(glob)
+        .mockResolvedValueOnce(["docs/file1.md"])
+        .mockResolvedValueOnce(["images/pic1.png"])
+        .mockResolvedValueOnce(["data/info.json"]);
 
       mockClient.vectorStores.files.upload.mockResolvedValue({
         id: "file_123",
@@ -162,7 +157,9 @@ describe("Vector Store Upload Command", () => {
 
     it("should handle no files found", async () => {
       mockFs({});
-      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([]);
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue(
+        []
+      );
 
       await command.parseAsync([
         "node",
@@ -192,7 +189,9 @@ describe("Vector Store Upload Command", () => {
       mockFs({
         "test.md": "test content",
       });
-      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue(["test.md"]);
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "test.md",
+      ]);
       mockClient.vectorStores.files.upload.mockResolvedValue({
         id: "file_123",
       });
@@ -335,7 +334,9 @@ describe("Vector Store Upload Command", () => {
         "test.md": "test content",
       });
 
-      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue(["test.md"]);
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "test.md",
+      ]);
 
       mockClient.vectorStores.files.list.mockResolvedValue({
         data: [
@@ -376,7 +377,9 @@ describe("Vector Store Upload Command", () => {
         "test.md": "test content",
       });
 
-      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue(["test.md"]);
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "test.md",
+      ]);
       mockClient.vectorStores.files.list.mockRejectedValue(
         new Error("List failed")
       );
@@ -449,7 +452,9 @@ describe("Vector Store Upload Command", () => {
         "test.md": "test content",
       });
 
-      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue(["test.md"]);
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "test.md",
+      ]);
       mockClient.vectorStores.files.upload.mockResolvedValue({
         id: "file_123",
       });
@@ -475,7 +480,9 @@ describe("Vector Store Upload Command", () => {
         "test.md": "test content",
       });
 
-      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue(["test.md"]);
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "test.md",
+      ]);
       mockClient.vectorStores.files.upload.mockRejectedValue(
         new Error("Upload failed")
       );

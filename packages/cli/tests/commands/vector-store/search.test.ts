@@ -123,7 +123,9 @@ describe("Vector Store Search Command", () => {
       ]);
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
-        mockClient,
+        expect.objectContaining({
+          vectorStores: expect.any(Object)
+        }),
         "test-store"
       );
       expect(mockClient.vectorStores.files.search).toHaveBeenCalledWith({

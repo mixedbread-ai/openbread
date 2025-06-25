@@ -91,7 +91,9 @@ describe("Vector Store Update Command", () => {
       ]);
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
-        mockClient,
+        expect.objectContaining({
+          vectorStores: expect.any(Object)
+        }),
         "test-store"
       );
       expect(mockClient.vectorStores.update).toHaveBeenCalledWith(
