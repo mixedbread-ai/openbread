@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2
+
+### Patch Changes
+
+- b1e4866: Fix postinstall script error by including scripts directory in published package
+
 ## 0.2.1
 
 ### Patch Changes
