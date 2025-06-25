@@ -58,6 +58,7 @@
     "zod": "^3.25.56"
   },
   "devDependencies": {
+    "@jest/globals": "^30.0.2",
     "@types/inquirer": "^9.0.7",
     "@types/jest": "^29.4.0",
     "@types/mime-types": "^3.0.1",

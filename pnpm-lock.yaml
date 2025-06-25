@@ -60,6 +60,9 @@ importers:
         specifier: ^3.25.56
         version: 3.25.67
     devDependencies:
+      '@jest/globals':
+        specifier: ^30.0.2
+        version: 30.0.2
       '@types/inquirer':
         specifier: ^9.0.7
         version: 9.0.8
