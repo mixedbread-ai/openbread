@@ -18,7 +18,7 @@
     "test": "jest",
     "build": "bash ./build",
     "prepack": "echo 'to pack, run pnpm build && (cd dist; pnpm pack)' && exit 1",
-    "prepublishOnly": "pnpm build",
+    "prepublishOnly": "echo 'to publish, run pnpm build && (cd dist; pnpm publish)' && exit 1",
     "tsn": "ts-node -r tsconfig-paths/register",
     "lint": "biome lint --write .",
     "format": "biome format --write .",
@@ -35,11 +35,6 @@
   "bin": {
     "mcp-server": "dist/index.js"
   },
-  "files": [
-    "dist/**/*",
-    "README.md",
-    "CHANGELOG.md"
-  ],
   "devDependencies": {
     "@jest/globals": "^30.0.2",
     "@types/jest": "^29.4.0",

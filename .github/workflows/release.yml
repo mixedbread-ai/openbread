@@ -43,15 +43,55 @@ jobs:
       - name: Build packages
         run: pnpm run build
 
-      - name: Create Release Pull Request or Publish
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: pnpm changeset publish
-          version: pnpm changeset version
-          commit: 'chore: release packages'
-          title: 'chore: release packages'
-          createGithubReleases: true
+      - name: Check for packages to publish
+        id: check_packages
+        run: |
+          # Check if packages need publishing
+          CLI_VERSION=$(node -p "require('./packages/cli/package.json').version")
+          MCP_VERSION=$(node -p "require('./packages/mcp-server/package.json').version")
+          
+          # Check if versions exist on npm
+          CLI_EXISTS=$(npm view @mixedbread/cli@$CLI_VERSION version 2>/dev/null || echo "")
+          MCP_EXISTS=$(npm view @mixedbread/mcp@$MCP_VERSION version 2>/dev/null || echo "")
+          
+          echo "CLI version $CLI_VERSION exists: $([[ -n \"$CLI_EXISTS\" ]] && echo 'yes' || echo 'no')"
+          echo "MCP version $MCP_VERSION exists: $([[ -n \"$MCP_EXISTS\" ]] && echo 'yes' || echo 'no')"
+          
+          echo "cli_version=$CLI_VERSION" >> $GITHUB_OUTPUT
+          echo "mcp_version=$MCP_VERSION" >> $GITHUB_OUTPUT
+          echo "cli_needs_publish=$([[ -z \"$CLI_EXISTS\" ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+          echo "mcp_needs_publish=$([[ -z \"$MCP_EXISTS\" ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+
+      - name: Publish CLI package
+        if: steps.check_packages.outputs.cli_needs_publish == 'true'
+        run: |
+          cd packages/cli
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish MCP package
+        if: steps.check_packages.outputs.mcp_needs_publish == 'true'
+        run: |
+          cd packages/mcp-server
+          bash ./build
+          cd dist
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Releases
+        run: |
+          if [[ "${{ steps.check_packages.outputs.cli_needs_publish }}" == "true" ]]; then
+            gh release create "cli-v${{ steps.check_packages.outputs.cli_version }}" \
+              --title "CLI v${{ steps.check_packages.outputs.cli_version }}" \
+              --notes "Release of @mixedbread/cli v${{ steps.check_packages.outputs.cli_version }}"
+          fi
+          
+          if [[ "${{ steps.check_packages.outputs.mcp_needs_publish }}" == "true" ]]; then
+            gh release create "mcp-v${{ steps.check_packages.outputs.mcp_version }}" \
+              --title "MCP v${{ steps.check_packages.outputs.mcp_version }}" \
+              --notes "Release of @mixedbread/mcp v${{ steps.check_packages.outputs.mcp_version }}"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
