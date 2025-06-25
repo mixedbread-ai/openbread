@@ -89,25 +89,17 @@ describe("Vector Store Search Command", () => {
   });
 
   describe("Basic chunk search (default)", () => {
-    const mockSearchResults: FileSearchResponse = {
+    const mockChunkResults: VectorStoreSearchResponse = {
       data: [
         {
           filename: "document1.pdf",
           score: 0.95,
           vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
+          chunk_index: 0,
           metadata: { author: "John Doe" },
-          id: "123",
-          created_at: "2021-01-01",
-          chunks: [],
-        },
-        {
-          filename: "document2.txt",
-          score: 0.87,
-          vector_store_id: "550e8400-e29b-41d4-a716-446655440080",
-          metadata: { category: "manual" },
-          id: "123",
-          created_at: "2021-01-01",
-          chunks: [],
+          type: "text",
+          file_id: "123",
+          text: "This is a test text",
         },
       ],
     };
@@ -188,7 +180,7 @@ describe("Vector Store Search Command", () => {
     });
 
     it("should search with custom top-k", async () => {
-      mockClient.vectorStores.files.search.mockResolvedValue(mockSearchResults);
+      mockClient.vectorStores.search.mockResolvedValue(mockChunkResults);
 
       await command.parseAsync([
         "node",
@@ -207,7 +199,7 @@ describe("Vector Store Search Command", () => {
     });
 
     it("should search with threshold", async () => {
-      mockClient.vectorStores.files.search.mockResolvedValue(mockSearchResults);
+      mockClient.vectorStores.search.mockResolvedValue(mockChunkResults);
 
       await command.parseAsync([
         "node",
@@ -228,7 +220,7 @@ describe("Vector Store Search Command", () => {
     });
 
     it("should search with return metadata enabled", async () => {
-      mockClient.vectorStores.files.search.mockResolvedValue(mockSearchResults);
+      mockClient.vectorStores.search.mockResolvedValue(mockChunkResults);
 
       await command.parseAsync([
         "node",
@@ -238,7 +230,7 @@ describe("Vector Store Search Command", () => {
         "--return-metadata",
       ]);
 
-      expect(mockClient.vectorStores.files.search).toHaveBeenCalledWith(
+      expect(mockClient.vectorStores.search).toHaveBeenCalledWith(
         expect.objectContaining({
           search_options: expect.objectContaining({
             return_metadata: true,
@@ -251,7 +243,7 @@ describe("Vector Store Search Command", () => {
     });
 
     it("should search with reranking enabled", async () => {
-      mockClient.vectorStores.files.search.mockResolvedValue(mockSearchResults);
+      mockClient.vectorStores.search.mockResolvedValue(mockChunkResults);
 
       await command.parseAsync([
         "node",
@@ -271,7 +263,7 @@ describe("Vector Store Search Command", () => {
     });
 
     it("should handle empty search results", async () => {
-      mockClient.vectorStores.files.search.mockResolvedValue({ data: [] });
+      mockClient.vectorStores.search.mockResolvedValue({ data: [] });
 
       await command.parseAsync([
         "node",
