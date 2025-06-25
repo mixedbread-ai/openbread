@@ -43,8 +43,20 @@ jobs:
       - name: Build packages
         run: pnpm run build
 
+      - name: Create Release Pull Request or Publish
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm changeset version
+          commit: 'chore: release packages'
+          title: 'chore: release packages'
+          createGithubReleases: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Check for packages to publish
         id: check_packages
+        if: steps.changesets.outputs.hasChangesets == 'false'
         run: |
           # Check if packages need publishing
           CLI_VERSION=$(node -p "require('./packages/cli/package.json').version")
@@ -63,7 +75,7 @@ jobs:
           echo "mcp_needs_publish=$([[ -z \"$MCP_EXISTS\" ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
       - name: Publish CLI package
-        if: steps.check_packages.outputs.cli_needs_publish == 'true'
+        if: steps.changesets.outputs.hasChangesets == 'false' && steps.check_packages.outputs.cli_needs_publish == 'true'
         run: |
           cd packages/cli
           npm publish --access public
@@ -71,7 +83,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish MCP package
-        if: steps.check_packages.outputs.mcp_needs_publish == 'true'
+        if: steps.changesets.outputs.hasChangesets == 'false' && steps.check_packages.outputs.mcp_needs_publish == 'true'
         run: |
           cd packages/mcp-server
           bash ./build
@@ -81,6 +93,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Releases
+        if: steps.changesets.outputs.hasChangesets == 'false'
         run: |
           if [[ "${{ steps.check_packages.outputs.cli_needs_publish }}" == "true" ]]; then
             gh release create "cli-v${{ steps.check_packages.outputs.cli_version }}" \
