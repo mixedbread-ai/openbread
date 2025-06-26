@@ -1,5 +1,14 @@
 # @mixedbread/mcp-server
 
+## 1.0.1
+
+### Patch Changes
+
+- Fixed test warnings for graceful process exit in integration tests
+  - Resolved worker process exit warnings by properly cleaning up timeouts and spawned processes
+  - Added timeout cleanup with unref() to prevent open handles
+  - Fixed test teardown to prevent Jest warnings about leaking processes
+
 ## 1.0.0
 
 ### Major Changes
