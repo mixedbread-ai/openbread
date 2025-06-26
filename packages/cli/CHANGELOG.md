@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.3
+
+### Patch Changes
+
+- 7d40e6e: Use the right vs file offset
+
 ## 0.2.2
 
 ### Patch Changes
