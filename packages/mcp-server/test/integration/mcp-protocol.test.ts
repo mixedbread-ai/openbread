@@ -1,4 +1,3 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
   createMCPListToolsRequest,
   createMCPToolCall,
@@ -14,24 +13,6 @@ jest.mock("../../src/utils.js", () => ({
 }));
 
 describe("MCP Protocol Compliance", () => {
-  let _server: Server;
-
-  beforeEach(async () => {
-    // Import the server setup after mocking - no default export in index.js
-    await import("../../src/index.js");
-    _server = new Server(
-      {
-        name: "mixedbread-mcp-server",
-        version: "1.0.0",
-      },
-      {
-        capabilities: {
-          tools: {},
-        },
-      }
-    );
-  });
-
   describe("Tool Registration", () => {
     it("should register all expected tools", () => {
       const expectedTools = [
@@ -45,8 +26,6 @@ describe("MCP Protocol Compliance", () => {
         "vector_store_file_retrieve",
       ];
 
-      // This test would need the actual server instance to be accessible
-      // For now, we'll just verify the expected tools exist
       expect(expectedTools).toHaveLength(8);
       expect(expectedTools).toContain("vector_store_search");
       expect(expectedTools).toContain("vector_store_list");
