@@ -1,42 +1,31 @@
-# Mixedbread MCP Server
+# @mixedbread/mcp-server
 
 A TypeScript-based MCP (Model Context Protocol) server that provides comprehensive vector store capabilities using Mixedbread's SDK. This server exposes powerful tools for searching, managing, and interacting with vector stores directly from Claude Desktop and other MCP-compatible clients.
+
+## Installation
+
+```bash
+npm install -g @mixedbread/mcp-server
+```
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 20+
-- Mixedbread API key
+- Mixedbread API key from [Mixedbread Dashboard](https://www.platform.mixedbread.com/)
 
-### Installation
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/mixedbread-ai/mixedbread-mcp-server.git
-cd mixedbread-mcp-server
-```
-
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Get your Mixedbread API key from [Mixedbread Dashboard](https://www.platform.mixedbread.com/)
-
-### Running the Server
+### Basic Usage
 
 ```bash
 # Set your API key
 export MIXEDBREAD_API_KEY="your_api_key_here"
 
 # Start the server
-npm start
+mcp-server
 
-# Or for development
-npm run dev
+# Or run directly with npx
+npx @mixedbread/mcp-server
 ```
 
 ## Claude Desktop Integration
@@ -51,9 +40,8 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 {
   "mcpServers": {
     "mixedbread": {
-      "command": "npm",
-      "args": ["start"],
-      "cwd": "/absolute/path/to/mixedbread-mcp-server",
+      "command": "npx",
+      "args": ["@mixedbread/mcp-server"],
       "env": {
         "MIXEDBREAD_API_KEY": "your_api_key_here"
       }
@@ -70,9 +58,8 @@ Edit `%APPDATA%\Claude\claude_desktop_config.json`:
 {
   "mcpServers": {
     "mixedbread": {
-      "command": "npm",
-      "args": ["start"],
-      "cwd": "C:\\path\\to\\mixedbread-mcp-server",
+      "command": "npx",
+      "args": ["@mixedbread/mcp-server"],
       "env": {
         "MIXEDBREAD_API_KEY": "your_api_key_here"
       }
@@ -89,9 +76,8 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
 {
   "mcpServers": {
     "mixedbread": {
-      "command": "npm",
-      "args": ["start"],
-      "cwd": "/home/username/path/to/mixedbread-mcp-server",
+      "command": "npx",
+      "args": ["@mixedbread/mcp-server"],
       "env": {
         "MIXEDBREAD_API_KEY": "your_api_key_here"
       }
@@ -108,9 +94,8 @@ For full functionality including file uploads, configure both the Mixedbread MCP
 {
   "mcpServers": {
     "mixedbread": {
-      "command": "npm",
-      "args": ["start"],
-      "cwd": "/absolute/path/to/mixedbread-mcp-server",
+      "command": "npx",
+      "args": ["@mixedbread/mcp-server"],
       "env": {
         "MIXEDBREAD_API_KEY": "your_api_key_here"
       }
@@ -129,7 +114,6 @@ For full functionality including file uploads, configure both the Mixedbread MCP
 
 **Important Notes:**
 
-- Replace `/absolute/path/to/mixedbread-mcp-server` with the actual absolute path to your cloned repository
 - Replace `your_api_key_here` with your actual Mixedbread API key
 - Replace `/path/to/allowed/directory` with the directory path you want to allow file access from
 - The filesystem MCP server is required for the upload tool to access local files
@@ -209,7 +193,7 @@ Upload a file to a vector store with automatic MIME type detection.
 
 **Requirements:**
 
-- Requires the filesystem MCP server to be configured in Claude Desktop for file access (see example configuration below)
+- Requires the filesystem MCP server to be configured in Claude Desktop for file access (see example configuration above)
 
 **Parameters:**
 
@@ -243,33 +227,111 @@ Once configured with Claude Desktop, you can use natural language to interact wi
 "Find files similar to 'data analysis methodology' in my data-science store"
 ```
 
+## Authentication
+
+The MCP server looks for your API key in this order:
+
+1. `MIXEDBREAD_API_KEY` environment variable
+2. Configuration file (if implemented in future versions)
+
 ## Troubleshooting
 
 ### Common Issues
 
 1. **Server not starting in Claude Desktop**
 
-   - Verify the `cwd` path is absolute and correct
-   - Check that `npm install` has been run in the project directory
+   - Verify the package is installed globally: `npm list -g @mixedbread/mcp-server`
    - Ensure the `MIXEDBREAD_API_KEY` is set correctly
+   - Check Claude Desktop logs for error messages
 
 2. **API key errors**
 
    - Verify your API key is valid at [Mixedbread AI Dashboard](https://www.mixedbread.ai/)
    - Ensure no extra spaces or characters in the key
+   - API key must start with the correct prefix
 
 3. **Permission errors**
 
-   - Make sure Claude Desktop has permission to access the project directory
-   - Verify the project path doesn't contain special characters
+   - Make sure Claude Desktop has permission to execute npm/npx commands
+   - Verify your npm installation and global package permissions
 
-4. **Tool not appearing in Claude**
+4. **Tools not appearing in Claude**
    - Restart Claude Desktop after configuration changes
    - Check the Claude Desktop logs for error messages
    - Verify JSON syntax in the configuration file
+   - Ensure the package is installed and accessible
+
+## Development
+
+This MCP server is built on top of the `@mixedbread/sdk` and provides a bridge between MCP Clients and Mixedbread's vector store capabilities.
+
+### Development Quick Start
+
+#### Prerequisites
+
+- Node.js 20+
+- pnpm (package manager)
+- Git
+
+#### Setup
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/mixedbread-ai/openbread.git
+   cd openbread/packages/mcp-server
+   ```
+
+2. **Install dependencies:**
+
+   ```bash
+   pnpm install
+   ```
+
+3. **Set up your API key:**
+
+   ```bash
+   export MIXEDBREAD_API_KEY=your_api_key_here
+   ```
+
+#### Development Workflow
+
+1. **Start development mode:**
+
+   ```bash
+   pnpm dev
+   ```
+
+2. **Run tests:**
+
+   ```bash
+   # Run all tests
+   pnpm test
+
+   # Run tests in watch mode
+   pnpm test:watch
+
+   # Run tests with coverage
+   pnpm test:coverage
+   ```
+
+3. **Lint and format:**
+
+   ```bash
+   pnpm lint          # Check for issues
+   pnpm format        # Format code
+   pnpm check-types   # Type checking
+   ```
+
+4. **Build:**
+
+   ```bash
+   pnpm build
+   ```
 
 ## Links
 
 - [Mixedbread AI](https://www.mixedbread.com/)
+- [Mixedbread CLI](https://www.npmjs.com/package/@mixedbread/cli)
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [Claude Desktop](https://claude.ai/download)
