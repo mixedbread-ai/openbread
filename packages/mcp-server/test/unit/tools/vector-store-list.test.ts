@@ -1,6 +1,6 @@
 import { vectorStoreList } from "../../../src/tools/vector-store-list.js";
 import { mockVectorStoreListResponse } from "../../fixtures/mock-responses.js";
-import { expectMCPResponse, expectMCPError } from "../../helpers/test-utils.js";
+import { expectMCPError, expectMCPResponse } from "../../helpers/test-utils.js";
 
 const mockList = jest.fn();
 const mockClient = {

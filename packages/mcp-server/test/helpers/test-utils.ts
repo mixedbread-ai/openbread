@@ -5,15 +5,22 @@ interface MCPRequest {
   params: Record<string, unknown>;
 }
 
-export const createMCPRequest = (method: string, params: Record<string, unknown>, id = 1): MCPRequest => ({
+export const createMCPRequest = (
+  method: string,
+  params: Record<string, unknown>,
+  id = 1
+): MCPRequest => ({
   jsonrpc: "2.0" as const,
   id,
   method,
   params,
 });
 
-export const createMCPToolCall = (name: string, args: Record<string, unknown>, id = 1) =>
-  createMCPRequest("tools/call", { name, arguments: args }, id);
+export const createMCPToolCall = (
+  name: string,
+  args: Record<string, unknown>,
+  id = 1
+) => createMCPRequest("tools/call", { name, arguments: args }, id);
 
 export const createMCPListToolsRequest = (id = 1): MCPRequest =>
   createMCPRequest("tools/list", {}, id);

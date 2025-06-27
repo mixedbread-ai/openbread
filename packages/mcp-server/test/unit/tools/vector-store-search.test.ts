@@ -1,6 +1,6 @@
 import { vectorStoreSearch } from "../../../src/tools/vector-store-search.js";
 import { mockVectorStoreSearchResponse } from "../../fixtures/mock-responses.js";
-import { expectMCPResponse, expectMCPError } from "../../helpers/test-utils.js";
+import { expectMCPError, expectMCPResponse } from "../../helpers/test-utils.js";
 
 const mockSearch = jest.fn();
 const mockClient = {

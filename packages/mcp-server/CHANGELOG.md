@@ -1,5 +1,11 @@
 # @mixedbread/mcp-server
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated tests
+
 ## 1.0.1
 
 ### Patch Changes
