@@ -20,7 +20,7 @@ describe("Utils", () => {
 
   describe("createMixedbreadClient", () => {
     it("should create client with valid API key", () => {
-      process.env.MIXEDBREAD_API_KEY = "test-api-key";
+      process.env.MXBAI_API_KEY = "test-api-key";
 
       const client = createMixedbreadClient();
 
@@ -29,25 +29,25 @@ describe("Utils", () => {
     });
 
     it("should throw error when API key is missing", () => {
-      delete process.env.MIXEDBREAD_API_KEY;
+      delete process.env.MXBAI_API_KEY;
 
       expect(() => createMixedbreadClient()).toThrow(
-        "MIXEDBREAD_API_KEY environment variable is required"
+        "MXBAI_API_KEY environment variable is required"
       );
     });
 
     it("should throw error when API key is empty", () => {
-      process.env.MIXEDBREAD_API_KEY = "";
+      process.env.MXBAI_API_KEY = "";
 
       expect(() => createMixedbreadClient()).toThrow(
-        "MIXEDBREAD_API_KEY environment variable is required"
+        "MXBAI_API_KEY environment variable is required"
       );
     });
   });
 
   describe("getMixedbreadClient", () => {
     it("should return singleton instance", () => {
-      process.env.MIXEDBREAD_API_KEY = "test-api-key";
+      process.env.MXBAI_API_KEY = "test-api-key";
 
       const client1 = getMixedbreadClient();
       const client2 = getMixedbreadClient();
@@ -56,7 +56,7 @@ describe("Utils", () => {
     });
 
     it("should create client on first call", () => {
-      process.env.MIXEDBREAD_API_KEY = "test-api-key";
+      process.env.MXBAI_API_KEY = "test-api-key";
 
       const client = getMixedbreadClient();
 
@@ -65,10 +65,10 @@ describe("Utils", () => {
     });
 
     it("should throw error when API key is missing", () => {
-      delete process.env.MIXEDBREAD_API_KEY;
+      delete process.env.MXBAI_API_KEY;
 
       expect(() => getMixedbreadClient()).toThrow(
-        "MIXEDBREAD_API_KEY environment variable is required"
+        "MXBAI_API_KEY environment variable is required"
       );
     });
   });

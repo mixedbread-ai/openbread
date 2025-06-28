@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeEach, jest } from "@jest/globals";
 
 // Set up test environment variables
-process.env.MIXEDBREAD_API_KEY = "mxb_test-api-key";
+process.env.MXBAI_API_KEY = "mxb_test-api-key";
 process.env.NODE_ENV = "test";
 
 // Mock console methods globally to reduce noise in tests

@@ -1,10 +1,10 @@
 import { Mixedbread } from "@mixedbread/sdk";
 
 export function createMixedbreadClient(): Mixedbread {
-  const apiKey = process.env.MIXEDBREAD_API_KEY;
+  const apiKey = process.env.MXBAI_API_KEY;
 
   if (!apiKey) {
-    throw new Error("MIXEDBREAD_API_KEY environment variable is required");
+    throw new Error("MXBAI_API_KEY environment variable is required");
   }
 
   return new Mixedbread({

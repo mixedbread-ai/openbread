@@ -16,7 +16,7 @@ describe("Server Integration", () => {
     return (done: jest.DoneCallback) => {
       const server = spawn("npm", ["start"], {
         stdio: ["pipe", "pipe", "pipe"],
-        env: { ...process.env, MIXEDBREAD_API_KEY: apiKey },
+        env: { ...process.env, MXBAI_API_KEY: apiKey },
       });
 
       let buffer = "";

@@ -15,6 +15,16 @@ npm install -g @mixedbread/mcp
 - Node.js 20+
 - Mixedbread API key from [Mixedbread Dashboard](https://www.platform.mixedbread.com/)
 
+### Basic Usage
+
+```bash
+# Set your API key
+export MXBAI_API_KEY="your_api_key_here"
+
+# Start the server
+npx @mixedbread/mcp
+```
+
 ## Claude Desktop Integration
 
 To use this MCP server with Claude Desktop, add the following configuration to your Claude Desktop config file:

@@ -1,5 +1,20 @@
 # @mixedbread/mcp
 
+## 1.1.0
+
+### Minor Changes
+
+- Fix executable configuration and update environment variable
+
+  **Breaking Change**: Environment variable renamed from `MIXEDBREAD_API_KEY` to `MXBAI_API_KEY`
+  - Update all references from MIXEDBREAD_API_KEY to MXBAI_API_KEY for consistency with other Mixedbread tools
+  - Update README documentation to reflect the new environment variable
+
+  Users need to update their environment configuration:
+
+  - Change `MIXEDBREAD_API_KEY` to `MXBAI_API_KEY` in their environment
+  - Update Claude Desktop configuration to use `MXBAI_API_KEY`
+
 ## 1.0.4
 
 ### Patch Changes
