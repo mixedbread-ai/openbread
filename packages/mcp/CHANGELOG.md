@@ -1,4 +1,10 @@
-# @mixedbread/mcp-server
+# @mixedbread/mcp
+
+## 1.0.3
+
+### Patch Changes
+
+- Rename package from @mixedbread/mcp-server to @mixedbread/mcp for better naming consistency
 
 ## 1.0.2
 

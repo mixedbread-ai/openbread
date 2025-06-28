@@ -1,6 +1,6 @@
 {
-  "name": "@mixedbread/mcp-server",
-  "version": "1.0.2",
+  "name": "@mixedbread/mcp",
+  "version": "1.0.3",
   "description": "MCP server for Mixedbread vector store operations",
   "type": "module",
   "main": "dist/index.js",
