@@ -97,14 +97,14 @@ describe("Schema Validation", () => {
       const input = {
         q: "search term",
         limit: 50,
-        after: "cursor1",
-        before: "cursor2",
+        cursor: "next_page_cursor",
+        include_total: true,
       };
       const result = VectorStoreListSchema.parse(input);
       expect(result.q).toBe("search term");
       expect(result.limit).toBe(50);
-      expect(result.after).toBe("cursor1");
-      expect(result.before).toBe("cursor2");
+      expect(result.cursor).toBe("next_page_cursor");
+      expect(result.include_total).toBe(true);
     });
 
     it("should apply default limit value", () => {
@@ -115,6 +115,32 @@ describe("Schema Validation", () => {
     it("should reject limit over 100", () => {
       const input = { limit: 150 };
       expect(() => VectorStoreListSchema.parse(input)).toThrow();
+    });
+
+    it("should accept minimal input", () => {
+      const result = VectorStoreListSchema.parse({});
+      expect(result.limit).toBe(20);
+      expect(result.q).toBeUndefined();
+      expect(result.cursor).toBeUndefined();
+      expect(result.include_total).toBeUndefined();
+    });
+
+    it("should validate search query", () => {
+      const input = { q: "embeddings" };
+      const result = VectorStoreListSchema.parse(input);
+      expect(result.q).toBe("embeddings");
+    });
+
+    it("should validate cursor pagination", () => {
+      const input = { cursor: "eyJpZCI6MTIzfQ==" };
+      const result = VectorStoreListSchema.parse(input);
+      expect(result.cursor).toBe("eyJpZCI6MTIzfQ==");
+    });
+
+    it("should validate include_total flag", () => {
+      const input = { include_total: false };
+      const result = VectorStoreListSchema.parse(input);
+      expect(result.include_total).toBe(false);
     });
   });
 
