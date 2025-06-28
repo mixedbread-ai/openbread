@@ -1,5 +1,13 @@
 # @mixedbread/mcp
 
+## 1.1.1
+
+### Patch Changes
+
+- Fix npx execution by adding "mcp" to bin field in package.json
+
+  The MCP server can now be properly executed with `npx @mixedbread/mcp`. This fixes the Claude Desktop integration issue where the server failed to start.
+
 ## 1.1.0
 
 ### Minor Changes

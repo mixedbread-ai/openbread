@@ -1,12 +1,12 @@
 {
   "name": "@mixedbread/mcp",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "MCP server for the Mixedbread Platform",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "mixedbread-mcp": "dist/index.js"
+    "mcp": "dist/index.js"
   },
   "files": [
     "dist",
