@@ -1,10 +1,13 @@
 {
   "name": "@mixedbread/mcp",
-  "version": "1.0.3",
-  "description": "MCP server for Mixedbread vector store operations",
+  "version": "1.0.4",
+  "description": "MCP server for the Mixedbread Platform",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "mixedbread-mcp": "dist/index.js"
+  },
   "files": [
     "dist",
     "README.md"

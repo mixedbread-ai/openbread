@@ -1,11 +1,11 @@
-# @mixedbread/mcp-server
+# @mixedbread/mcp
 
 A TypeScript-based MCP (Model Context Protocol) server that provides comprehensive vector store capabilities using Mixedbread's SDK. This server exposes powerful tools for searching, managing, and interacting with vector stores directly from Claude Desktop and other MCP-compatible clients.
 
 ## Installation
 
 ```bash
-npm install -g @mixedbread/mcp-server
+npm install -g @mixedbread/mcp
 ```
 
 ## Quick Start
@@ -14,19 +14,6 @@ npm install -g @mixedbread/mcp-server
 
 - Node.js 20+
 - Mixedbread API key from [Mixedbread Dashboard](https://www.platform.mixedbread.com/)
-
-### Basic Usage
-
-```bash
-# Set your API key
-export MIXEDBREAD_API_KEY="your_api_key_here"
-
-# Start the server
-mcp-server
-
-# Or run directly with npx
-npx @mixedbread/mcp-server
-```
 
 ## Claude Desktop Integration
 
@@ -41,9 +28,9 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "mixedbread": {
       "command": "npx",
-      "args": ["@mixedbread/mcp-server"],
+      "args": ["@mixedbread/mcp"],
       "env": {
-        "MIXEDBREAD_API_KEY": "your_api_key_here"
+        "MXBAI_API_KEY": "your_api_key_here"
       }
     }
   }
@@ -59,9 +46,9 @@ Edit `%APPDATA%\Claude\claude_desktop_config.json`:
   "mcpServers": {
     "mixedbread": {
       "command": "npx",
-      "args": ["@mixedbread/mcp-server"],
+      "args": ["@mixedbread/mcp"],
       "env": {
-        "MIXEDBREAD_API_KEY": "your_api_key_here"
+        "MXBAI_API_KEY": "your_api_key_here"
       }
     }
   }
@@ -77,9 +64,9 @@ Edit `~/.config/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "mixedbread": {
       "command": "npx",
-      "args": ["@mixedbread/mcp-server"],
+      "args": ["@mixedbread/mcp"],
       "env": {
-        "MIXEDBREAD_API_KEY": "your_api_key_here"
+        "MXBAI_API_KEY": "your_api_key_here"
       }
     }
   }
@@ -95,9 +82,9 @@ For full functionality including file uploads, configure both the Mixedbread MCP
   "mcpServers": {
     "mixedbread": {
       "command": "npx",
-      "args": ["@mixedbread/mcp-server"],
+      "args": ["@mixedbread/mcp"],
       "env": {
-        "MIXEDBREAD_API_KEY": "your_api_key_here"
+        "MXBAI_API_KEY": "your_api_key_here"
       }
     },
     "filesystem": {
@@ -166,9 +153,9 @@ List all available vector stores with optional filtering and pagination.
 **Parameters:**
 
 - `q` (string, optional): Search query to filter vector stores
-- `limit` (number, default: 20, max: 100): Maximum number of results
-- `after` (string, optional): Pagination cursor for results after this ID
-- `before` (string, optional): Pagination cursor for results before this ID
+- `limit` (number, default: 20, max: 100): Maximum number of vector stores to return
+- `cursor` (string, optional): Cursor for pagination
+- `include_total` (boolean, optional): Whether to include total count
 
 ### 5. Vector Store Create
 
@@ -231,7 +218,7 @@ Once configured with Claude Desktop, you can use natural language to interact wi
 
 The MCP server looks for your API key in this order:
 
-1. `MIXEDBREAD_API_KEY` environment variable
+1. `MXBAI_API_KEY` environment variable
 2. Configuration file (if implemented in future versions)
 
 ## Troubleshooting
@@ -240,13 +227,13 @@ The MCP server looks for your API key in this order:
 
 1. **Server not starting in Claude Desktop**
 
-   - Verify the package is installed globally: `npm list -g @mixedbread/mcp-server`
-   - Ensure the `MIXEDBREAD_API_KEY` is set correctly
+   - Verify the package is installed globally: `npm list -g @mixedbread/mcp`
+   - Ensure the `MXBAI_API_KEY` is set correctly
    - Check Claude Desktop logs for error messages
 
 2. **API key errors**
 
-   - Verify your API key is valid at [Mixedbread AI Dashboard](https://www.mixedbread.ai/)
+   - Verify your API key is valid at [Mixedbread Dashboard](https://www.platform.mixedbread.com/)
    - Ensure no extra spaces or characters in the key
    - API key must start with the correct prefix
 
@@ -279,7 +266,7 @@ This MCP server is built on top of the `@mixedbread/sdk` and provides a bridge b
 
    ```bash
    git clone https://github.com/mixedbread-ai/openbread.git
-   cd openbread/packages/mcp-server
+   cd openbread/packages/mcp
    ```
 
 2. **Install dependencies:**
@@ -291,7 +278,7 @@ This MCP server is built on top of the `@mixedbread/sdk` and provides a bridge b
 3. **Set up your API key:**
 
    ```bash
-   export MIXEDBREAD_API_KEY=your_api_key_here
+   export MXBAI_API_KEY=your_api_key_here
    ```
 
 #### Development Workflow
@@ -331,7 +318,7 @@ This MCP server is built on top of the `@mixedbread/sdk` and provides a bridge b
 
 ## Links
 
-- [Mixedbread AI](https://www.mixedbread.com/)
+- [Mixedbread](https://www.mixedbread.com/)
 - [Mixedbread CLI](https://www.npmjs.com/package/@mixedbread/cli)
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [Claude Desktop](https://claude.ai/download)
