@@ -1,5 +1,15 @@
 # @mixedbread/mcp
 
+## 1.1.3
+
+### Patch Changes
+
+- Fix MCP package structure for proper npx execution
+
+  - Fixed bin field in package.json to use object notation mapping "mcp" command to dist/index.js
+  - Updated tsconfig.json to output files directly in dist/ instead of dist/src/
+  - This ensures the package works correctly when executed via npx
+
 ## 1.1.2
 
 ### Patch Changes
