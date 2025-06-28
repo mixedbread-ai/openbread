@@ -1,9 +1,27 @@
 import { readFile } from "node:fs/promises";
 import { basename } from "node:path";
-import { lookup } from "mime-types";
 import { toFile } from "@mixedbread/sdk";
-import { getMixedbreadClient } from "../utils.js";
+import { lookup } from "mime-types";
 import type { VectorStoreUploadInput } from "../types/index.js";
+import { getMixedbreadClient } from "../utils.js";
+
+const SUPPORTED_MIME_TYPES = [
+  "application/pdf",
+  "text/plain",
+  "text/markdown",
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/webp",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+  "application/vnd.ms-powerpoint.addin.macroEnabled.12",
+  "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+  "application/vnd.ms-powerpoint.template.macroEnabled.12",
+  "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
+  "application/vnd.oasis.opendocument.presentation",
+] as const;
 
 export async function vectorStoreUpload(args: VectorStoreUploadInput) {
   const client = getMixedbreadClient();
@@ -15,7 +33,7 @@ export async function vectorStoreUpload(args: VectorStoreUploadInput) {
 
     if (!mimeType) {
       throw new Error(
-        `Could not determine MIME type for file: ${filename}. Supported types: PDF, TXT, MD, PNG, JPG, JPEG, WEBP, PPT, PPTX, PPSX, PPAM, PPTM, POTM, PPSM, ODP`
+        `Could not determine MIME type for file: ${filename}. Supported types: ${SUPPORTED_MIME_TYPES.join(", ")}`
       );
     }
 

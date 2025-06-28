@@ -88,14 +88,11 @@ export const VectorStoreListSchema = z.object({
     .max(100)
     .default(20)
     .describe("Maximum number of vector stores to return"),
-  after: z
-    .string()
+  cursor: z.string().optional().describe("Cursor for pagination"),
+  include_total: z
+    .boolean()
     .optional()
-    .describe("Cursor for pagination - return results after this ID"),
-  before: z
-    .string()
-    .optional()
-    .describe("Cursor for pagination - return results before this ID"),
+    .describe("Whether to include total count"),
 });
 
 // Vector Store Create Schema
