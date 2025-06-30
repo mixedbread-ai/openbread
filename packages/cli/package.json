@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "github:mixedbread-ai/mixedbread-ts",
+    "url": "github:mixedbread-ai/openbread",
     "directory": "packages/cli"
   },
   "keywords": [
