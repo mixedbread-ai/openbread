@@ -15,6 +15,7 @@ import { validateMetadata } from "../../utils/metadata";
 import { formatCountWithSuffix } from "../../utils/output";
 import {
   analyzeChanges,
+  displaySyncResultsSummary,
   executeSyncChanges,
   formatChangeSummary,
 } from "../../utils/sync";
@@ -208,41 +209,20 @@ export function createSyncCommand(): Command {
         }
 
         // Execute changes
-        await executeSyncChanges(client, vectorStore.id, analysis, {
-          strategy: parsedOptions.strategy,
-          metadata: additionalMetadata,
-          gitInfo: gitInfo.isRepo ? gitInfo : undefined,
-          concurrency: parsedOptions.concurrency,
-        });
-
-        // Summary
-        console.log("");
-        console.log(chalk.bold("Summary:"));
-        console.log(
-          chalk.green("✓"),
-          `${formatCountWithSuffix(
-            analysis.added.length + analysis.modified.length,
-            "file"
-          )} uploaded successfully`
+        const syncResults = await executeSyncChanges(
+          client,
+          vectorStore.id,
+          analysis,
+          {
+            strategy: parsedOptions.strategy,
+            metadata: additionalMetadata,
+            gitInfo: gitInfo.isRepo ? gitInfo : undefined,
+            concurrency: parsedOptions.concurrency,
+          }
         );
-        console.log(
-          chalk.green("✓"),
-          `${formatCountWithSuffix(
-            analysis.modified.length + analysis.deleted.length,
-            "file"
-          )} deleted (${formatCountWithSuffix(analysis.modified.length, "update")} + ${formatCountWithSuffix(
-            analysis.deleted.length,
-            "removal"
-          )})`
-        );
-        console.log(chalk.green("✓"), "Vector store is now in sync");
 
-        if (fromGit && gitInfo.isRepo) {
-          console.log(
-            chalk.green("✓"),
-            `Sync state saved (commit: ${gitInfo.commit.substring(0, 7)})`
-          );
-        }
+        // Display summary
+        displaySyncResultsSummary(syncResults, gitInfo, fromGit);
       } catch (error) {
         if (error instanceof Error) {
           console.error(chalk.red("Error:"), error.message);
