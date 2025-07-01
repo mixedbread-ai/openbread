@@ -81,13 +81,13 @@ describe("Schema Validation", () => {
 
   describe("VectorStoreRetrieveSchema", () => {
     it("should validate correct input", () => {
-      const input = { vector_store_id: "vs-123" };
+      const input = { vector_store_identifier: "vs-123" };
       const result = VectorStoreRetrieveSchema.parse(input);
-      expect(result.vector_store_id).toBe("vs-123");
+      expect(result.vector_store_identifier).toBe("vs-123");
     });
 
-    it("should reject empty vector_store_id", () => {
-      const input = { vector_store_id: "" };
+    it("should reject empty vector_store_identifier", () => {
+      const input = { vector_store_identifier: "" };
       expect(() => VectorStoreRetrieveSchema.parse(input)).toThrow();
     });
   });
@@ -170,13 +170,13 @@ describe("Schema Validation", () => {
 
   describe("VectorStoreDeleteSchema", () => {
     it("should validate correct input", () => {
-      const input = { vector_store_id: "vs-123" };
+      const input = { vector_store_identifier: "vs-123" };
       const result = VectorStoreDeleteSchema.parse(input);
-      expect(result.vector_store_id).toBe("vs-123");
+      expect(result.vector_store_identifier).toBe("vs-123");
     });
 
-    it("should reject empty vector_store_id", () => {
-      const input = { vector_store_id: "" };
+    it("should reject empty vector_store_identifier", () => {
+      const input = { vector_store_identifier: "" };
       expect(() => VectorStoreDeleteSchema.parse(input)).toThrow();
     });
   });
@@ -184,13 +184,13 @@ describe("Schema Validation", () => {
   describe("VectorStoreUploadSchema", () => {
     it("should validate correct input", () => {
       const input = {
-        vector_store_id: "vs-123",
+        vector_store_identifier: "vs-123",
         file_path: "/path/to/file.txt",
         filename: "custom-name.txt",
         mime_type: "text/plain",
       };
       const result = VectorStoreUploadSchema.parse(input);
-      expect(result.vector_store_id).toBe("vs-123");
+      expect(result.vector_store_identifier).toBe("vs-123");
       expect(result.file_path).toBe("/path/to/file.txt");
       expect(result.filename).toBe("custom-name.txt");
       expect(result.mime_type).toBe("text/plain");
@@ -198,11 +198,11 @@ describe("Schema Validation", () => {
 
     it("should validate without optional fields", () => {
       const input = {
-        vector_store_id: "vs-123",
+        vector_store_identifier: "vs-123",
         file_path: "/path/to/file.txt",
       };
       const result = VectorStoreUploadSchema.parse(input);
-      expect(result.vector_store_id).toBe("vs-123");
+      expect(result.vector_store_identifier).toBe("vs-123");
       expect(result.file_path).toBe("/path/to/file.txt");
       expect(result.filename).toBeUndefined();
       expect(result.mime_type).toBeUndefined();
@@ -210,7 +210,7 @@ describe("Schema Validation", () => {
 
     it("should reject empty file_path", () => {
       const input = {
-        vector_store_id: "vs-123",
+        vector_store_identifier: "vs-123",
         file_path: "",
       };
       expect(() => VectorStoreUploadSchema.parse(input)).toThrow();

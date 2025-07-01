@@ -1,5 +1,15 @@
 # @mixedbread/mcp
 
+## 1.1.5
+
+### Patch Changes
+
+- Fix schema parameter usage in implementation and tests
+
+  - Updated tool implementations to use `vector_store_identifier` instead of `vector_store_id`
+  - Fixed all test assertions to match the new schema parameter names
+  - Ensures consistency between schema definitions and actual usage
+
 ## 1.1.4
 
 ### Patch Changes

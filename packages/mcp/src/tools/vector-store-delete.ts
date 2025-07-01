@@ -5,7 +5,7 @@ export async function vectorStoreDelete(args: VectorStoreDeleteInput) {
   const client = getMixedbreadClient();
 
   try {
-    const response = await client.vectorStores.delete(args.vector_store_id);
+    const response = await client.vectorStores.delete(args.vector_store_identifier);
 
     return {
       content: [

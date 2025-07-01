@@ -5,7 +5,7 @@ export async function vectorStoreRetrieve(args: VectorStoreRetrieveInput) {
   const client = getMixedbreadClient();
 
   try {
-    const response = await client.vectorStores.retrieve(args.vector_store_id);
+    const response = await client.vectorStores.retrieve(args.vector_store_identifier);
 
     return {
       content: [

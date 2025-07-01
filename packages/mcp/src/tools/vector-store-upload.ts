@@ -39,7 +39,7 @@ export async function vectorStoreUpload(args: VectorStoreUploadInput) {
 
     const file = await toFile(fileBuffer, filename, { type: mimeType });
     const response = await client.vectorStores.files.upload(
-      args.vector_store_id,
+      args.vector_store_identifier,
       file
     );
 
