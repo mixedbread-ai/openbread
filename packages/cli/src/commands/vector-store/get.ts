@@ -73,10 +73,10 @@ export function createGetCommand(): Command {
     } catch (error) {
       spinner.fail("Failed to load vector store details");
       if (error instanceof Error) {
-        console.error(chalk.red("Error:"), error.message);
+        console.error(chalk.red("\nError:"), error.message);
       } else {
         console.error(
-          chalk.red("Error:"),
+          chalk.red("\nError:"),
           "Failed to get vector store details"
         );
       }
