@@ -32,8 +32,9 @@ mxbai vs search "My Documents" "how to get started"
 # Sync files with change detection
 mxbai vs sync "My Documents" "docs/**" --from-git HEAD~1
 
-# Upload with manifest file
+# Upload with manifest file (JSON or YAML)
 mxbai vs upload "My Documents" --manifest upload-manifest.json
+mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 ```
 
 ## Commands
@@ -70,7 +71,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.json
 ### Advanced Features
 
 - `mxbai vs sync <name-or-id> <patterns...>` - Sync files with intelligent change detection
-  - Options: `--strategy <strategy>`, `--from-git <ref>`, `--dry-run`, `--force`, `--metadata <json>`, `--ci`
+  - Options: `--strategy <strategy>`, `--from-git <ref>`, `--dry-run`, `--force`, `--metadata <json>`, `--ci`, `--concurrency <n>`
 
 ### Configuration
 
@@ -81,8 +82,9 @@ mxbai vs upload "My Documents" --manifest upload-manifest.json
 
 ### Manifest-Based Upload
 
-You can upload files using a manifest file that defines file patterns, processing strategies, and metadata:
+You can upload files using a manifest file (JSON or YAML) that defines file patterns, processing strategies, and metadata:
 
+**JSON Example:**
 ```json
 {
   "version": "1.0",
@@ -112,13 +114,49 @@ You can upload files using a manifest file that defines file patterns, processin
 }
 ```
 
+**YAML Example:**
+```yaml
+version: "1.0"
+
+defaults:
+  strategy: fast
+  contextualization: false
+  metadata:
+    project: my-project
+
+files:
+  - path: "docs/**/*.md"
+    metadata:
+      category: documentation
+  - path: README.md
+    strategy: high_quality
+    contextualization: true
+    metadata:
+      importance: high
+```
+
 ### Intelligent Sync
 
-The sync command provides three levels of change detection:
+The sync command provides intelligent change detection and robust error handling:
 
-1. **Git-based** (fastest): Uses `git diff` to detect changes
-2. **Hash-based** (accurate): Compares file hashes with stored metadata
-3. **Missing file detection**: Finds files that exist locally but not in vector store
+**Change Detection Methods:**
+1. **Git-based** (fastest): Uses `git diff` to detect changes since a specific commit
+2. **Hash-based** (accurate): Compares file hashes with stored metadata  
+
+**Example Usage:**
+```bash
+# Sync with git-based detection (fastest)
+mxbai vs sync "My Docs" "docs/**" --from-git HEAD~1
+
+# Sync with hash-based detection and custom concurrency
+mxbai vs sync "My Docs" "**/*.md" --concurrency 10
+
+# Dry run to preview changes
+mxbai vs sync "My Docs" "src/**" --dry-run
+
+# Force sync without confirmation in CI
+mxbai vs sync "My Docs" "**/*.pdf" --ci --force
+```
 
 ### Configuration Management
 
@@ -132,7 +170,7 @@ mxbai config set defaults.upload.parallel 10             # Concurrent uploads (d
 
 # Search defaults
 mxbai config set defaults.search.top_k 20                # Number of results (default: 10)
-mxbai config set defaults.search.rerank true             # Enable reranking (default: true)
+mxbai config set defaults.search.rerank true             # Enable reranking (default: false)
 
 # API key (alternative to environment variable)
 mxbai config set api_key mxb_xxxxx
@@ -185,8 +223,8 @@ This CLI is built on top of the `@mixedbread/sdk` and provides a convenient comm
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/mixedbread-ai/mixedbread-ts.git
-   cd mixedbread-ts/packages/cli
+   git clone https://github.com/mixedbread-ai/openbread.git
+   cd openbread/packages/cli
    ```
 
 2. **Install dependencies:**
