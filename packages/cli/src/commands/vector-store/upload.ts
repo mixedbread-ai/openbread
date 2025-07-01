@@ -110,7 +110,7 @@ export function createUploadCommand(): Command {
 
         if (!parsedOptions.patterns || parsedOptions.patterns.length === 0) {
           console.error(
-            chalk.red("\nError:"),
+            chalk.red("Error:"),
             "No file patterns provided. Use --manifest for manifest-based uploads."
           );
           process.exit(1);
@@ -213,9 +213,9 @@ export function createUploadCommand(): Command {
         });
       } catch (error) {
         if (error instanceof Error) {
-          console.error(chalk.red("\nError:"), error.message);
+          console.error(chalk.red("Error:"), error.message);
         } else {
-          console.error(chalk.red("\nError:"), "Failed to upload files");
+          console.error(chalk.red("Error:"), "Failed to upload files");
         }
         process.exit(1);
       }

@@ -88,9 +88,9 @@ export function createCreateCommand(): Command {
         spinner.fail("Failed to create vector store");
       }
       if (error instanceof Error) {
-        console.error(chalk.red("\nError:"), error.message);
+        console.error(chalk.red("Error:"), error.message);
       } else {
-        console.error(chalk.red("\nError:"), "Failed to create vector store");
+        console.error(chalk.red("Error:"), "Failed to create vector store");
       }
       process.exit(1);
     }

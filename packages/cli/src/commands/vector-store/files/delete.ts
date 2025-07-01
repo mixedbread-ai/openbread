@@ -76,9 +76,9 @@ export function createDeleteCommand(): Command {
         spinner.succeed(`File ${parsedOptions.fileId} deleted successfully`);
       } catch (error) {
         if (error instanceof Error) {
-          console.error(chalk.red("\nError:"), error.message);
+          console.error(chalk.red("Error:"), error.message);
         } else {
-          console.error(chalk.red("\nError:"), "Failed to delete file");
+          console.error(chalk.red("Error:"), "Failed to delete file");
         }
         process.exit(1);
       }

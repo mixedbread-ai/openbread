@@ -89,9 +89,9 @@ export function createListCommand(): Command {
     } catch (error) {
       spinner.fail("Failed to load vector stores");
       if (error instanceof Error) {
-        console.error(chalk.red("\nError:"), error.message);
+        console.error(chalk.red("Error:"), error.message);
       } else {
-        console.error(chalk.red("\nError:"), "Failed to list vector stores");
+        console.error(chalk.red("Error:"), "Failed to list vector stores");
       }
       process.exit(1);
     }

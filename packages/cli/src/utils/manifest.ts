@@ -220,14 +220,14 @@ export async function uploadFromManifest(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error(chalk.red("\nError:"), "Invalid manifest file format:");
+      console.error(chalk.red("Error:"), "Invalid manifest file format:");
       error.errors.forEach((err) => {
         console.error(chalk.red(`  - ${err.path.join(".")}: ${err.message}`));
       });
     } else if (error instanceof Error) {
-      console.error(chalk.red("\nError:"), error.message);
+      console.error(chalk.red("Error:"), error.message);
     } else {
-      console.error(chalk.red("\nError:"), "Failed to process manifest file");
+      console.error(chalk.red("Error:"), "Failed to process manifest file");
     }
     process.exit(1);
   }

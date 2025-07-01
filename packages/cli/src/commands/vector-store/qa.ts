@@ -122,9 +122,9 @@ export function createQACommand(): Command {
       } catch (error) {
         spinner.fail("Failed to process question");
         if (error instanceof Error) {
-          console.error(chalk.red("\nError:"), error.message);
+          console.error(chalk.red("Error:"), error.message);
         } else {
-          console.error(chalk.red("\nError:"), "Failed to process question");
+          console.error(chalk.red("Error:"), "Failed to process question");
         }
         process.exit(1);
       }

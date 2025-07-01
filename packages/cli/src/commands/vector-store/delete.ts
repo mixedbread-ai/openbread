@@ -77,9 +77,9 @@ export function createDeleteCommand(): Command {
         spinner.fail("Failed to delete vector store");
       }
       if (error instanceof Error) {
-        console.error(chalk.red("\nError:"), error.message);
+        console.error(chalk.red("Error:"), error.message);
       } else {
-        console.error(chalk.red("\nError:"), "Failed to delete vector store");
+        console.error(chalk.red("Error:"), "Failed to delete vector store");
       }
       process.exit(1);
     }

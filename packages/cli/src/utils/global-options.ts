@@ -79,7 +79,7 @@ export function parseOptions<T>(
 
   if (!parsed.success) {
     console.error(
-      chalk.red("\nError:"),
+      chalk.red("Error:"),
       parsed.error.issues.map((i) => i.message).join(", ")
     );
     process.exit(1);

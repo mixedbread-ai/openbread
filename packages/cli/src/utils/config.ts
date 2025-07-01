@@ -156,7 +156,7 @@ export function getApiKey(options?: { apiKey?: string }): string {
     options?.apiKey || process.env.MXBAI_API_KEY || loadConfig().api_key;
 
   if (!apiKey) {
-    console.error(chalk.red("\nError:"), "No API key found.\n");
+    console.error(chalk.red("Error:"), "No API key found.\n");
     console.error("Please provide your API key using one of these methods:");
     console.error("  1. Command flag: --api-key mxb_xxxxx");
     console.error("  2. Environment variable: export MXBAI_API_KEY=mxb_xxxxx");
