@@ -196,7 +196,11 @@ The CLI looks for your API key in this order:
 
 1. `--api-key` command line flag
 2. `MXBAI_API_KEY` environment variable
-3. Config file (`~/.config/mixedbread/config.json`)
+3. Config file (platform-specific location):
+   - **Linux/Unix**: `~/.config/mixedbread/config.json` (or `$XDG_CONFIG_HOME/mixedbread/config.json`)
+   - **macOS**: `~/Library/Application Support/mixedbread/config.json`
+   - **Windows**: `%APPDATA%\mixedbread\config.json`
+   - **Custom**: Set `MXBAI_CONFIG_PATH` environment variable to override
 
 ## Global Options
 

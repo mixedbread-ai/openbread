@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
+import { homedir, platform } from "node:os";
 import { join } from "node:path";
 import chalk from "chalk";
 import { z } from "zod";
@@ -63,8 +63,34 @@ export const CliConfigSchema = z.object({
 
 export type CliConfig = z.infer<typeof CliConfigSchema>;
 
-const CONFIG_DIR =
-  process.env.MXBAI_CONFIG_PATH || join(homedir(), ".config", "mixedbread");
+function getConfigDir(): string {
+  if (process.env.MXBAI_CONFIG_PATH) {
+    return process.env.MXBAI_CONFIG_PATH;
+  }
+
+  const home = homedir();
+  const os = platform();
+
+  switch (os) {
+    case "win32":
+      // Windows: %APPDATA%\mixedbread
+      return process.env.APPDATA
+        ? join(process.env.APPDATA, "mixedbread")
+        : join(home, "AppData", "Roaming", "mixedbread");
+
+    case "darwin":
+      // macOS: ~/Library/Application Support/mixedbread
+      return join(home, "Library", "Application Support", "mixedbread");
+
+    default:
+      // Linux and others: ~/.config/mixedbread
+      return process.env.XDG_CONFIG_HOME
+        ? join(process.env.XDG_CONFIG_HOME, "mixedbread")
+        : join(home, ".config", "mixedbread");
+  }
+}
+
+const CONFIG_DIR = getConfigDir();
 const CONFIG_FILE = join(CONFIG_DIR, "config.json");
 
 const DEFAULT_CONFIG: CliConfig = {
