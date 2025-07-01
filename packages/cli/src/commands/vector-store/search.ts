@@ -44,7 +44,7 @@ async function searchVectorStoreFiles(
 ) {
   return await client.vectorStores.files.search({
     query: parsedOptions.query,
-    vector_store_ids: [parsedOptions.vectorStoreId],
+    vector_store_identifiers: [parsedOptions.vectorStoreId],
     top_k: parsedOptions.topK,
     search_options: {
       return_metadata: parsedOptions.returnMetadata,
@@ -60,7 +60,7 @@ async function searchVectorStoreChunks(
 ) {
   return await client.vectorStores.search({
     query: parsedOptions.query,
-    vector_store_ids: [parsedOptions.vectorStoreId],
+    vector_store_identifiers: [parsedOptions.vectorStoreId],
     top_k: parsedOptions.topK,
     search_options: {
       return_metadata: parsedOptions.returnMetadata,

@@ -342,9 +342,5 @@ async function uploadManifestFiles(
     console.log(
       chalk.red(`✗ ${formatCountWithSuffix(results.failed, "file")} failed`)
     );
-    if (results.errors.length > 0) {
-      console.log("\nErrors:");
-      results.errors.forEach((error) => console.log(chalk.red(`  ${error}`)));
-    }
   }
 }

@@ -21,19 +21,21 @@ export async function getSyncedFiles(
     string,
     { fileId: string; metadata: FileSyncMetadata }
   >();
-  const list_offset_options: FileListParams | null = {
+  const fileListParams: FileListParams | null = {
     limit: 100,
-    offset: 0,
   };
 
   try {
     // Get all files in the vector store
     while (true) {
-      const response = await client.vectorStores.files.list(vectorStoreId, list_offset_options);
+      const response = await client.vectorStores.files.list(
+        vectorStoreId,
+        fileListParams
+      );
       if (response.data.length === 0) {
         break;
       }
-      list_offset_options.offset = list_offset_options.offset + response.data.length;
+      fileListParams.after = response.pagination.last_cursor;
 
       for (const file of response.data) {
         // Check if file has sync metadata
