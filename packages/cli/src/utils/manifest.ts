@@ -145,11 +145,6 @@ export async function uploadFromManifest(
     }
 
     const finalFiles = Array.from(uniqueFiles.values());
-    console.log(
-      chalk.green("✓"),
-      `Resolved ${formatCountWithSuffix(finalFiles.length, "file")} for upload`
-    );
-
     // Calculate total size
     const totalSize = finalFiles.reduce((sum, file) => {
       try {
@@ -159,7 +154,9 @@ export async function uploadFromManifest(
       }
     }, 0);
 
-    console.log(chalk.gray(`Total size: ${formatBytes(totalSize)}`));
+    console.log(
+      `Found ${formatCountWithSuffix(finalFiles.length, "file")} matching the patterns (${formatBytes(totalSize)})`
+    );
 
     // Dry run preview
     if (options.dryRun) {
@@ -252,8 +249,16 @@ async function uploadManifestFiles(
   const { unique, existingFiles, parallel } = options;
 
   console.log(
-    `\nUploading ${formatCountWithSuffix(files.length, "file")} from manifest...`
+    `\nUploading ${formatCountWithSuffix(files.length, "file")} to vector store...`
   );
+
+  const totalSize = files.reduce((sum, file) => {
+    try {
+      return sum + statSync(file.path).size;
+    } catch {
+      return sum;
+    }
+  }, 0);
 
   const results = {
     uploaded: 0,
@@ -262,11 +267,11 @@ async function uploadManifestFiles(
     errors: [] as string[],
   };
 
-  const batch = Math.ceil(files.length / parallel);
+  const totalBatches = Math.ceil(files.length / parallel);
 
   console.log(
     chalk.gray(
-      `Processing batch ${batch} (${formatCountWithSuffix(parallel, "file")} per batch)...`
+      `Processing ${totalBatches} batch${totalBatches > 1 ? "es" : ""} (${formatCountWithSuffix(parallel, "file")} per batch)...`
     )
   );
 
@@ -274,7 +279,9 @@ async function uploadManifestFiles(
   for (let i = 0; i < files.length; i += parallel) {
     const batch = files.slice(i, i + parallel);
     const promises = batch.map(async (file) => {
-      const spinner = ora(`Uploading ${basename(file.path)}...`).start();
+      const spinner = ora(
+        `Uploading ${relative(process.cwd(), file.path)}...`
+      ).start();
 
       try {
         // Delete existing file if using --unique
@@ -315,13 +322,15 @@ async function uploadManifestFiles(
         }
 
         const stats = statSync(file.path);
-        spinner.succeed(`${basename(file.path)} (${formatBytes(stats.size)})`);
+        spinner.succeed(
+          `${relative(process.cwd(), file.path)} (${formatBytes(stats.size)})`
+        );
       } catch (error) {
         results.failed++;
         const errorMsg =
           error instanceof Error ? error.message : "Unknown error";
         results.errors.push(`${file.path}: ${errorMsg}`);
-        spinner.fail(`${basename(file.path)} - ${errorMsg}`);
+        spinner.fail(`${relative(process.cwd(), file.path)} - ${errorMsg}`);
       }
     });
 
@@ -329,7 +338,7 @@ async function uploadManifestFiles(
   }
 
   // Summary
-  console.log(`\n${chalk.bold("Manifest Upload Summary:")}`);
+  console.log(`\n${chalk.bold("Upload Summary:")}`);
   if (results.uploaded > 0) {
     console.log(
       chalk.green(
@@ -347,4 +356,5 @@ async function uploadManifestFiles(
       chalk.red(`✗ ${formatCountWithSuffix(results.failed, "file")} failed`)
     );
   }
+  console.log(chalk.gray(`Total size: ${formatBytes(totalSize)}`));
 }

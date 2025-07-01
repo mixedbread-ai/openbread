@@ -254,6 +254,14 @@ async function uploadFiles(
     `\nUploading ${formatCountWithSuffix(files.length, "file")} to vector store...`
   );
 
+  const totalSize = files.reduce((sum, filePath) => {
+    try {
+      return sum + statSync(filePath).size;
+    } catch {
+      return sum;
+    }
+  }, 0);
+
   const results = {
     uploaded: 0,
     updated: 0,
@@ -261,11 +269,21 @@ async function uploadFiles(
     errors: [] as string[],
   };
 
+  const totalBatches = Math.ceil(files.length / parallel);
+
+  console.log(
+    chalk.gray(
+      `Processing ${totalBatches} batch${totalBatches > 1 ? "es" : ""} (${formatCountWithSuffix(parallel, "file")} per batch)...`
+    )
+  );
+
   // Process files in batches
   for (let i = 0; i < files.length; i += parallel) {
     const batch = files.slice(i, i + parallel);
     const promises = batch.map(async (filePath) => {
-      const spinner = ora(`Uploading ${basename(filePath)}...`).start();
+      const spinner = ora(
+        `Uploading ${relative(process.cwd(), filePath)}...`
+      ).start();
 
       try {
         // Delete existing file if using --unique
@@ -306,13 +324,15 @@ async function uploadFiles(
         }
 
         const stats = statSync(filePath);
-        spinner.succeed(`${basename(filePath)} (${formatBytes(stats.size)})`);
+        spinner.succeed(
+          `${relative(process.cwd(), filePath)} (${formatBytes(stats.size)})`
+        );
       } catch (error) {
         results.failed++;
         const errorMsg =
           error instanceof Error ? error.message : "Unknown error";
         results.errors.push(`${filePath}: ${errorMsg}`);
-        spinner.fail(`${basename(filePath)} - ${errorMsg}`);
+        spinner.fail(`${relative(process.cwd(), filePath)} - ${errorMsg}`);
       }
     });
 
@@ -338,4 +358,5 @@ async function uploadFiles(
       chalk.red(`✗ ${formatCountWithSuffix(results.failed, "file")} failed`)
     );
   }
+  console.log(chalk.gray(`Total size: ${formatBytes(totalSize)}`));
 }
