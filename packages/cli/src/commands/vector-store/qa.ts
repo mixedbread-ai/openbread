@@ -76,7 +76,7 @@ export function createQACommand(): Command {
 
         const response = await client.vectorStores.questionAnswering({
           query: parsedOptions.question,
-          vector_store_ids: [vectorStore.id],
+          vector_store_identifiers: [vectorStore.id],
           top_k: topK,
           search_options: {
             score_threshold: parsedOptions.threshold

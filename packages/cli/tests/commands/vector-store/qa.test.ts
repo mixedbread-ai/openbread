@@ -128,7 +128,7 @@ describe("QA Command", () => {
       );
       expect(mockClient.vectorStores.questionAnswering).toHaveBeenCalledWith({
         query: "What is machine learning?",
-        vector_store_ids: ["550e8400-e29b-41d4-a716-446655440090"],
+        vector_store_identifiers: ["550e8400-e29b-41d4-a716-446655440090"],
         top_k: 5,
         search_options: {
           score_threshold: undefined,
@@ -685,7 +685,7 @@ describe("QA Command", () => {
 
       expect(mockClient.vectorStores.questionAnswering).toHaveBeenCalledWith({
         query: "Complex question?",
-        vector_store_ids: ["550e8400-e29b-41d4-a716-446655440090"],
+        vector_store_identifiers: ["550e8400-e29b-41d4-a716-446655440090"],
         top_k: 20,
         search_options: {
           score_threshold: 0.75,
