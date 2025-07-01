@@ -133,7 +133,7 @@ export function createSyncCommand(): Command {
           );
         } else if (fromGit && !gitInfo.isRepo) {
           console.error(
-            chalk.red("\n✗ Error:"),
+            chalk.red("✗ Error:"),
             "--from-git specified but not in a git repository"
           );
           process.exit(1);

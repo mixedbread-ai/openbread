@@ -110,7 +110,7 @@ export function createUploadCommand(): Command {
 
         if (!parsedOptions.patterns || parsedOptions.patterns.length === 0) {
           console.error(
-            chalk.red("\nError:"),
+            chalk.red("Error:"),
             "No file patterns provided. Use --manifest for manifest-based uploads."
           );
           process.exit(1);
