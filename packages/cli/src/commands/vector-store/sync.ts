@@ -133,7 +133,7 @@ export function createSyncCommand(): Command {
           );
         } else if (fromGit && !gitInfo.isRepo) {
           console.error(
-            chalk.red("✗ Error:"),
+            chalk.red("\n✗ Error:"),
             "--from-git specified but not in a git repository"
           );
           process.exit(1);
@@ -225,9 +225,9 @@ export function createSyncCommand(): Command {
         displaySyncResultsSummary(syncResults, gitInfo, fromGit);
       } catch (error) {
         if (error instanceof Error) {
-          console.error(chalk.red("Error:"), error.message);
+          console.error(chalk.red("\nError:"), error.message);
         } else {
-          console.error(chalk.red("Error:"), "Failed to sync vector store");
+          console.error(chalk.red("\nError:"), "Failed to sync vector store");
         }
         process.exit(1);
       }

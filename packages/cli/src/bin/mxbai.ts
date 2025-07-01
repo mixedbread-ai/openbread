@@ -52,7 +52,7 @@ program.action(() => {
 
 // Global error handling
 program.on("error", (error: Error) => {
-  console.error(chalk.red("Error:"), error.message);
+  console.error(chalk.red("\nError:"), error.message);
   if (process.env.MXBAI_DEBUG === "true") {
     console.error(chalk.gray(error.stack));
   }
@@ -62,10 +62,9 @@ program.on("error", (error: Error) => {
 // Handle unknown commands
 program.on("command:*", () => {
   console.error(
-    chalk.red("Error:"),
-    `Unknown command: ${program.args.join(" ")}`
+    chalk.red("\nError:"),
+    `Unknown command: ${program.args.join(" ")}\n`
   );
-  console.log();
   program.help();
 });
 
@@ -75,7 +74,7 @@ async function main() {
     await program.parseAsync(process.argv);
   } catch (error) {
     if (error instanceof Error) {
-      console.error(chalk.red("Error:"), error.message);
+      console.error(chalk.red("\nError:"), error.message);
       if (process.env.MXBAI_DEBUG === "true") {
         console.error(chalk.gray(error.stack));
       }
