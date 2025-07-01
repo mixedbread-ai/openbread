@@ -72,10 +72,10 @@ export const VectorStoreFileSearchSchema = z.object({
 
 // Vector Store Retrieve Schema
 export const VectorStoreRetrieveSchema = z.object({
-  vector_store_id: z
+  vector_store_identifier: z
     .string()
     .min(1)
-    .describe("The ID of the vector store to retrieve"),
+    .describe("The identifier of the vector store to retrieve"),
 });
 
 // Vector Store List Schema
@@ -103,18 +103,18 @@ export const VectorStoreCreateSchema = z.object({
 
 // Vector Store Delete Schema
 export const VectorStoreDeleteSchema = z.object({
-  vector_store_id: z
+  vector_store_identifier: z
     .string()
     .min(1)
-    .describe("The ID of the vector store to delete"),
+    .describe("The identifier of the vector store to delete"),
 });
 
 // Vector Store Upload Schema
 export const VectorStoreUploadSchema = z.object({
-  vector_store_id: z
+  vector_store_identifier: z
     .string()
     .min(1)
-    .describe("The ID of the vector store to upload to"),
+    .describe("The identifier of the vector store to upload to"),
   file_path: z
     .string()
     .min(1)

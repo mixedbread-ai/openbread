@@ -1,5 +1,16 @@
 # @mixedbread/mcp
 
+## 1.1.4
+
+### Patch Changes
+
+- Update README for clarity and fix schema parameter names
+
+  - Simplified README.md with clearer quick start instructions
+  - Renamed `vector_store_id` to `vector_store_identifier` in schemas for consistency
+  - Improved documentation structure and removed redundant development sections
+  - Added -y flag to npx command in Claude Desktop configuration example
+
 ## 1.1.3
 
 ### Patch Changes
@@ -33,6 +44,7 @@
 - Fix executable configuration and update environment variable
 
   **Breaking Change**: Environment variable renamed from `MIXEDBREAD_API_KEY` to `MXBAI_API_KEY`
+
   - Update all references from MIXEDBREAD_API_KEY to MXBAI_API_KEY for consistency with other Mixedbread tools
   - Update README documentation to reflect the new environment variable
 
