@@ -259,8 +259,8 @@ describe("Vector Store Update Command", () => {
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Invalid JSON in metadata option"
+        expect.stringContaining("Error:"),
+        expect.stringContaining("Invalid JSON in metadata option")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

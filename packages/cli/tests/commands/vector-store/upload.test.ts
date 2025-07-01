@@ -36,6 +36,10 @@ const mockResolveVectorStore =
   vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
     typeof vectorStoreUtils.resolveVectorStore
   >;
+const mockGetVectorStoreFiles =
+  vectorStoreUtils.getVectorStoreFiles as jest.MockedFunction<
+    typeof vectorStoreUtils.getVectorStoreFiles
+  >;
 const mockLoadConfig = configUtils.loadConfig as jest.MockedFunction<
   typeof configUtils.loadConfig
 >;
@@ -271,8 +275,8 @@ describe("Vector Store Upload Command", () => {
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Invalid JSON in metadata option"
+        expect.stringContaining("Error:"),
+        expect.stringContaining("Invalid JSON in metadata option")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -338,14 +342,14 @@ describe("Vector Store Upload Command", () => {
         "test.md",
       ]);
 
-      mockClient.vectorStores.files.list.mockResolvedValue({
-        data: [
-          {
-            id: "existing_file_id",
-            metadata: { file_path: "test.md" },
-          },
-        ],
-      });
+      mockGetVectorStoreFiles.mockResolvedValue([
+        {
+          id: "existing_file_id",
+          vector_store_id: "550e8400-e29b-41d4-a716-446655440130",
+          created_at: "2021-02-18T12:00:00Z",
+          metadata: { file_path: "test.md" },
+        },
+      ]);
 
       mockClient.vectorStores.files.delete.mockResolvedValue({});
       mockClient.vectorStores.files.upload.mockResolvedValue({
@@ -360,9 +364,9 @@ describe("Vector Store Upload Command", () => {
         "--unique",
       ]);
 
-      expect(mockClient.vectorStores.files.list).toHaveBeenCalledWith(
-        "550e8400-e29b-41d4-a716-446655440130",
-        { limit: 1000 }
+      expect(mockGetVectorStoreFiles).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130"
       );
       expect(mockClient.vectorStores.files.delete).toHaveBeenCalledWith(
         "existing_file_id",
@@ -380,9 +384,7 @@ describe("Vector Store Upload Command", () => {
       (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
         "test.md",
       ]);
-      mockClient.vectorStores.files.list.mockRejectedValue(
-        new Error("List failed")
-      );
+      mockGetVectorStoreFiles.mockRejectedValue(new Error("List failed"));
 
       await command.parseAsync([
         "node",
@@ -393,8 +395,8 @@ describe("Vector Store Upload Command", () => {
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "List failed"
+        expect.stringContaining("Error:"),
+        expect.stringContaining("List failed")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

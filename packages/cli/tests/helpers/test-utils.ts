@@ -1,4 +1,6 @@
 import { expect, jest } from "@jest/globals";
+import { homedir, platform } from "node:os";
+import { join } from "node:path";
 import type { Command } from "commander";
 
 /**
@@ -237,3 +239,25 @@ export const createMockConfig = (overrides: Record<string, any> = {}) => ({
   version: "1.0",
   ...overrides,
 });
+
+/**
+ * Get platform-specific test config directory path
+ * This matches the logic from config.ts to ensure tests use the same paths
+ */
+export const getTestConfigDir = () => {
+  const home = homedir();
+  const os = platform();
+  
+  switch (os) {
+    case "win32":
+      return process.env.APPDATA
+        ? join(process.env.APPDATA, "mixedbread")
+        : join(home, "AppData", "Roaming", "mixedbread");
+    case "darwin":
+      return join(home, "Library", "Application Support", "mixedbread");
+    default:
+      return process.env.XDG_CONFIG_HOME
+        ? join(process.env.XDG_CONFIG_HOME, "mixedbread")
+        : join(home, ".config", "mixedbread");
+  }
+};

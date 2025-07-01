@@ -19,7 +19,10 @@ import {
 import { uploadFromManifest } from "../../utils/manifest";
 import { validateMetadata } from "../../utils/metadata";
 import { formatBytes, formatCountWithSuffix } from "../../utils/output";
-import { resolveVectorStore } from "../../utils/vector-store";
+import {
+  getVectorStoreFiles,
+  resolveVectorStore,
+} from "../../utils/vector-store";
 
 const UploadVectorStoreSchema = GlobalOptionsSchema.extend({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
@@ -176,12 +179,12 @@ export function createUploadCommand(): Command {
         if (parsedOptions.unique) {
           const spinner = ora("Checking for existing files...").start();
           try {
-            const filesResponse = await client.vectorStores.files.list(
-              vectorStore.id,
-              { limit: 1000 }
+            const vectorStoreFiles = await getVectorStoreFiles(
+              client,
+              vectorStore.id
             );
             existingFiles = new Map(
-              filesResponse.data
+              vectorStoreFiles
                 .filter((f) => {
                   const filePath = (f.metadata as { file_path?: string })
                     ?.file_path;
@@ -272,9 +275,6 @@ async function uploadFiles(
           await client.vectorStores.files.delete(existingFileId, {
             vector_store_identifier: vectorStoreId,
           });
-          results.updated++;
-        } else {
-          results.uploaded++;
         }
 
         // Prepare file metadata
@@ -298,6 +298,12 @@ async function uploadFiles(
             contextualization,
           },
         });
+
+        if (unique && existingFiles.has(relativePath)) {
+          results.updated++;
+        } else {
+          results.uploaded++;
+        }
 
         const stats = statSync(filePath);
         spinner.succeed(`${basename(filePath)} (${formatBytes(stats.size)})`);

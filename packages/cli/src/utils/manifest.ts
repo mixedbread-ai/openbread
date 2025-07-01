@@ -11,6 +11,7 @@ import type { UploadOptions } from "../commands/vector-store/upload";
 import { loadConfig } from "./config";
 import { validateMetadata } from "./metadata";
 import { formatBytes, formatCountWithSuffix } from "./output";
+import { getVectorStoreFiles } from "./vector-store";
 
 // Manifest file schema
 const ManifestFileEntrySchema = z.object({
@@ -185,12 +186,12 @@ export async function uploadFromManifest(
     if (options.unique) {
       const spinner = ora("Checking for existing files...").start();
       try {
-        const filesResponse = await client.vectorStores.files.list(
-          vectorStoreId,
-          { limit: 1000 }
+        const vectorStoreFiles = await getVectorStoreFiles(
+          client,
+          vectorStoreId
         );
         existingFiles = new Map(
-          filesResponse.data
+          vectorStoreFiles
             .filter((f) =>
               finalFiles.some((file) => {
                 return (
@@ -283,9 +284,6 @@ async function uploadManifestFiles(
           await client.vectorStores.files.delete(existingFileId, {
             vector_store_identifier: vectorStoreId,
           });
-          results.updated++;
-        } else {
-          results.uploaded++;
         }
 
         // Prepare file metadata with manifest metadata
@@ -309,6 +307,12 @@ async function uploadManifestFiles(
             contextualization: file.contextualization,
           },
         });
+
+        if (unique && existingFiles.has(relativePath)) {
+          results.updated++;
+        } else {
+          results.uploaded++;
+        }
 
         const stats = statSync(file.path);
         spinner.succeed(`${basename(file.path)} (${formatBytes(stats.size)})`);

@@ -1,5 +1,9 @@
 import type { Mixedbread } from "@mixedbread/sdk";
-import type { VectorStore } from "@mixedbread/sdk/resources/vector-stores";
+import type {
+  FileListParams,
+  VectorStore,
+  VectorStoreFile,
+} from "@mixedbread/sdk/resources/vector-stores";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import { resolveVectorStoreName } from "./config";
@@ -63,4 +67,29 @@ export async function resolveVectorStore(
     console.error("\nRun 'mxbai vs list' to see all vector stores.");
     process.exit(1);
   }
+}
+
+export async function getVectorStoreFiles(
+  client: Mixedbread,
+  vectorStoreId: string
+): Promise<VectorStoreFile[]> {
+  const vectorStoreFiles = [];
+  const fileListParams: FileListParams = {
+    limit: 100,
+  };
+
+  while (true) {
+    const response = await client.vectorStores.files.list(
+      vectorStoreId,
+      fileListParams
+    );
+    if (response.data.length === 0) {
+      break;
+    }
+    fileListParams.after = response.pagination.last_cursor;
+
+    vectorStoreFiles.push(...response.data);
+  }
+
+  return vectorStoreFiles;
 }

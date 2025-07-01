@@ -1,4 +1,3 @@
-import { homedir } from "node:os";
 import { join } from "node:path";
 import {
   afterEach,
@@ -12,10 +11,11 @@ import type { Command } from "commander";
 import mockFs from "mock-fs";
 import { createSetCommand } from "../../../src/commands/config/set";
 import { loadConfig } from "../../../src/utils/config";
+import { getTestConfigDir } from "../../helpers/test-utils";
 
 
 describe("Config Set Command", () => {
-  const configDir = join(homedir(), ".config", "mixedbread");
+  const configDir = getTestConfigDir();
   const configFile = join(configDir, "config.json");
   let command: Command;
 

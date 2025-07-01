@@ -1,5 +1,5 @@
 import type Mixedbread from "@mixedbread/sdk";
-import type { FileListParams } from "@mixedbread/sdk/resources/vector-stores/files";
+import { getVectorStoreFiles } from "./vector-store";
 
 export interface FileSyncMetadata {
   file_path: string;
@@ -21,31 +21,18 @@ export async function getSyncedFiles(
     string,
     { fileId: string; metadata: FileSyncMetadata }
   >();
-  const fileListParams: FileListParams | null = {
-    limit: 100,
-  };
 
   try {
-    // Get all files in the vector store
-    while (true) {
-      const response = await client.vectorStores.files.list(
-        vectorStoreId,
-        fileListParams
-      );
-      if (response.data.length === 0) {
-        break;
-      }
-      fileListParams.after = response.pagination.last_cursor;
+    const vectorStoreFiles = await getVectorStoreFiles(client, vectorStoreId);
 
-      for (const file of response.data) {
-        // Check if file has sync metadata
-        const metadata = file.metadata as FileSyncMetadata;
-        if (metadata && metadata.synced === true && metadata.file_path) {
-          fileMap.set(metadata.file_path, {
-            fileId: file.id,
-            metadata,
-          });
-        }
+    for (const file of vectorStoreFiles) {
+      // Check if file has sync metadata
+      const metadata = file.metadata as FileSyncMetadata;
+      if (metadata && metadata.synced === true && metadata.file_path) {
+        fileMap.set(metadata.file_path, {
+          fileId: file.id,
+          metadata,
+        });
       }
     }
 
