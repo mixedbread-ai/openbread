@@ -103,18 +103,18 @@ export async function uploadFromManifest(
 
       // Add each matched file with its configuration
       for (const filePath of matchedFiles) {
-        // Precedence for file-specific: command-line > entry-specific > config defaults > manifest defaults > built-in defaults
+        // Precedence for file-specific: command-line > entry-specific > manifest defaults > config defaults > built-in defaults
         const fileStrategy =
           options.strategy ??
           entry.strategy ??
-          config.defaults.upload.strategy ??
           defaults.strategy ??
+          config.defaults.upload.strategy ??
           "fast";
         const fileContextualization =
           options.contextualization ??
           entry.contextualization ??
-          config.defaults.upload.contextualization ??
           defaults.contextualization ??
+          config.defaults.upload.contextualization ??
           false;
 
         // Merge metadata: command-line (highest) > entry-specific > manifest defaults
