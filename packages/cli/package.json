@@ -9,6 +9,7 @@
     "url": "github:mixedbread-ai/openbread",
     "directory": "packages/cli"
   },
+  "homepage": "https://www.mixedbread.com/cli",
   "keywords": [
     "mixedbread",
     "cli",
@@ -16,6 +17,9 @@
     "embeddings",
     "command-line"
   ],
+  "bugs": {
+    "url": "https://github.com/mixedbread-ai/openbread/issues"
+  },
   "bin": {
     "mxbai": "./dist/bin/mxbai.js"
   },
