@@ -15,7 +15,7 @@ export interface FileSyncMetadata {
  */
 export async function getSyncedFiles(
   client: Mixedbread,
-  vectorStoreId: string
+  vectorStoreIdentifier: string
 ): Promise<Map<string, { fileId: string; metadata: FileSyncMetadata }>> {
   const fileMap = new Map<
     string,
@@ -23,7 +23,10 @@ export async function getSyncedFiles(
   >();
 
   try {
-    const vectorStoreFiles = await getVectorStoreFiles(client, vectorStoreId);
+    const vectorStoreFiles = await getVectorStoreFiles(
+      client,
+      vectorStoreIdentifier
+    );
 
     for (const file of vectorStoreFiles) {
       // Check if file has sync metadata

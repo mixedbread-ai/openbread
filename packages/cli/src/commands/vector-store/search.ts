@@ -35,7 +35,7 @@ const SearchVectorStoreSchema = GlobalOptionsSchema.extend({
 });
 
 type ParsedSearchOptions = z.infer<typeof SearchVectorStoreSchema> & {
-  vectorStoreId: string;
+  vectorStoreIdentifier: string;
 };
 
 async function searchVectorStoreFiles(
@@ -44,7 +44,7 @@ async function searchVectorStoreFiles(
 ) {
   return await client.vectorStores.files.search({
     query: parsedOptions.query,
-    vector_store_identifiers: [parsedOptions.vectorStoreId],
+    vector_store_identifiers: [parsedOptions.vectorStoreIdentifier],
     top_k: parsedOptions.topK,
     search_options: {
       return_metadata: parsedOptions.returnMetadata,
@@ -60,7 +60,7 @@ async function searchVectorStoreChunks(
 ) {
   return await client.vectorStores.search({
     query: parsedOptions.query,
-    vector_store_identifiers: [parsedOptions.vectorStoreId],
+    vector_store_identifiers: [parsedOptions.vectorStoreIdentifier],
     top_k: parsedOptions.topK,
     search_options: {
       return_metadata: parsedOptions.returnMetadata,
@@ -118,13 +118,13 @@ export function createSearchCommand(): Command {
         const results = parsedOptions.fileSearch
           ? await searchVectorStoreFiles(client, {
               ...parsedOptions,
-              vectorStoreId: vectorStore.id,
+              vectorStoreIdentifier: vectorStore.id,
               topK,
               rerank,
             })
           : await searchVectorStoreChunks(client, {
               ...parsedOptions,
-              vectorStoreId: vectorStore.id,
+              vectorStoreIdentifier: vectorStore.id,
               topK,
               rerank,
             });

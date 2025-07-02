@@ -38,7 +38,7 @@ type ManifestFile = z.infer<typeof ManifestSchema>;
 
 export async function uploadFromManifest(
   client: Mixedbread,
-  vectorStoreId: string,
+  vectorStoreIdentifier: string,
   manifestPath: string,
   options: UploadOptions
 ) {
@@ -176,7 +176,7 @@ export async function uploadFromManifest(
       try {
         const vectorStoreFiles = await getVectorStoreFiles(
           client,
-          vectorStoreId
+          vectorStoreIdentifier
         );
         existingFiles = new Map(
           vectorStoreFiles
@@ -203,7 +203,7 @@ export async function uploadFromManifest(
     }
 
     // Upload files
-    await uploadFilesInBatch(client, vectorStoreId, uniqueFiles, {
+    await uploadFilesInBatch(client, vectorStoreIdentifier, uniqueFiles, {
       unique: options.unique || false,
       existingFiles,
       parallel: options.parallel ?? config.defaults.upload.parallel ?? 5,

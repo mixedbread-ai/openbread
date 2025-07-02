@@ -33,7 +33,7 @@ export interface UploadResults {
  */
 export async function uploadFile(
   client: Mixedbread,
-  vectorStoreId: string,
+  vectorStoreIdentifier: string,
   filePath: string,
   options: UploadFileOptions = {}
 ): Promise<void> {
@@ -46,7 +46,7 @@ export async function uploadFile(
   const file = new File([fileContent], fileName, { type: mimeType });
 
   // Upload the file
-  await client.vectorStores.files.upload(vectorStoreId, file, {
+  await client.vectorStores.files.upload(vectorStoreIdentifier, file, {
     metadata,
     experimental: {
       parsing_strategy: strategy,
@@ -60,7 +60,7 @@ export async function uploadFile(
  */
 export async function uploadFilesInBatch(
   client: Mixedbread,
-  vectorStoreId: string,
+  vectorStoreIdentifier: string,
   files: FileToUpload[],
   options: {
     unique: boolean;
@@ -109,7 +109,7 @@ export async function uploadFilesInBatch(
         if (unique && existingFiles.has(relativePath)) {
           const existingFileId = existingFiles.get(relativePath);
           await client.vectorStores.files.delete(existingFileId, {
-            vector_store_identifier: vectorStoreId,
+            vector_store_identifier: vectorStoreIdentifier,
           });
         }
 
@@ -127,13 +127,17 @@ export async function uploadFilesInBatch(
           type: mimeType,
         });
 
-        await client.vectorStores.files.upload(vectorStoreId, fileToUpload, {
-          metadata: fileMetadata,
-          experimental: {
-            parsing_strategy: file.strategy,
-            contextualization: file.contextualization,
-          },
-        });
+        await client.vectorStores.files.upload(
+          vectorStoreIdentifier,
+          fileToUpload,
+          {
+            metadata: fileMetadata,
+            experimental: {
+              parsing_strategy: file.strategy,
+              contextualization: file.contextualization,
+            },
+          }
+        );
 
         const stats = statSync(file.path);
 

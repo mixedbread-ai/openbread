@@ -225,7 +225,7 @@ export function formatChangeSummary(analysis: SyncAnalysis): string {
 
 export async function executeSyncChanges(
   client: Mixedbread,
-  vectorStoreId: string,
+  vectorStoreIdentifier: string,
   analysis: SyncAnalysis,
   options: {
     strategy?: FileCreateParams.Experimental["parsing_strategy"];
@@ -269,7 +269,7 @@ export async function executeSyncChanges(
         ).start();
         try {
           await client.vectorStores.files.delete(file.fileId!, {
-            vector_store_identifier: vectorStoreId,
+            vector_store_identifier: vectorStoreIdentifier,
           });
           completed++;
           deleteSpinner.succeed(
@@ -337,7 +337,7 @@ export async function executeSyncChanges(
           };
 
           // Upload file
-          await uploadFile(client, vectorStoreId, file.path, {
+          await uploadFile(client, vectorStoreIdentifier, file.path, {
             metadata: finalMetadata,
             strategy: options.strategy,
             contextualization: options.contextualization,

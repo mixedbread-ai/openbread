@@ -71,7 +71,7 @@ export async function resolveVectorStore(
 
 export async function getVectorStoreFiles(
   client: Mixedbread,
-  vectorStoreId: string
+  vectorStoreIdentifier: string
 ): Promise<VectorStoreFile[]> {
   const vectorStoreFiles = [];
   const fileListParams: FileListParams = {
@@ -80,7 +80,7 @@ export async function getVectorStoreFiles(
 
   while (true) {
     const response = await client.vectorStores.files.list(
-      vectorStoreId,
+      vectorStoreIdentifier,
       fileListParams
     );
     if (response.data.length === 0) {
