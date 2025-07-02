@@ -1,9 +1,7 @@
 import { readFileSync, statSync } from "node:fs";
-import { basename, relative } from "node:path";
 import type { Mixedbread } from "@mixedbread/sdk";
 import chalk from "chalk";
 import { glob } from "glob";
-import { lookup } from "mime-types";
 import ora from "ora";
 import { parse } from "yaml";
 import { z } from "zod";
@@ -11,6 +9,8 @@ import type { UploadOptions } from "../commands/vector-store/upload";
 import { loadConfig } from "./config";
 import { validateMetadata } from "./metadata";
 import { formatBytes, formatCountWithSuffix } from "./output";
+import { type FileToUpload, uploadFilesInBatch } from "./upload";
+import { getVectorStoreFiles } from "./vector-store";
 
 // Manifest file schema
 const ManifestFileEntrySchema = z.object({
@@ -36,16 +36,9 @@ const ManifestSchema = z.object({
 
 type ManifestFile = z.infer<typeof ManifestSchema>;
 
-interface ResolvedFile {
-  path: string;
-  strategy: string;
-  contextualization: boolean;
-  metadata: Record<string, unknown>;
-}
-
 export async function uploadFromManifest(
   client: Mixedbread,
-  vectorStoreId: string,
+  vectorStoreIdentifier: string,
   manifestPath: string,
   options: UploadOptions
 ) {
@@ -79,7 +72,7 @@ export async function uploadFromManifest(
     );
 
     // Resolve all files from manifest entries
-    const resolvedFiles: ResolvedFile[] = [];
+    const resolvedFiles: FileToUpload[] = [];
 
     const defaults = manifest.defaults || {};
     const optionsMetadata = validateMetadata(options.metadata);
@@ -102,18 +95,18 @@ export async function uploadFromManifest(
 
       // Add each matched file with its configuration
       for (const filePath of matchedFiles) {
-        // Precedence for file-specific: command-line > entry-specific > config defaults > manifest defaults > built-in defaults
+        // Precedence for file-specific: command-line > entry-specific > manifest defaults > config defaults > built-in defaults
         const fileStrategy =
           options.strategy ??
           entry.strategy ??
-          config.defaults.upload.strategy ??
           defaults.strategy ??
+          config.defaults.upload.strategy ??
           "fast";
         const fileContextualization =
           options.contextualization ??
           entry.contextualization ??
-          config.defaults.upload.contextualization ??
           defaults.contextualization ??
+          config.defaults.upload.contextualization ??
           false;
 
         // Merge metadata: command-line (highest) > entry-specific > manifest defaults
@@ -121,6 +114,7 @@ export async function uploadFromManifest(
           ...defaults.metadata,
           ...entry.metadata,
           ...optionsMetadata,
+          manifest_entry: true,
         };
 
         resolvedFiles.push({
@@ -138,19 +132,13 @@ export async function uploadFromManifest(
     }
 
     // Remove duplicates (same file with potentially different configs - last wins)
-    const uniqueFiles = new Map<string, ResolvedFile>();
+    const uniqueFilesMap = new Map<string, FileToUpload>();
     for (const file of resolvedFiles) {
-      uniqueFiles.set(file.path, file);
+      uniqueFilesMap.set(file.path, file);
     }
+    const uniqueFiles = Array.from(uniqueFilesMap.values());
 
-    const finalFiles = Array.from(uniqueFiles.values());
-    console.log(
-      chalk.green("✓"),
-      `Resolved ${formatCountWithSuffix(finalFiles.length, "file")} for upload`
-    );
-
-    // Calculate total size
-    const totalSize = finalFiles.reduce((sum, file) => {
+    const totalSize = uniqueFiles.reduce((sum, file) => {
       try {
         return sum + statSync(file.path).size;
       } catch {
@@ -158,18 +146,19 @@ export async function uploadFromManifest(
       }
     }, 0);
 
-    console.log(chalk.gray(`Total size: ${formatBytes(totalSize)}`));
+    console.log(
+      `Found ${formatCountWithSuffix(uniqueFiles.length, "file")} matching the patterns (${formatBytes(totalSize)})`
+    );
 
-    // Dry run preview
     if (options.dryRun) {
       console.log(chalk.blue("\nDry run - files that would be uploaded:"));
-      finalFiles.forEach((file) => {
+      uniqueFiles.forEach((file) => {
         try {
           const stats = statSync(file.path);
-          console.log(`  ${file.path} (${formatBytes(stats.size)})`);
-          console.log(
-            `    Strategy: ${file.strategy}, Contextualization: ${file.contextualization}`
-          );
+          console.log(`  \n${file.path} (${formatBytes(stats.size)})`);
+          console.log(`    Strategy: ${file.strategy}`);
+          console.log(`    Contextualization: ${file.contextualization}`);
+
           if (Object.keys(file.metadata).length > 0) {
             console.log(`    Metadata: ${JSON.stringify(file.metadata)}`);
           }
@@ -185,20 +174,21 @@ export async function uploadFromManifest(
     if (options.unique) {
       const spinner = ora("Checking for existing files...").start();
       try {
-        const filesResponse = await client.vectorStores.files.list(
-          vectorStoreId,
-          { limit: 1000 }
+        const vectorStoreFiles = await getVectorStoreFiles(
+          client,
+          vectorStoreIdentifier
         );
         existingFiles = new Map(
-          filesResponse.data
+          vectorStoreFiles
             .filter((f) =>
-              finalFiles.some((file) => {
-                return (
+              uniqueFiles.some((file) => {
+                const filePath =
                   typeof f.metadata === "object" &&
                   f.metadata &&
                   "file_path" in f.metadata &&
-                  f.metadata.file_path === relative(process.cwd(), file.path)
-                );
+                  f.metadata.file_path;
+
+                return filePath && filePath === file.path;
               })
             )
             .map((f) => [(f.metadata as { file_path: string }).file_path, f.id])
@@ -213,7 +203,7 @@ export async function uploadFromManifest(
     }
 
     // Upload files
-    await uploadManifestFiles(client, vectorStoreId, finalFiles, {
+    await uploadFilesInBatch(client, vectorStoreIdentifier, uniqueFiles, {
       unique: options.unique || false,
       existingFiles,
       parallel: options.parallel ?? config.defaults.upload.parallel ?? 5,
@@ -230,121 +220,5 @@ export async function uploadFromManifest(
       console.error(chalk.red("Error:"), "Failed to process manifest file");
     }
     process.exit(1);
-  }
-}
-
-async function uploadManifestFiles(
-  client: Mixedbread,
-  vectorStoreId: string,
-  files: Array<{
-    path: string;
-    strategy: string;
-    contextualization: boolean;
-    metadata: Record<string, unknown>;
-  }>,
-  options: {
-    unique: boolean;
-    existingFiles: Map<string, string>;
-    parallel: number;
-  }
-) {
-  const { unique, existingFiles, parallel } = options;
-
-  console.log(
-    `\nUploading ${formatCountWithSuffix(files.length, "file")} from manifest...`
-  );
-
-  const results = {
-    uploaded: 0,
-    updated: 0,
-    failed: 0,
-    errors: [] as string[],
-  };
-
-  const batch = Math.ceil(files.length / parallel);
-
-  console.log(
-    chalk.gray(
-      `Processing batch ${batch} (${formatCountWithSuffix(parallel, "file")} per batch)...`
-    )
-  );
-
-  // Process files in batches
-  for (let i = 0; i < files.length; i += parallel) {
-    const batch = files.slice(i, i + parallel);
-    const promises = batch.map(async (file) => {
-      const spinner = ora(`Uploading ${basename(file.path)}...`).start();
-
-      try {
-        // Delete existing file if using --unique
-        const relativePath = relative(process.cwd(), file.path);
-        if (unique && existingFiles.has(relativePath)) {
-          const existingFileId = existingFiles.get(relativePath);
-          await client.vectorStores.files.delete(existingFileId, {
-            vector_store_identifier: vectorStoreId,
-          });
-          results.updated++;
-        } else {
-          results.uploaded++;
-        }
-
-        // Prepare file metadata with manifest metadata
-        const fileMetadata = {
-          file_path: relativePath,
-          uploaded_at: new Date().toISOString(),
-          manifest_entry: true,
-          ...file.metadata,
-        };
-
-        // Upload the file
-        const fileContent = readFileSync(file.path);
-        const fileName = basename(file.path);
-        const mimeType = lookup(file.path) || "application/octet-stream";
-        const fileObj = new File([fileContent], fileName, { type: mimeType });
-
-        await client.vectorStores.files.upload(vectorStoreId, fileObj, {
-          metadata: fileMetadata,
-          experimental: {
-            parsing_strategy: file.strategy as "fast" | "high_quality",
-            contextualization: file.contextualization,
-          },
-        });
-
-        const stats = statSync(file.path);
-        spinner.succeed(`${basename(file.path)} (${formatBytes(stats.size)})`);
-      } catch (error) {
-        results.failed++;
-        const errorMsg =
-          error instanceof Error ? error.message : "Unknown error";
-        results.errors.push(`${file.path}: ${errorMsg}`);
-        spinner.fail(`${basename(file.path)} - ${errorMsg}`);
-      }
-    });
-
-    await Promise.all(promises);
-  }
-
-  // Summary
-  console.log(`\n${chalk.bold("Manifest Upload Summary:")}`);
-  if (results.uploaded > 0) {
-    console.log(
-      chalk.green(
-        `✓ ${formatCountWithSuffix(results.uploaded, "file")} uploaded successfully`
-      )
-    );
-  }
-  if (results.updated > 0) {
-    console.log(
-      chalk.blue(`↻ ${formatCountWithSuffix(results.updated, "file")} updated`)
-    );
-  }
-  if (results.failed > 0) {
-    console.log(
-      chalk.red(`✗ ${formatCountWithSuffix(results.failed, "file")} failed`)
-    );
-    if (results.errors.length > 0) {
-      console.log("\nErrors:");
-      results.errors.forEach((error) => console.log(chalk.red(`  ${error}`)));
-    }
   }
 }

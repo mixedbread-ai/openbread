@@ -26,14 +26,21 @@ mxbai vs create "My Documents"
 # Upload files
 mxbai vs upload "My Documents" "*.md" "docs/**/*.pdf"
 
+# Upload with high-quality processing and contextualization
+mxbai vs upload "My Documents" "**/*.md" --strategy high_quality --contextualization
+
 # Search content
 mxbai vs search "My Documents" "how to get started"
 
 # Sync files with change detection
 mxbai vs sync "My Documents" "docs/**" --from-git HEAD~1
 
-# Upload with manifest file
+# Sync with processing options
+mxbai vs sync "My Documents" "**/*.md" --parallel 8
+
+# Upload with manifest file (JSON or YAML)
 mxbai vs upload "My Documents" --manifest upload-manifest.json
+mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 ```
 
 ## Commands
@@ -53,7 +60,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.json
 ### File Management
 
 - `mxbai vs upload <name-or-id> <patterns...>` - Upload files to vector store
-  - Options: `--strategy fast|high_quality`, `--contextualization`, `--metadata <json>`, `--dry-run`, `--parallel <n>`, `--unique`, `--manifest <file>`
+  - Options: `--strategy fast|high_quality`, `--contextualization`, `--metadata <json>`, `--dry-run`, `--parallel <n>` (1-20), `--unique`, `--manifest <file>`
 - `mxbai vs files list <name-or-id>` - List files in vector store (alias: `ls`)
   - Options: `--status <status>` (pending|in_progress|cancelled|completed|failed), `--limit <n>`
 - `mxbai vs files get <name-or-id> <file-id>` - Get file details
@@ -70,7 +77,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.json
 ### Advanced Features
 
 - `mxbai vs sync <name-or-id> <patterns...>` - Sync files with intelligent change detection
-  - Options: `--strategy <strategy>`, `--from-git <ref>`, `--dry-run`, `--force`, `--metadata <json>`, `--ci`
+  - Options: `--strategy <strategy>`, `--contextualization`, `--from-git <ref>`, `--dry-run`, `--force`, `--metadata <json>`, `--ci`, `--parallel <n>` (1-20)
 
 ### Configuration
 
@@ -81,8 +88,9 @@ mxbai vs upload "My Documents" --manifest upload-manifest.json
 
 ### Manifest-Based Upload
 
-You can upload files using a manifest file that defines file patterns, processing strategies, and metadata:
+You can upload files using a manifest file (JSON or YAML) that defines file patterns, processing strategies, and metadata:
 
+**JSON Example:**
 ```json
 {
   "version": "1.0",
@@ -112,27 +120,102 @@ You can upload files using a manifest file that defines file patterns, processin
 }
 ```
 
+**YAML Example:**
+```yaml
+version: "1.0"
+
+defaults:
+  strategy: fast
+  contextualization: false
+  metadata:
+    project: my-project
+
+files:
+  - path: "docs/**/*.md"
+    metadata:
+      category: documentation
+  - path: README.md
+    strategy: high_quality
+    contextualization: true
+    metadata:
+      importance: high
+```
+
+### Configuration Precedence
+
+When using the CLI, configuration values are resolved in the following order (highest to lowest priority):
+
+1. **Command-line flags** - Direct CLI options (e.g., `--strategy high_quality`)
+2. **Manifest entry** - File-specific settings in manifest files
+3. **Manifest defaults** - Default settings in manifest files
+4. **Config file** - User configuration file settings
+5. **Built-in defaults** - CLI default values
+
+This allows flexible configuration while maintaining predictable behavior.
+
+### Upload Summary Information
+
+The upload and sync commands display strategy and contextualization information in their summaries:
+
+**Normal uploads** show configuration in the summary:
+```
+✓ 5 files uploaded successfully
+Strategy: fast
+Contextualization: enabled
+Total size: 25.3 KB
+```
+
+**Manifest uploads** show configuration beside each file:
+```
+✓ docs/api.md (15.2 KB) [fast, no-context]
+✓ README.md (8.5 KB) [high_quality, contextualized]
+✓ guide.md (1.6 KB) [fast, no-context]
+```
+
 ### Intelligent Sync
 
-The sync command provides three levels of change detection:
+The sync command provides intelligent change detection and robust error handling with full support for processing strategies and contextualization:
 
-1. **Git-based** (fastest): Uses `git diff` to detect changes
-2. **Hash-based** (accurate): Compares file hashes with stored metadata
-3. **Missing file detection**: Finds files that exist locally but not in vector store
+**Change Detection Methods:**
+1. **Git-based** (fastest): Uses `git diff` to detect changes since a specific commit
+2. **Hash-based** (accurate): Compares file hashes with stored metadata  
+
+**Processing Options:**
+- **Strategy**: Choose between `fast` (default) or `high_quality` processing
+- **Contextualization**: Enable context preservation for better semantic understanding
+- **Parallel processing**: Control concurrency for optimal performance
+
+**Example Usage:**
+```bash
+# Sync with git-based detection (fastest)
+mxbai vs sync "My Docs" "docs/**" --from-git HEAD~1
+
+# Sync with hash-based detection and custom parallel processing
+mxbai vs sync "My Docs" "**/*.md" --parallel 10
+
+# Sync with high-quality processing and contextualization
+mxbai vs sync "My Docs" "**/*.md" --strategy high_quality --contextualization
+
+# Dry run to preview changes
+mxbai vs sync "My Docs" "src/**" --dry-run
+
+# Force sync without confirmation in CI
+mxbai vs sync "My Docs" "**/*.pdf" --ci --force
+```
 
 ### Configuration Management
 
 Set defaults for common options:
 
 ```bash
-# Upload defaults
+# Upload defaults (apply to both upload and sync commands)
 mxbai config set defaults.upload.strategy high_quality  # or 'fast' (default: fast)
 mxbai config set defaults.upload.contextualization true  # Enable context preservation (default: false)
-mxbai config set defaults.upload.parallel 10             # Concurrent uploads (default: 5)
+mxbai config set defaults.upload.parallel 10             # Concurrent operations (1-20, default: 5)
 
 # Search defaults
 mxbai config set defaults.search.top_k 20                # Number of results (default: 10)
-mxbai config set defaults.search.rerank true             # Enable reranking (default: true)
+mxbai config set defaults.search.rerank true             # Enable reranking (default: false)
 
 # API key (alternative to environment variable)
 mxbai config set api_key mxb_xxxxx
@@ -158,7 +241,11 @@ The CLI looks for your API key in this order:
 
 1. `--api-key` command line flag
 2. `MXBAI_API_KEY` environment variable
-3. Config file (`~/.config/mixedbread/config.json`)
+3. Config file (platform-specific location):
+   - **Linux/Unix**: `~/.config/mixedbread/config.json` (or `$XDG_CONFIG_HOME/mixedbread/config.json`)
+   - **macOS**: `~/Library/Application Support/mixedbread/config.json`
+   - **Windows**: `%APPDATA%\mixedbread\config.json`
+   - **Custom**: Set `MXBAI_CONFIG_PATH` environment variable to override
 
 ## Global Options
 
@@ -185,8 +272,8 @@ This CLI is built on top of the `@mixedbread/sdk` and provides a convenient comm
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/mixedbread-ai/mixedbread-ts.git
-   cd mixedbread-ts/packages/cli
+   git clone https://github.com/mixedbread-ai/openbread.git
+   cd openbread/packages/cli
    ```
 
 2. **Install dependencies:**

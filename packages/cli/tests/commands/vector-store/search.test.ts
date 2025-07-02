@@ -146,7 +146,7 @@ describe("Vector Store Search Command", () => {
       );
       expect(mockClient.vectorStores.search).toHaveBeenCalledWith({
         query: "machine learning",
-        vector_store_ids: ["550e8400-e29b-41d4-a716-446655440080"],
+        vector_store_identifiers: ["550e8400-e29b-41d4-a716-446655440080"],
         top_k: 5,
         search_options: {
           return_metadata: undefined,
@@ -315,7 +315,7 @@ describe("Vector Store Search Command", () => {
 
       expect(mockClient.vectorStores.files.search).toHaveBeenCalledWith({
         query: "query",
-        vector_store_ids: ["550e8400-e29b-41d4-a716-446655440080"],
+        vector_store_identifiers: ["550e8400-e29b-41d4-a716-446655440080"],
         top_k: 5,
         search_options: {
           return_metadata: undefined,
@@ -361,7 +361,7 @@ describe("Vector Store Search Command", () => {
 
       expect(mockClient.vectorStores.files.search).toHaveBeenCalledWith({
         query: "query",
-        vector_store_ids: ["550e8400-e29b-41d4-a716-446655440080"],
+        vector_store_identifiers: ["550e8400-e29b-41d4-a716-446655440080"],
         top_k: 15,
         search_options: {
           return_metadata: true,

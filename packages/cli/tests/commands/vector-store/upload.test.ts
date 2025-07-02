@@ -13,6 +13,7 @@ import mockFs from "mock-fs";
 import { createUploadCommand } from "../../../src/commands/vector-store/upload";
 import * as clientUtils from "../../../src/utils/client";
 import * as configUtils from "../../../src/utils/config";
+import * as uploadUtils from "../../../src/utils/upload";
 import * as vectorStoreUtils from "../../../src/utils/vector-store";
 
 import {
@@ -25,6 +26,7 @@ import {
 jest.mock("../../../src/utils/client");
 jest.mock("../../../src/utils/vector-store");
 jest.mock("../../../src/utils/config");
+jest.mock("../../../src/utils/upload");
 jest.mock("glob");
 // ora is mocked globally in jest.config.ts
 
@@ -36,8 +38,15 @@ const mockResolveVectorStore =
   vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
     typeof vectorStoreUtils.resolveVectorStore
   >;
+const mockGetVectorStoreFiles =
+  vectorStoreUtils.getVectorStoreFiles as jest.MockedFunction<
+    typeof vectorStoreUtils.getVectorStoreFiles
+  >;
 const mockLoadConfig = configUtils.loadConfig as jest.MockedFunction<
   typeof configUtils.loadConfig
+>;
+const mockUploadFilesInBatch = uploadUtils.uploadFilesInBatch as jest.MockedFunction<
+  typeof uploadUtils.uploadFilesInBatch
 >;
 
 describe("Vector Store Upload Command", () => {
@@ -85,6 +94,15 @@ describe("Vector Store Upload Command", () => {
         },
       })
     );
+    
+    // Setup uploadFilesInBatch mock
+    mockUploadFilesInBatch.mockResolvedValue({
+      uploaded: 1,
+      updated: 0,
+      failed: 0,
+      errors: [],
+      successfulSize: 1024,
+    });
   });
 
   afterEach(() => {
@@ -108,10 +126,6 @@ describe("Vector Store Upload Command", () => {
         return [];
       });
 
-      mockClient.vectorStores.files.upload.mockResolvedValue({
-        id: "file_123",
-      });
-
       await command.parseAsync([
         "node",
         "upload",
@@ -122,6 +136,7 @@ describe("Vector Store Upload Command", () => {
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining("Found 3 files matching the pattern")
       );
+      expect(mockUploadFilesInBatch).toHaveBeenCalled();
     });
 
     it("should handle multiple patterns", async () => {
@@ -137,10 +152,6 @@ describe("Vector Store Upload Command", () => {
         .mockResolvedValueOnce(["images/pic1.png"])
         .mockResolvedValueOnce(["data/info.json"]);
 
-      mockClient.vectorStores.files.upload.mockResolvedValue({
-        id: "file_123",
-      });
-
       await command.parseAsync([
         "node",
         "upload",
@@ -153,6 +164,7 @@ describe("Vector Store Upload Command", () => {
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining("Found 3 files matching the patterns")
       );
+      expect(mockUploadFilesInBatch).toHaveBeenCalled();
     });
 
     it("should handle no files found", async () => {
@@ -192,9 +204,6 @@ describe("Vector Store Upload Command", () => {
       (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
         "test.md",
       ]);
-      mockClient.vectorStores.files.upload.mockResolvedValue({
-        id: "file_123",
-      });
     });
 
     it("should use custom strategy", async () => {
@@ -207,14 +216,15 @@ describe("Vector Store Upload Command", () => {
         "high_quality",
       ]);
 
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
         "550e8400-e29b-41d4-a716-446655440130",
-        expect.any(File),
-        expect.objectContaining({
-          experimental: expect.objectContaining({
-            parsing_strategy: "high_quality",
+        expect.arrayContaining([
+          expect.objectContaining({
+            strategy: "high_quality",
           }),
-        })
+        ]),
+        expect.any(Object)
       );
     });
 
@@ -227,14 +237,15 @@ describe("Vector Store Upload Command", () => {
         "--contextualization",
       ]);
 
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
         "550e8400-e29b-41d4-a716-446655440130",
-        expect.any(File),
-        expect.objectContaining({
-          experimental: expect.objectContaining({
+        expect.arrayContaining([
+          expect.objectContaining({
             contextualization: true,
           }),
-        })
+        ]),
+        expect.any(Object)
       );
     });
 
@@ -248,15 +259,18 @@ describe("Vector Store Upload Command", () => {
         '{"author":"john","version":"1.0"}',
       ]);
 
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
         "550e8400-e29b-41d4-a716-446655440130",
-        expect.any(File),
-        expect.objectContaining({
-          metadata: expect.objectContaining({
-            author: "john",
-            version: "1.0",
+        expect.arrayContaining([
+          expect.objectContaining({
+            metadata: expect.objectContaining({
+              author: "john",
+              version: "1.0",
+            }),
           }),
-        })
+        ]),
+        expect.any(Object)
       );
     });
 
@@ -271,8 +285,8 @@ describe("Vector Store Upload Command", () => {
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Invalid JSON in metadata option"
+        expect.stringContaining("Error:"),
+        expect.stringContaining("Invalid JSON in metadata option")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -324,7 +338,7 @@ describe("Vector Store Upload Command", () => {
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining("file2.md")
       );
-      expect(mockClient.vectorStores.files.upload).not.toHaveBeenCalled();
+      expect(mockUploadFilesInBatch).not.toHaveBeenCalled();
     });
   });
 
@@ -338,19 +352,16 @@ describe("Vector Store Upload Command", () => {
         "test.md",
       ]);
 
-      mockClient.vectorStores.files.list.mockResolvedValue({
-        data: [
-          {
-            id: "existing_file_id",
-            metadata: { file_path: "test.md" },
-          },
-        ],
-      });
+      mockGetVectorStoreFiles.mockResolvedValue([
+        {
+          id: "existing_file_id",
+          vector_store_id: "550e8400-e29b-41d4-a716-446655440130",
+          created_at: "2021-02-18T12:00:00Z",
+          metadata: { file_path: "test.md" },
+        },
+      ]);
 
       mockClient.vectorStores.files.delete.mockResolvedValue({});
-      mockClient.vectorStores.files.upload.mockResolvedValue({
-        id: "file_123",
-      });
 
       await command.parseAsync([
         "node",
@@ -360,15 +371,18 @@ describe("Vector Store Upload Command", () => {
         "--unique",
       ]);
 
-      expect(mockClient.vectorStores.files.list).toHaveBeenCalledWith(
-        "550e8400-e29b-41d4-a716-446655440130",
-        { limit: 1000 }
+      expect(mockGetVectorStoreFiles).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130"
       );
-      expect(mockClient.vectorStores.files.delete).toHaveBeenCalledWith(
-        "existing_file_id",
-        {
-          vector_store_identifier: "550e8400-e29b-41d4-a716-446655440130",
-        }
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130",
+        expect.any(Array),
+        expect.objectContaining({
+          unique: true,
+          existingFiles: expect.any(Map),
+        })
       );
     });
 
@@ -380,9 +394,7 @@ describe("Vector Store Upload Command", () => {
       (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
         "test.md",
       ]);
-      mockClient.vectorStores.files.list.mockRejectedValue(
-        new Error("List failed")
-      );
+      mockGetVectorStoreFiles.mockRejectedValue(new Error("List failed"));
 
       await command.parseAsync([
         "node",
@@ -393,58 +405,35 @@ describe("Vector Store Upload Command", () => {
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "List failed"
+        expect.stringContaining("Error:"),
+        expect.stringContaining("List failed")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
   });
 
   describe("File upload", () => {
-    it("should set correct MIME types", async () => {
+    it("should upload files with correct types", async () => {
       mockFs({
         "image.webp": Buffer.from("webp image"),
-        "doc.pdf": Buffer.from("pdf content"),
-        "script.js": 'console.log("test");',
       });
 
-      (glob as unknown as jest.MockedFunction<typeof glob>)
-        .mockResolvedValueOnce(["image.webp"])
-        .mockResolvedValueOnce(["doc.pdf"])
-        .mockResolvedValueOnce(["script.js"]);
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "image.webp",
+      ]);
 
-      mockClient.vectorStores.files.upload.mockResolvedValue({
-        id: "file_123",
-      });
-
-      // Test webp
       await command.parseAsync(["node", "upload", "test-store", "image.webp"]);
-      let uploadCall = mockClient.vectorStores.files.upload.mock.calls[0];
-      expect(uploadCall[1].type).toBe("image/webp");
 
-      // Test pdf
-      jest.clearAllMocks();
-      mockResolveVectorStore.mockResolvedValue(
-        createMockVectorStore({
-          id: "550e8400-e29b-41d4-a716-446655440130",
-          name: "test-store",
-        })
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130",
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: "image.webp",
+          }),
+        ]),
+        expect.any(Object)
       );
-      await command.parseAsync(["node", "upload", "test-store", "doc.pdf"]);
-      uploadCall = mockClient.vectorStores.files.upload.mock.calls[0];
-      expect(uploadCall[1].type).toBe("application/pdf");
-
-      // Test js
-      jest.clearAllMocks();
-      mockResolveVectorStore.mockResolvedValue(
-        createMockVectorStore({
-          id: "550e8400-e29b-41d4-a716-446655440130",
-          name: "test-store",
-        })
-      );
-      await command.parseAsync(["node", "upload", "test-store", "script.js"]);
-      uploadCall = mockClient.vectorStores.files.upload.mock.calls[0];
-      expect(uploadCall[1].type).toBe("text/javascript");
     });
 
     it("should include file metadata", async () => {
@@ -455,21 +444,20 @@ describe("Vector Store Upload Command", () => {
       (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
         "test.md",
       ]);
-      mockClient.vectorStores.files.upload.mockResolvedValue({
-        id: "file_123",
-      });
 
       await command.parseAsync(["node", "upload", "test-store", "test.md"]);
 
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
         "550e8400-e29b-41d4-a716-446655440130",
-        expect.any(File),
-        expect.objectContaining({
-          metadata: expect.objectContaining({
-            file_path: "test.md",
-            uploaded_at: expect.any(String),
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: "test.md",
+            strategy: "fast",
+            contextualization: false,
           }),
-        })
+        ]),
+        expect.any(Object)
       );
     });
   });
@@ -483,18 +471,19 @@ describe("Vector Store Upload Command", () => {
       (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
         "test.md",
       ]);
-      mockClient.vectorStores.files.upload.mockRejectedValue(
-        new Error("Upload failed")
-      );
+      
+      // Mock uploadFilesInBatch to return failure results
+      mockUploadFilesInBatch.mockResolvedValue({
+        uploaded: 0,
+        updated: 0,
+        failed: 1,
+        errors: ["test.md: Upload failed"],
+        successfulSize: 0,
+      });
 
       await command.parseAsync(["node", "upload", "test-store", "test.md"]);
 
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("Upload Summary:")
-      );
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("✗ 1 file failed")
-      );
+      expect(mockUploadFilesInBatch).toHaveBeenCalled();
     });
 
     it("should handle vector store resolution errors", async () => {
@@ -524,16 +513,19 @@ describe("Vector Store Upload Command", () => {
         "readable.md",
         "unreadable.md",
       ]);
-      mockClient.vectorStores.files.upload.mockResolvedValue({
-        id: "file_123",
+      
+      // Mock uploadFilesInBatch to handle the unreadable file
+      mockUploadFilesInBatch.mockResolvedValue({
+        uploaded: 1,
+        updated: 0,
+        failed: 1,
+        errors: ["unreadable.md: Permission denied"],
+        successfulSize: 7,
       });
 
       await command.parseAsync(["node", "upload", "test-store", "*.md"]);
 
-      // Should show summary with failures
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("Upload Summary:")
-      );
+      expect(mockUploadFilesInBatch).toHaveBeenCalled();
     });
   });
 
@@ -548,18 +540,30 @@ describe("Vector Store Upload Command", () => {
         "file1.md",
         "file2.md",
       ]);
-      mockClient.vectorStores.files.upload.mockResolvedValue({
-        id: "file_123",
+      
+      // Mock uploadFilesInBatch to return successful results
+      mockUploadFilesInBatch.mockResolvedValue({
+        uploaded: 2,
+        updated: 0,
+        failed: 0,
+        errors: [],
+        successfulSize: 16,
       });
 
       await command.parseAsync(["node", "upload", "test-store", "*.md"]);
 
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("✓ 2 files uploaded successfully")
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130",
+        expect.arrayContaining([
+          expect.objectContaining({ path: "file1.md" }),
+          expect.objectContaining({ path: "file2.md" }),
+        ]),
+        expect.any(Object)
       );
     });
 
-    it.skip("should show correct summary for mixed results", async () => {
+    it("should show correct summary for mixed results", async () => {
       mockFs({
         "file1.md": "content1",
         "file2.md": "content2",
@@ -572,19 +576,26 @@ describe("Vector Store Upload Command", () => {
         "file3.md",
       ]);
 
-      // Make the second upload fail
-      mockClient.vectorStores.files.upload
-        .mockResolvedValueOnce({ id: "file_1" })
-        .mockRejectedValueOnce(new Error("Upload failed"))
-        .mockResolvedValueOnce({ id: "file_3" });
+      // Mock uploadFilesInBatch to return mixed results
+      mockUploadFilesInBatch.mockResolvedValue({
+        uploaded: 2,
+        updated: 0,
+        failed: 1,
+        errors: ["file2.md: Upload failed"],
+        successfulSize: 16,
+      });
 
       await command.parseAsync(["node", "upload", "test-store", "*.md"]);
 
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("✓ 2 files uploaded successfully")
-      );
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("✗ 1 file failed")
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130",
+        expect.arrayContaining([
+          expect.objectContaining({ path: "file1.md" }),
+          expect.objectContaining({ path: "file2.md" }),
+          expect.objectContaining({ path: "file3.md" }),
+        ]),
+        expect.any(Object)
       );
     });
   });

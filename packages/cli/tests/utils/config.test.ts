@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-import { homedir } from "node:os";
 import { join } from "node:path";
 import {
   afterEach,
@@ -18,10 +17,11 @@ import {
   resolveVectorStoreName,
   saveConfig,
 } from "../../src/utils/config";
+import { getTestConfigDir } from "../helpers/test-utils";
 
 
 describe("Config Utils", () => {
-  const configDir = join(homedir(), ".config", "mixedbread");
+  const configDir = getTestConfigDir();
   const configFile = join(configDir, "config.json");
 
   afterEach(() => {

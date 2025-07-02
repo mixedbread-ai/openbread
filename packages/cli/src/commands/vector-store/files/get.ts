@@ -70,9 +70,9 @@ export function createGetCommand(): Command {
       } catch (error) {
         spinner.fail("Failed to load file details");
         if (error instanceof Error) {
-          console.error(chalk.red("Error:"), error.message);
+          console.error(chalk.red("\nError:"), error.message);
         } else {
-          console.error(chalk.red("Error:"), "Failed to get file details");
+          console.error(chalk.red("\nError:"), "Failed to get file details");
         }
         process.exit(1);
       }

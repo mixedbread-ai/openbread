@@ -1,3 +1,4 @@
+import type { FileCreateParams } from "@mixedbread/sdk/resources/vector-stores";
 import chalk from "chalk";
 import { Command } from "commander";
 import ora from "ora";
@@ -15,6 +16,7 @@ import { validateMetadata } from "../../utils/metadata";
 import { formatCountWithSuffix } from "../../utils/output";
 import {
   analyzeChanges,
+  displaySyncResultsSummary,
   executeSyncChanges,
   formatChangeSummary,
 } from "../../utils/sync";
@@ -27,28 +29,32 @@ const SyncVectorStoreSchema = GlobalOptionsSchema.extend({
     .array(z.string())
     .min(1, { message: "At least one pattern is required" }),
   strategy: z.enum(["fast", "high_quality"]).optional(),
+  contextualization: z
+    .boolean({ message: '"contextualization" must be a boolean' })
+    .optional(),
   fromGit: z.string().optional(),
   dryRun: z.boolean().optional(),
   force: z.boolean().optional(),
   metadata: z.string().optional(),
   ci: z.boolean().optional(),
-  concurrency: z.coerce
-    .number({ message: '"concurrency" must be a number' })
-    .int({ message: '"concurrency" must be an integer' })
-    .min(1, { message: '"concurrency" must be at least 1' })
-    .max(50, { message: '"concurrency" must be at most 50' })
+  parallel: z.coerce
+    .number({ message: '"parallel" must be a number' })
+    .int({ message: '"parallel" must be an integer' })
+    .min(1, { message: '"parallel" must be at least 1' })
+    .max(20, { message: '"parallel" must be less than or equal to 20' })
     .optional()
     .default(5),
 });
 
 interface SyncOptions extends GlobalOptions {
-  strategy?: "fast" | "high_quality";
+  strategy?: FileCreateParams.Experimental["parsing_strategy"];
+  contextualization?: boolean;
   fromGit?: string;
   dryRun?: boolean;
   force?: boolean;
   metadata?: string;
   ci?: boolean;
-  concurrency?: number;
+  parallel?: number;
 }
 
 export function createSyncCommand(): Command {
@@ -62,11 +68,8 @@ export function createSyncCommand(): Command {
         "<patterns...>",
         "File patterns, folders, or paths to sync (supports ./** and folder names)"
       )
-      .option(
-        "--strategy <strategy>",
-        "Upload strategy (fast|high_quality)",
-        "fast"
-      )
+      .option("--strategy <strategy>", "Upload strategy (fast|high_quality)")
+      .option("--contextualization", "Enable context preservation")
       .option(
         "--from-git <ref>",
         "Only sync files changed since git ref (default: last sync)"
@@ -75,11 +78,7 @@ export function createSyncCommand(): Command {
       .option("--force", "Skip confirmation prompt")
       .option("--metadata <json>", "Additional metadata for files")
       .option("--ci", "Non-interactive mode for CI/CD")
-      .option(
-        "-c, --concurrency <number>",
-        "Number of concurrent operations (1-50)",
-        "5"
-      )
+      .option("--parallel <n>", "Number of concurrent operations (1-20)")
   );
 
   command.action(
@@ -156,7 +155,6 @@ export function createSyncCommand(): Command {
 
         analyzeSpinner.succeed("Change analysis complete");
 
-        console.log(chalk.bold("\nChange Summary"));
         const totalChanges =
           analysis.added.length +
           analysis.modified.length +
@@ -208,46 +206,29 @@ export function createSyncCommand(): Command {
         }
 
         // Execute changes
-        await executeSyncChanges(client, vectorStore.id, analysis, {
+        const syncResults = await executeSyncChanges(
+          client,
+          vectorStore.id,
+          analysis,
+          {
+            strategy: parsedOptions.strategy,
+            contextualization: parsedOptions.contextualization,
+            metadata: additionalMetadata,
+            gitInfo: gitInfo.isRepo ? gitInfo : undefined,
+            parallel: parsedOptions.parallel,
+          }
+        );
+
+        // Display summary
+        displaySyncResultsSummary(syncResults, gitInfo, fromGit, {
           strategy: parsedOptions.strategy,
-          metadata: additionalMetadata,
-          gitInfo: gitInfo.isRepo ? gitInfo : undefined,
-          concurrency: parsedOptions.concurrency,
+          contextualization: parsedOptions.contextualization,
         });
-
-        // Summary
-        console.log("");
-        console.log(chalk.bold("Summary:"));
-        console.log(
-          chalk.green("✓"),
-          `${formatCountWithSuffix(
-            analysis.added.length + analysis.modified.length,
-            "file"
-          )} uploaded successfully`
-        );
-        console.log(
-          chalk.green("✓"),
-          `${formatCountWithSuffix(
-            analysis.modified.length + analysis.deleted.length,
-            "file"
-          )} deleted (${formatCountWithSuffix(analysis.modified.length, "update")} + ${formatCountWithSuffix(
-            analysis.deleted.length,
-            "removal"
-          )})`
-        );
-        console.log(chalk.green("✓"), "Vector store is now in sync");
-
-        if (fromGit && gitInfo.isRepo) {
-          console.log(
-            chalk.green("✓"),
-            `Sync state saved (commit: ${gitInfo.commit.substring(0, 7)})`
-          );
-        }
       } catch (error) {
         if (error instanceof Error) {
-          console.error(chalk.red("Error:"), error.message);
+          console.error(chalk.red("\nError:"), error.message);
         } else {
-          console.error(chalk.red("Error:"), "Failed to sync vector store");
+          console.error(chalk.red("\nError:"), "Failed to sync vector store");
         }
         process.exit(1);
       }

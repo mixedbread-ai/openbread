@@ -29,7 +29,7 @@ const ListFilesSchema = GlobalOptionsSchema.extend({
     .number({ message: '"limit" must be a number' })
     .int({ message: '"limit" must be an integer' })
     .positive({ message: '"limit" must be positive' })
-    .max(1000, { message: '"limit" must be less than or equal to 1000' })
+    .max(100, { message: '"limit" must be less than or equal to 100' })
     .optional(),
 });
 
@@ -100,9 +100,9 @@ export function createListCommand(): Command {
     } catch (error) {
       spinner.fail("Failed to load files");
       if (error instanceof Error) {
-        console.error(chalk.red("Error:"), error.message);
+        console.error(chalk.red("\nError:"), error.message);
       } else {
-        console.error(chalk.red("Error:"), "Failed to list files");
+        console.error(chalk.red("\nError:"), "Failed to list files");
       }
       process.exit(1);
     }

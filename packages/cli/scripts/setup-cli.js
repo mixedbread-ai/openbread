@@ -17,6 +17,30 @@ function question(query) {
   });
 }
 
+function getConfigDir() {
+  if (process.env.MXBAI_CONFIG_PATH) {
+    return process.env.MXBAI_CONFIG_PATH;
+  }
+
+  const home = os.homedir();
+  const platform = os.platform();
+
+  switch (platform) {
+    case "win32":
+      return process.env.APPDATA
+        ? path.join(process.env.APPDATA, "mixedbread")
+        : path.join(home, "AppData", "Roaming", "mixedbread");
+
+    case "darwin":
+      return path.join(home, "Library", "Application Support", "mixedbread");
+
+    default:
+      return process.env.XDG_CONFIG_HOME
+        ? path.join(process.env.XDG_CONFIG_HOME, "mixedbread")
+        : path.join(home, ".config", "mixedbread");
+  }
+}
+
 async function main() {
   console.log("=== Mixedbread CLI Setup ===\n");
 
@@ -74,12 +98,8 @@ async function main() {
   console.log("\n=== API Key Configuration ===\n");
 
   const envApiKey = process.env.MXBAI_API_KEY;
-  const configPath = path.join(
-    os.homedir(),
-    ".config",
-    "mixedbread",
-    "config.json"
-  );
+
+  const configPath = path.join(getConfigDir(), "config.json");
   let configApiKey = null;
 
   try {
@@ -109,7 +129,7 @@ async function main() {
 
       if (apiKey?.startsWith("mxb_")) {
         const saveLocation = await question(
-          "\nWhere would you like to save the API key?\n1. Environment variable (add to shell profile)\n2. Config file (~/.config/mixedbread/config.json)\n3. Both\nEnter choice (1-3): "
+          `\nWhere would you like to save the API key?\n1. Environment variable (add to shell profile)\n2. Config file (${configPath})\n3. Both\nEnter choice (1-3): `
         );
 
         // Save to config file
@@ -163,8 +183,10 @@ async function main() {
     console.log("  mxbai config get          # View configuration");
 
     console.log("\nUseful resources:");
-    console.log("  📚 Documentation: https://mixedbread.ai/docs/cli");
-    console.log("  🔑 Get API key: https://mixedbread.ai/dashboard/api-keys");
+    console.log("  📚 Documentation: https://mixedbread.com/cli");
+    console.log(
+      "  🔑 Get API key: https://www.platform.mixedbread.com/platform?next=/api-keys"
+    );
   }
 
   rl.close();

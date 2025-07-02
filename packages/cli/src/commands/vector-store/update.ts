@@ -123,9 +123,9 @@ export function createUpdateCommand(): Command {
         spinner.fail("Failed to update vector store");
       }
       if (error instanceof Error) {
-        console.error(chalk.red("Error:"), error.message);
+        console.error(chalk.red("\nError:"), error.message);
       } else {
-        console.error(chalk.red("Error:"), "Failed to update vector store");
+        console.error(chalk.red("\nError:"), "Failed to update vector store");
       }
       process.exit(1);
     }

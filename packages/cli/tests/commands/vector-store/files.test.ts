@@ -21,7 +21,6 @@ jest.mock("../../../src/utils/output", () => ({
   formatOutput: jest.fn(),
 }));
 
-
 // Explicit mock definitions
 const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
   typeof clientUtils.createClient
@@ -34,15 +33,18 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
 
-
 describe("Files Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
       files: {
         list: jest.MockedFunction<Mixedbread["vectorStores"]["files"]["list"]>;
-        retrieve: jest.MockedFunction<Mixedbread["vectorStores"]["files"]["retrieve"]>;
-        delete: jest.MockedFunction<Mixedbread["vectorStores"]["files"]["delete"]>;
+        retrieve: jest.MockedFunction<
+          Mixedbread["vectorStores"]["files"]["retrieve"]
+        >;
+        delete: jest.MockedFunction<
+          Mixedbread["vectorStores"]["files"]["delete"]
+        >;
       };
     };
   };
@@ -95,13 +97,16 @@ describe("Files Command", () => {
     ];
 
     it("should list all files by default", async () => {
-      mockClient.vectorStores.files.list.mockResolvedValue({ data: mockFiles } as any);
+      mockClient.vectorStores.files.list.mockResolvedValue({
+        data: mockFiles,
+        pagination: { first_cursor: "123", last_cursor: "456", has_more: true },
+      });
 
       await command.parseAsync(["node", "files", "list", "test-store"]);
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
         expect.objectContaining({
-          vectorStores: expect.any(Object)
+          vectorStores: expect.any(Object),
         }),
         "test-store"
       );
@@ -131,7 +136,10 @@ describe("Files Command", () => {
     });
 
     it("should filter files by status", async () => {
-      mockClient.vectorStores.files.list.mockResolvedValue({ data: mockFiles } as any);
+      mockClient.vectorStores.files.list.mockResolvedValue({
+        data: mockFiles,
+        pagination: { first_cursor: "123", last_cursor: "456", has_more: true },
+      });
 
       await command.parseAsync([
         "node",
@@ -151,7 +159,10 @@ describe("Files Command", () => {
     });
 
     it("should handle custom limit", async () => {
-      mockClient.vectorStores.files.list.mockResolvedValue({ data: mockFiles } as any);
+      mockClient.vectorStores.files.list.mockResolvedValue({
+        data: mockFiles,
+        pagination: { first_cursor: "123", last_cursor: "456", has_more: true },
+      });
 
       await command.parseAsync([
         "node",
@@ -180,7 +191,10 @@ describe("Files Command", () => {
     });
 
     it("should support output formatting", async () => {
-      mockClient.vectorStores.files.list.mockResolvedValue({ data: mockFiles } as any);
+      mockClient.vectorStores.files.list.mockResolvedValue({
+        data: mockFiles,
+        pagination: { first_cursor: "123", last_cursor: "456", has_more: true },
+      });
 
       await command.parseAsync([
         "node",
@@ -235,7 +249,7 @@ describe("Files Command", () => {
     const mockFile = {
       id: "file_123",
       filename: "important-doc.pdf",
-      status: "completed",
+      status: "completed" as const,
       usage_bytes: 2097152,
       created_at: "2024-01-01T12:00:00Z",
       metadata: { author: "John Doe", version: "1.0" },
@@ -243,7 +257,7 @@ describe("Files Command", () => {
     };
 
     it("should get file details", async () => {
-      mockClient.vectorStores.files.retrieve.mockResolvedValue(mockFile as any);
+      mockClient.vectorStores.files.retrieve.mockResolvedValue(mockFile);
 
       await command.parseAsync([
         "node",
@@ -255,7 +269,7 @@ describe("Files Command", () => {
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
         expect.objectContaining({
-          vectorStores: expect.any(Object)
+          vectorStores: expect.any(Object),
         }),
         "test-store"
       );
@@ -279,9 +293,13 @@ describe("Files Command", () => {
     });
 
     it("should handle file without metadata", async () => {
-      const fileWithoutMetadata = { ...mockFile, metadata: {}, vector_store_id: "550e8400-e29b-41d4-a716-446655440070" };
+      const fileWithoutMetadata = {
+        ...mockFile,
+        metadata: {},
+        vector_store_id: "550e8400-e29b-41d4-a716-446655440070",
+      };
       mockClient.vectorStores.files.retrieve.mockResolvedValue(
-        fileWithoutMetadata as any
+        fileWithoutMetadata
       );
 
       await command.parseAsync([
@@ -297,7 +315,7 @@ describe("Files Command", () => {
     });
 
     it("should support output formatting", async () => {
-      mockClient.vectorStores.files.retrieve.mockResolvedValue(mockFile as any);
+      mockClient.vectorStores.files.retrieve.mockResolvedValue(mockFile);
 
       await command.parseAsync([
         "node",
@@ -334,7 +352,9 @@ describe("Files Command", () => {
 
   describe("Delete file subcommand", () => {
     it("should delete file with force flag", async () => {
-      mockClient.vectorStores.files.delete.mockResolvedValue({ id: "file_123" });
+      mockClient.vectorStores.files.delete.mockResolvedValue({
+        id: "file_123",
+      });
 
       await command.parseAsync([
         "node",
@@ -347,7 +367,7 @@ describe("Files Command", () => {
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
         expect.objectContaining({
-          vectorStores: expect.any(Object)
+          vectorStores: expect.any(Object),
         }),
         "test-store"
       );
@@ -455,7 +475,10 @@ describe("Files Command", () => {
     ];
 
     it("should support API key option", async () => {
-      mockClient.vectorStores.files.list.mockResolvedValue({ data: mockFiles } as any);
+      mockClient.vectorStores.files.list.mockResolvedValue({
+        data: mockFiles,
+        pagination: { first_cursor: "123", last_cursor: "456", has_more: true },
+      });
 
       await command.parseAsync([
         "node",

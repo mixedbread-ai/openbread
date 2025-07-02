@@ -76,7 +76,7 @@ export function createQACommand(): Command {
 
         const response = await client.vectorStores.questionAnswering({
           query: parsedOptions.question,
-          vector_store_ids: [vectorStore.id],
+          vector_store_identifiers: [vectorStore.id],
           top_k: topK,
           search_options: {
             score_threshold: parsedOptions.threshold
@@ -122,9 +122,9 @@ export function createQACommand(): Command {
       } catch (error) {
         spinner.fail("Failed to process question");
         if (error instanceof Error) {
-          console.error(chalk.red("Error:"), error.message);
+          console.error(chalk.red("\nError:"), error.message);
         } else {
-          console.error(chalk.red("Error:"), "Failed to process question");
+          console.error(chalk.red("\nError:"), "Failed to process question");
         }
         process.exit(1);
       }

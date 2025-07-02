@@ -1,10 +1,8 @@
-import { readFileSync, statSync } from "node:fs";
-import { basename, relative } from "node:path";
-import type { Mixedbread } from "@mixedbread/sdk";
+import { statSync } from "node:fs";
+import type { FileCreateParams } from "@mixedbread/sdk/resources/vector-stores";
 import chalk from "chalk";
 import { Command } from "commander";
 import { glob } from "glob";
-import { lookup } from "mime-types";
 import ora from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
@@ -19,7 +17,11 @@ import {
 import { uploadFromManifest } from "../../utils/manifest";
 import { validateMetadata } from "../../utils/metadata";
 import { formatBytes, formatCountWithSuffix } from "../../utils/output";
-import { resolveVectorStore } from "../../utils/vector-store";
+import { type FileToUpload, uploadFilesInBatch } from "../../utils/upload";
+import {
+  getVectorStoreFiles,
+  resolveVectorStore,
+} from "../../utils/vector-store";
 
 const UploadVectorStoreSchema = GlobalOptionsSchema.extend({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
@@ -37,7 +39,7 @@ const UploadVectorStoreSchema = GlobalOptionsSchema.extend({
   parallel: z.coerce
     .number({ message: '"parallel" must be a number' })
     .int({ message: '"parallel" must be an integer' })
-    .positive({ message: '"parallel" must be positive' })
+    .min(1, { message: '"parallel" must be at least 1' })
     .max(20, { message: '"parallel" must be less than or equal to 20' })
     .optional(),
   unique: z.boolean().optional(),
@@ -45,7 +47,7 @@ const UploadVectorStoreSchema = GlobalOptionsSchema.extend({
 });
 
 export interface UploadOptions extends GlobalOptions {
-  strategy?: "fast" | "high_quality";
+  strategy?: FileCreateParams.Experimental["parsing_strategy"];
   contextualization?: boolean;
   metadata?: string;
   dryRun?: boolean;
@@ -63,11 +65,11 @@ export function createUploadCommand(): Command {
         "[patterns...]",
         'File patterns to upload (e.g., "*.md", "docs/**/*.pdf")'
       )
-      .option("--strategy <strategy>", "Processing strategy", "fast")
-      .option("--contextualization", "Enable context preservation", false)
+      .option("--strategy <strategy>", "Processing strategy")
+      .option("--contextualization", "Enable context preservation")
       .option("--metadata <json>", "Additional metadata as JSON string")
       .option("--dry-run", "Preview what would be uploaded", false)
-      .option("--parallel <n>", "Number of concurrent uploads")
+      .option("--parallel <n>", "Number of concurrent uploads (1-20)")
       .option(
         "--unique",
         "Update existing files instead of creating duplicates",
@@ -146,7 +148,6 @@ export function createUploadCommand(): Command {
             return;
           }
 
-          // Calculate total size
           const totalSize = uniqueFiles.reduce((sum, file) => {
             try {
               return sum + statSync(file).size;
@@ -165,8 +166,18 @@ export function createUploadCommand(): Command {
         if (parsedOptions.dryRun) {
           console.log(chalk.blue("Dry run - files that would be uploaded:"));
           uniqueFiles.forEach((file) => {
-            const stats = statSync(file);
-            console.log(`  ${file} (${formatBytes(stats.size)})`);
+            try {
+              const stats = statSync(file);
+              console.log(`  \n${file} (${formatBytes(stats.size)})`);
+              console.log(`    Strategy: ${strategy}`);
+              console.log(`    Contextualization: ${contextualization}`);
+
+              if (metadata && Object.keys(metadata).length > 0) {
+                console.log(`    Metadata: ${JSON.stringify(metadata)}`);
+              }
+            } catch (_error) {
+              console.log(`  ${file} (${chalk.red("Error: File not found")})`);
+            }
           });
           return;
         }
@@ -176,22 +187,25 @@ export function createUploadCommand(): Command {
         if (parsedOptions.unique) {
           const spinner = ora("Checking for existing files...").start();
           try {
-            const filesResponse = await client.vectorStores.files.list(
-              vectorStore.id,
-              { limit: 1000 }
+            const vectorStoreFiles = await getVectorStoreFiles(
+              client,
+              vectorStore.id
             );
             existingFiles = new Map(
-              filesResponse.data
+              vectorStoreFiles
                 .filter((f) => {
-                  const filePath = (f.metadata as { file_path?: string })
-                    ?.file_path;
+                  const filePath =
+                    typeof f.metadata === "object" &&
+                    f.metadata &&
+                    "file_path" in f.metadata &&
+                    (f.metadata.file_path as string);
+
                   return filePath && files.includes(filePath);
                 })
-                .map((f) => {
-                  const filePath = (f.metadata as { file_path: string })
-                    .file_path;
-                  return [filePath, f.id];
-                })
+                .map((f) => [
+                  (f.metadata as { file_path: string }).file_path,
+                  f.id,
+                ])
             );
             spinner.succeed(
               `Found ${formatCountWithSuffix(existingFiles.size, "existing file")}`
@@ -202,20 +216,25 @@ export function createUploadCommand(): Command {
           }
         }
 
-        // Upload files with progress tracking
-        await uploadFiles(client, vectorStore.id, uniqueFiles, {
+        // Transform files to shared format
+        const filesToUpload: FileToUpload[] = uniqueFiles.map((filePath) => ({
+          path: filePath,
           strategy,
           contextualization,
-          parallel,
-          additionalMetadata: metadata,
+          metadata,
+        }));
+
+        // Upload files with progress tracking
+        await uploadFilesInBatch(client, vectorStore.id, filesToUpload, {
           unique: parsedOptions.unique || false,
           existingFiles,
+          parallel,
         });
       } catch (error) {
         if (error instanceof Error) {
-          console.error(chalk.red("Error:"), error.message);
+          console.error(chalk.red("\nError:"), error.message);
         } else {
-          console.error(chalk.red("Error:"), "Failed to upload files");
+          console.error(chalk.red("\nError:"), "Failed to upload files");
         }
         process.exit(1);
       }
@@ -223,117 +242,4 @@ export function createUploadCommand(): Command {
   );
 
   return command;
-}
-
-async function uploadFiles(
-  client: Mixedbread,
-  vectorStoreId: string,
-  files: string[],
-  options: {
-    strategy: string;
-    contextualization: boolean;
-    parallel: number;
-    additionalMetadata: Record<string, unknown>;
-    unique: boolean;
-    existingFiles: Map<string, string>;
-  }
-) {
-  const {
-    strategy,
-    contextualization,
-    parallel,
-    additionalMetadata,
-    unique,
-    existingFiles,
-  } = options;
-
-  console.log(
-    `\nUploading ${formatCountWithSuffix(files.length, "file")} to vector store...`
-  );
-
-  const results = {
-    uploaded: 0,
-    updated: 0,
-    failed: 0,
-    errors: [] as string[],
-  };
-
-  // Process files in batches
-  for (let i = 0; i < files.length; i += parallel) {
-    const batch = files.slice(i, i + parallel);
-    const promises = batch.map(async (filePath) => {
-      const spinner = ora(`Uploading ${basename(filePath)}...`).start();
-
-      try {
-        // Delete existing file if using --unique
-        const relativePath = relative(process.cwd(), filePath);
-        if (unique && existingFiles.has(relativePath)) {
-          const existingFileId = existingFiles.get(relativePath)!;
-          await client.vectorStores.files.delete(existingFileId, {
-            vector_store_identifier: vectorStoreId,
-          });
-          results.updated++;
-        } else {
-          results.uploaded++;
-        }
-
-        // Prepare file metadata
-        const fileMetadata = {
-          file_path: relativePath,
-          uploaded_at: new Date().toISOString(),
-          ...(unique && { synced: true }),
-          ...additionalMetadata,
-        };
-
-        // Upload the file
-        const fileContent = readFileSync(filePath);
-        const fileName = basename(filePath);
-        const mimeType = lookup(filePath) || "application/octet-stream";
-        const file = new File([fileContent], fileName, { type: mimeType });
-
-        await client.vectorStores.files.upload(vectorStoreId, file, {
-          metadata: fileMetadata,
-          experimental: {
-            parsing_strategy: strategy as "fast" | "high_quality",
-            contextualization,
-          },
-        });
-
-        const stats = statSync(filePath);
-        spinner.succeed(`${basename(filePath)} (${formatBytes(stats.size)})`);
-      } catch (error) {
-        results.failed++;
-        const errorMsg =
-          error instanceof Error ? error.message : "Unknown error";
-        results.errors.push(`${filePath}: ${errorMsg}`);
-        spinner.fail(`${basename(filePath)} - ${errorMsg}`);
-      }
-    });
-
-    await Promise.all(promises);
-  }
-
-  // Summary
-  console.log(`\n${chalk.bold("Upload Summary:")}`);
-  if (results.uploaded > 0) {
-    console.log(
-      chalk.green(
-        `✓ ${formatCountWithSuffix(results.uploaded, "file")} uploaded successfully`
-      )
-    );
-  }
-  if (results.updated > 0) {
-    console.log(
-      chalk.blue(`↻ ${formatCountWithSuffix(results.updated, "file")} updated`)
-    );
-  }
-  if (results.failed > 0) {
-    console.log(
-      chalk.red(`✗ ${formatCountWithSuffix(results.failed, "file")} failed`)
-    );
-    if (results.errors.length > 0) {
-      console.log("\nErrors:");
-      results.errors.forEach((error) => console.log(chalk.red(`  ${error}`)));
-    }
-  }
 }

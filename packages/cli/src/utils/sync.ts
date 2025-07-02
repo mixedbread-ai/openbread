@@ -1,10 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type Mixedbread from "@mixedbread/sdk";
+import type { FileCreateParams } from "@mixedbread/sdk/resources/vector-stores";
 import chalk from "chalk";
 import { glob } from "glob";
 import ora from "ora";
-import { processWithConcurrency } from "./concurrency";
+import pLimit from "p-limit";
 import { getChangedFiles, normalizeGitPatterns } from "./git";
 import { calculateFileHash, hashesMatch } from "./hash";
 import { formatBytes, formatCountWithSuffix } from "./output";
@@ -26,6 +27,23 @@ interface SyncAnalysis {
   deleted: FileChange[];
   unchanged: number;
   totalSize: number;
+}
+
+interface SyncResult {
+  file: FileChange;
+  success: boolean;
+  error?: Error;
+}
+
+interface SyncResults {
+  deletions: {
+    successful: SyncResult[];
+    failed: SyncResult[];
+  };
+  uploads: {
+    successful: SyncResult[];
+    failed: SyncResult[];
+  };
 }
 
 export async function analyzeChanges(
@@ -152,7 +170,7 @@ export async function analyzeChanges(
 export function formatChangeSummary(analysis: SyncAnalysis): string {
   const lines: string[] = [];
 
-  lines.push(chalk.bold("Changes to apply:"));
+  lines.push(chalk.bold("\nChanges to apply:"));
 
   if (analysis.modified.length > 0) {
     lines.push(
@@ -170,7 +188,8 @@ export function formatChangeSummary(analysis: SyncAnalysis): string {
       `  ${chalk.green("New:")} (${formatCountWithSuffix(analysis.added.length, "file")})`
     );
     analysis.added.forEach((file) => {
-      const size = file.size ? ` (${formatBytes(file.size)})` : "";
+      const size =
+        typeof file.size === "number" ? ` (${formatBytes(file.size)})` : "";
       lines.push(`    • ${path.relative(process.cwd(), file.path)}${size}`);
     });
     lines.push("");
@@ -206,16 +225,18 @@ export function formatChangeSummary(analysis: SyncAnalysis): string {
 
 export async function executeSyncChanges(
   client: Mixedbread,
-  vectorStoreId: string,
+  vectorStoreIdentifier: string,
   analysis: SyncAnalysis,
   options: {
-    strategy?: "fast" | "high_quality";
+    strategy?: FileCreateParams.Experimental["parsing_strategy"];
+    contextualization?: boolean;
     metadata?: Record<string, unknown>;
     gitInfo?: { commit: string; branch: string };
-    concurrency?: number;
+    parallel?: number;
   }
-): Promise<void> {
-  const concurrency = options.concurrency ?? 5;
+): Promise<SyncResults> {
+  const parallel = options.parallel ?? 5;
+  const limit = pLimit(parallel);
   const totalOperations =
     analysis.added.length +
     analysis.modified.length * 2 +
@@ -224,102 +245,208 @@ export async function executeSyncChanges(
 
   console.log(chalk.bold("Syncing changes..."));
 
-  try {
-    // Delete modified and removed files
-    const filesToDelete = [...analysis.modified, ...analysis.deleted].filter(
-      (f) => f.fileId
+  const results: SyncResults = {
+    deletions: { successful: [], failed: [] },
+    uploads: { successful: [], failed: [] },
+  };
+
+  // Delete modified and removed files
+  const filesToDelete = [...analysis.modified, ...analysis.deleted].filter(
+    (f) => f.fileId
+  );
+
+  if (filesToDelete.length > 0) {
+    console.log(
+      chalk.yellow(
+        `\nDeleting ${formatCountWithSuffix(filesToDelete.length, "file")}...`
+      )
     );
 
-    if (filesToDelete.length > 0) {
-      console.log(
-        chalk.yellow(
-          `\nDeleting ${formatCountWithSuffix(filesToDelete.length, "file")}...`
-        )
-      );
+    const deletePromises = filesToDelete.map((file) =>
+      limit(async () => {
+        const deleteSpinner = ora(
+          `Deleting ${path.relative(process.cwd(), file.path)}`
+        ).start();
+        try {
+          await client.vectorStores.files.delete(file.fileId!, {
+            vector_store_identifier: vectorStoreIdentifier,
+          });
+          completed++;
+          deleteSpinner.succeed(
+            `[${completed}/${totalOperations}] Deleted ${path.relative(process.cwd(), file.path)}`
+          );
+          return { file, success: true };
+        } catch (error) {
+          completed++;
+          deleteSpinner.fail(
+            `[${completed}/${totalOperations}] Failed to delete ${path.relative(process.cwd(), file.path)}: ${error instanceof Error ? error.message : "Unknown error"}`
+          );
+          return {
+            file,
+            success: false,
+            error: error instanceof Error ? error : new Error(String(error)),
+          };
+        }
+      })
+    );
 
-      await processWithConcurrency(
-        filesToDelete,
-        async (file) => {
-          const deleteSpinner = ora(
-            `Deleting ${path.relative(process.cwd(), file.path)}`
-          ).start();
-          try {
-            await client.vectorStores.files.delete(file.fileId!, {
-              vector_store_identifier: vectorStoreId,
-            });
-            completed++;
-            deleteSpinner.succeed(
-              `[${completed}/${totalOperations}] Deleted ${path.relative(process.cwd(), file.path)}`
-            );
-          } catch (error) {
-            deleteSpinner.fail(
-              `Failed to delete ${path.relative(process.cwd(), file.path)}`
-            );
-            throw error;
-          }
-        },
-        concurrency
-      );
-    }
+    const deleteResults = await Promise.allSettled(deletePromises);
+    deleteResults.forEach((result) => {
+      if (result.status === "fulfilled") {
+        const syncResult = result.value;
+        if (syncResult.success) {
+          results.deletions.successful.push(syncResult);
+        } else {
+          results.deletions.failed.push(syncResult);
+        }
+      }
+    });
+  }
 
-    // Upload new and modified files
-    const filesToUpload = [...analysis.added, ...analysis.modified];
+  // Upload new and modified files
+  const filesToUpload = [...analysis.added, ...analysis.modified];
 
-    if (filesToUpload.length > 0) {
-      console.log(
-        chalk.blue(
-          `\nUploading ${formatCountWithSuffix(filesToUpload.length, "file")}...`
-        )
-      );
+  if (filesToUpload.length > 0) {
+    console.log(
+      chalk.blue(
+        `\nUploading ${formatCountWithSuffix(filesToUpload.length, "file")}...`
+      )
+    );
 
-      await processWithConcurrency(
-        filesToUpload,
-        async (file) => {
-          const uploadSpinner = ora(
-            `Uploading ${path.relative(process.cwd(), file.path)}`
-          ).start();
-          try {
-            // Calculate hash if not already done
-            const fileHash =
-              file.localHash || (await calculateFileHash(file.path));
+    const uploadPromises = filesToUpload.map((file) =>
+      limit(async () => {
+        const uploadSpinner = ora(
+          `Uploading ${path.relative(process.cwd(), file.path)}`
+        ).start();
+        try {
+          // Calculate hash if not already done
+          const fileHash =
+            file.localHash || (await calculateFileHash(file.path));
 
-            // Build sync metadata
-            const syncMetadata = buildFileSyncMetadata(
-              file.path,
-              fileHash,
-              options.gitInfo
-            );
+          // Build sync metadata
+          const syncMetadata = buildFileSyncMetadata(
+            file.path,
+            fileHash,
+            options.gitInfo
+          );
 
-            // Merge with user-provided metadata
-            const finalMetadata = {
-              ...options.metadata,
-              ...syncMetadata,
-            };
+          // Merge with user-provided metadata
+          const finalMetadata = {
+            ...options.metadata,
+            ...syncMetadata,
+          };
 
-            // Upload file
-            await uploadFile(client, vectorStoreId, file.path, {
-              metadata: finalMetadata,
-              strategy: options.strategy,
-            });
+          // Upload file
+          await uploadFile(client, vectorStoreIdentifier, file.path, {
+            metadata: finalMetadata,
+            strategy: options.strategy,
+            contextualization: options.contextualization,
+          });
 
-            completed++;
-            uploadSpinner.succeed(
-              `[${completed}/${totalOperations}] Uploaded ${path.relative(process.cwd(), file.path)}`
-            );
-          } catch (error) {
-            uploadSpinner.fail(
-              `Failed to upload ${path.relative(process.cwd(), file.path)}`
-            );
-            throw error;
-          }
-        },
-        concurrency
-      );
-    }
+          completed++;
+          uploadSpinner.succeed(
+            `[${completed}/${totalOperations}] Uploaded ${path.relative(process.cwd(), file.path)}`
+          );
+          return { file, success: true };
+        } catch (error) {
+          completed++;
+          uploadSpinner.fail(
+            `[${completed}/${totalOperations}] Failed to upload ${path.relative(process.cwd(), file.path)}: ${error instanceof Error ? error.message : "Unknown error"}`
+          );
+          return {
+            file,
+            success: false,
+            error: error instanceof Error ? error : new Error(String(error)),
+          };
+        }
+      })
+    );
 
-    console.log(chalk.green("\n✓ Sync completed successfully"));
-  } catch (error) {
-    console.error(chalk.red("\n✗ Sync failed"));
-    throw error;
+    const uploadResults = await Promise.allSettled(uploadPromises);
+    uploadResults.forEach((result) => {
+      if (result.status === "fulfilled") {
+        const syncResult = result.value;
+        if (syncResult.success) {
+          results.uploads.successful.push(syncResult);
+        } else {
+          results.uploads.failed.push(syncResult);
+        }
+      }
+    });
+  }
+
+  return results;
+}
+
+export function displaySyncResultsSummary(
+  syncResults: SyncResults,
+  gitInfo: { commit: string; branch: string; isRepo: boolean },
+  fromGit?: string,
+  uploadOptions?: {
+    strategy?: FileCreateParams.Experimental["parsing_strategy"];
+    contextualization?: boolean;
+  }
+): void {
+  console.log("");
+  console.log(chalk.bold("Summary:"));
+
+  // Upload summary
+  const successfulUploads = syncResults.uploads.successful.length;
+  const failedUploads = syncResults.uploads.failed.length;
+
+  if (successfulUploads > 0) {
+    console.log(
+      chalk.green("✓"),
+      `${formatCountWithSuffix(successfulUploads, "file")} uploaded successfully`
+    );
+  }
+
+  if (failedUploads > 0) {
+    console.log(
+      chalk.red("✗"),
+      `${formatCountWithSuffix(failedUploads, "file")} failed to upload`
+    );
+  }
+
+  // Deletion summary
+  const successfulDeletions = syncResults.deletions.successful.length;
+  const failedDeletions = syncResults.deletions.failed.length;
+
+  if (successfulDeletions > 0) {
+    console.log(
+      chalk.green("✓"),
+      `${formatCountWithSuffix(successfulDeletions, "file")} deleted successfully`
+    );
+  }
+
+  if (failedDeletions > 0) {
+    console.log(
+      chalk.red("✗"),
+      `${formatCountWithSuffix(failedDeletions, "file")} failed to delete`
+    );
+  }
+
+  if (successfulUploads > 0 && uploadOptions) {
+    const strategy = uploadOptions.strategy ?? "fast";
+    const contextText = uploadOptions.contextualization
+      ? "enabled"
+      : "disabled";
+    console.log(chalk.gray(`Strategy: ${strategy}`));
+    console.log(chalk.gray(`Contextualization: ${contextText}`));
+  }
+
+  const hasFailures = failedUploads > 0 || failedDeletions > 0;
+
+  if (hasFailures) {
+    console.log(chalk.yellow("\n⚠ Sync completed with errors"));
+  } else {
+    console.log(chalk.green("\n✓ Vector store is now in sync"));
+  }
+
+  if (fromGit && gitInfo.isRepo) {
+    console.log(
+      chalk.green("✓"),
+      `Sync state saved (commit: ${gitInfo.commit.substring(0, 7)})`
+    );
   }
 }

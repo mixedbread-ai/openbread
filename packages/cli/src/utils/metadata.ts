@@ -16,7 +16,7 @@ export function validateMetadata(
   try {
     return JSON.parse(metadataString);
   } catch (_error) {
-    console.error(chalk.red("Error:"), "Invalid JSON in metadata option");
+    console.error(chalk.red("Error:"), "Invalid JSON in metadata option\n");
     process.exit(1);
   }
 }
