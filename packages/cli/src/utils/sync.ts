@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type Mixedbread from "@mixedbread/sdk";
+import type { FileCreateParams } from "@mixedbread/sdk/resources/vector-stores";
 import chalk from "chalk";
 import { glob } from "glob";
 import ora from "ora";
@@ -226,7 +227,7 @@ export async function executeSyncChanges(
   vectorStoreId: string,
   analysis: SyncAnalysis,
   options: {
-    strategy?: "fast" | "high_quality";
+    strategy?: FileCreateParams.Experimental["parsing_strategy"];
     metadata?: Record<string, unknown>;
     gitInfo?: { commit: string; branch: string };
     concurrency?: number;

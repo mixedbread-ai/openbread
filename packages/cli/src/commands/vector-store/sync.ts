@@ -1,3 +1,4 @@
+import type { FileCreateParams } from "@mixedbread/sdk/resources/vector-stores";
 import chalk from "chalk";
 import { Command } from "commander";
 import ora from "ora";
@@ -43,7 +44,7 @@ const SyncVectorStoreSchema = GlobalOptionsSchema.extend({
 });
 
 interface SyncOptions extends GlobalOptions {
-  strategy?: "fast" | "high_quality";
+  strategy?: FileCreateParams.Experimental["parsing_strategy"];
   fromGit?: string;
   dryRun?: boolean;
   force?: boolean;
