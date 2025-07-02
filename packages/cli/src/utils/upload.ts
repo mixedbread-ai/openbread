@@ -25,6 +25,7 @@ export interface UploadResults {
   updated: number;
   failed: number;
   errors: string[];
+  successfulSize: number;
 }
 
 /**
@@ -73,19 +74,12 @@ export async function uploadFilesInBatch(
     `\nUploading ${formatCountWithSuffix(files.length, "file")} to vector store...`
   );
 
-  const totalSize = files.reduce((sum, file) => {
-    try {
-      return sum + statSync(file.path).size;
-    } catch {
-      return sum;
-    }
-  }, 0);
-
   const results: UploadResults = {
     uploaded: 0,
     updated: 0,
     failed: 0,
     errors: [],
+    successfulSize: 0,
   };
 
   const totalBatches = Math.ceil(files.length / parallel);
@@ -136,13 +130,16 @@ export async function uploadFilesInBatch(
           },
         });
 
+        const stats = statSync(file.path);
+
         if (unique && existingFiles.has(relativePath)) {
           results.updated++;
         } else {
           results.uploaded++;
         }
 
-        const stats = statSync(file.path);
+        results.successfulSize += stats.size;
+
         spinner.succeed(
           `${relative(process.cwd(), file.path)} (${formatBytes(stats.size)})`
         );
@@ -177,7 +174,7 @@ export async function uploadFilesInBatch(
       chalk.red(`✗ ${formatCountWithSuffix(results.failed, "file")} failed`)
     );
   }
-  console.log(chalk.gray(`Total size: ${formatBytes(totalSize)}`));
+  console.log(chalk.gray(`Total size: ${formatBytes(results.successfulSize)}`));
 
   return results;
 }

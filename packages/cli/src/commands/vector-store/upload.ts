@@ -65,8 +65,8 @@ export function createUploadCommand(): Command {
         "[patterns...]",
         'File patterns to upload (e.g., "*.md", "docs/**/*.pdf")'
       )
-      .option("--strategy <strategy>", "Processing strategy", "fast")
-      .option("--contextualization", "Enable context preservation", false)
+      .option("--strategy <strategy>", "Processing strategy")
+      .option("--contextualization", "Enable context preservation")
       .option("--metadata <json>", "Additional metadata as JSON string")
       .option("--dry-run", "Preview what would be uploaded", false)
       .option("--parallel <n>", "Number of concurrent uploads")
@@ -166,8 +166,18 @@ export function createUploadCommand(): Command {
         if (parsedOptions.dryRun) {
           console.log(chalk.blue("Dry run - files that would be uploaded:"));
           uniqueFiles.forEach((file) => {
-            const stats = statSync(file);
-            console.log(`  ${file} (${formatBytes(stats.size)})`);
+            try {
+              const stats = statSync(file);
+              console.log(`  \n${file} (${formatBytes(stats.size)})`);
+              console.log(`    Strategy: ${strategy}`);
+              console.log(`    Contextualization: ${contextualization}`);
+
+              if (metadata && Object.keys(metadata).length > 0) {
+                console.log(`    Metadata: ${JSON.stringify(metadata)}`);
+              }
+            } catch (_error) {
+              console.log(`  ${file} (${chalk.red("Error: File not found")})`);
+            }
           });
           return;
         }

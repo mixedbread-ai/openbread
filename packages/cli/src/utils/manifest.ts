@@ -150,16 +150,15 @@ export async function uploadFromManifest(
       `Found ${formatCountWithSuffix(uniqueFiles.length, "file")} matching the patterns (${formatBytes(totalSize)})`
     );
 
-    // Dry run preview
     if (options.dryRun) {
       console.log(chalk.blue("\nDry run - files that would be uploaded:"));
       uniqueFiles.forEach((file) => {
         try {
           const stats = statSync(file.path);
-          console.log(`  ${file.path} (${formatBytes(stats.size)})`);
-          console.log(
-            `    Strategy: ${file.strategy}, Contextualization: ${file.contextualization}`
-          );
+          console.log(`  \n${file.path} (${formatBytes(stats.size)})`);
+          console.log(`    Strategy: ${file.strategy}`);
+          console.log(`    Contextualization: ${file.contextualization}`);
+
           if (Object.keys(file.metadata).length > 0) {
             console.log(`    Metadata: ${JSON.stringify(file.metadata)}`);
           }
