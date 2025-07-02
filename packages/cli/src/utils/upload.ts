@@ -70,6 +70,11 @@ export async function uploadFilesInBatch(
 ): Promise<UploadResults> {
   const { unique, existingFiles, parallel } = options;
 
+  // Detect if this is a manifest upload
+  const isManifestUpload = files.some(
+    (file) => file.metadata?.manifest_entry === true
+  );
+
   console.log(
     `\nUploading ${formatCountWithSuffix(files.length, "file")} to vector store...`
   );
@@ -140,9 +145,16 @@ export async function uploadFilesInBatch(
 
         results.successfulSize += stats.size;
 
-        spinner.succeed(
-          `${relative(process.cwd(), file.path)} (${formatBytes(stats.size)})`
-        );
+        let successMessage = `${relative(process.cwd(), file.path)} (${formatBytes(stats.size)})`;
+
+        if (isManifestUpload) {
+          const contextText = file.contextualization
+            ? "contextualized"
+            : "no-context";
+          successMessage += ` [${file.strategy}, ${contextText}]`;
+        }
+
+        spinner.succeed(successMessage);
       } catch (error) {
         results.failed++;
         const errorMsg =
@@ -174,6 +186,14 @@ export async function uploadFilesInBatch(
       chalk.red(`✗ ${formatCountWithSuffix(results.failed, "file")} failed`)
     );
   }
+
+  if (!isManifestUpload && files.length > 0) {
+    const firstFile = files[0];
+    const contextText = firstFile.contextualization ? "enabled" : "disabled";
+    console.log(chalk.gray(`Strategy: ${firstFile.strategy}`));
+    console.log(chalk.gray(`Contextualization: ${contextText}`));
+  }
+
   console.log(chalk.gray(`Total size: ${formatBytes(results.successfulSize)}`));
 
   return results;
