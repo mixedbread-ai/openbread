@@ -26,11 +26,17 @@ mxbai vs create "My Documents"
 # Upload files
 mxbai vs upload "My Documents" "*.md" "docs/**/*.pdf"
 
+# Upload with high-quality processing and contextualization
+mxbai vs upload "My Documents" "**/*.md" --strategy high_quality --contextualization
+
 # Search content
 mxbai vs search "My Documents" "how to get started"
 
 # Sync files with change detection
 mxbai vs sync "My Documents" "docs/**" --from-git HEAD~1
+
+# Sync with processing options
+mxbai vs sync "My Documents" "**/*.md" --parallel 8
 
 # Upload with manifest file (JSON or YAML)
 mxbai vs upload "My Documents" --manifest upload-manifest.json
@@ -54,7 +60,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 ### File Management
 
 - `mxbai vs upload <name-or-id> <patterns...>` - Upload files to vector store
-  - Options: `--strategy fast|high_quality`, `--contextualization`, `--metadata <json>`, `--dry-run`, `--parallel <n>`, `--unique`, `--manifest <file>`
+  - Options: `--strategy fast|high_quality`, `--contextualization`, `--metadata <json>`, `--dry-run`, `--parallel <n>` (1-20), `--unique`, `--manifest <file>`
 - `mxbai vs files list <name-or-id>` - List files in vector store (alias: `ls`)
   - Options: `--status <status>` (pending|in_progress|cancelled|completed|failed), `--limit <n>`
 - `mxbai vs files get <name-or-id> <file-id>` - Get file details
@@ -71,7 +77,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 ### Advanced Features
 
 - `mxbai vs sync <name-or-id> <patterns...>` - Sync files with intelligent change detection
-  - Options: `--strategy <strategy>`, `--from-git <ref>`, `--dry-run`, `--force`, `--metadata <json>`, `--ci`, `--concurrency <n>`
+  - Options: `--strategy <strategy>`, `--contextualization`, `--from-git <ref>`, `--dry-run`, `--force`, `--metadata <json>`, `--ci`, `--parallel <n>` (1-20)
 
 ### Configuration
 
@@ -135,21 +141,60 @@ files:
       importance: high
 ```
 
+### Configuration Precedence
+
+When using the CLI, configuration values are resolved in the following order (highest to lowest priority):
+
+1. **Command-line flags** - Direct CLI options (e.g., `--strategy high_quality`)
+2. **Manifest entry** - File-specific settings in manifest files
+3. **Manifest defaults** - Default settings in manifest files
+4. **Config file** - User configuration file settings
+5. **Built-in defaults** - CLI default values
+
+This allows flexible configuration while maintaining predictable behavior.
+
+### Upload Summary Information
+
+The upload and sync commands display strategy and contextualization information in their summaries:
+
+**Normal uploads** show configuration in the summary:
+```
+✓ 5 files uploaded successfully
+Strategy: fast
+Contextualization: enabled
+Total size: 25.3 KB
+```
+
+**Manifest uploads** show configuration beside each file:
+```
+✓ docs/api.md (15.2 KB) [fast, no-context]
+✓ README.md (8.5 KB) [high_quality, contextualized]
+✓ guide.md (1.6 KB) [fast, no-context]
+```
+
 ### Intelligent Sync
 
-The sync command provides intelligent change detection and robust error handling:
+The sync command provides intelligent change detection and robust error handling with full support for processing strategies and contextualization:
 
 **Change Detection Methods:**
 1. **Git-based** (fastest): Uses `git diff` to detect changes since a specific commit
 2. **Hash-based** (accurate): Compares file hashes with stored metadata  
+
+**Processing Options:**
+- **Strategy**: Choose between `fast` (default) or `high_quality` processing
+- **Contextualization**: Enable context preservation for better semantic understanding
+- **Parallel processing**: Control concurrency for optimal performance
 
 **Example Usage:**
 ```bash
 # Sync with git-based detection (fastest)
 mxbai vs sync "My Docs" "docs/**" --from-git HEAD~1
 
-# Sync with hash-based detection and custom concurrency
-mxbai vs sync "My Docs" "**/*.md" --concurrency 10
+# Sync with hash-based detection and custom parallel processing
+mxbai vs sync "My Docs" "**/*.md" --parallel 10
+
+# Sync with high-quality processing and contextualization
+mxbai vs sync "My Docs" "**/*.md" --strategy high_quality --contextualization
 
 # Dry run to preview changes
 mxbai vs sync "My Docs" "src/**" --dry-run
@@ -163,10 +208,10 @@ mxbai vs sync "My Docs" "**/*.pdf" --ci --force
 Set defaults for common options:
 
 ```bash
-# Upload defaults
+# Upload defaults (apply to both upload and sync commands)
 mxbai config set defaults.upload.strategy high_quality  # or 'fast' (default: fast)
 mxbai config set defaults.upload.contextualization true  # Enable context preservation (default: false)
-mxbai config set defaults.upload.parallel 10             # Concurrent uploads (default: 5)
+mxbai config set defaults.upload.parallel 10             # Concurrent operations (1-20, default: 5)
 
 # Search defaults
 mxbai config set defaults.search.top_k 20                # Number of results (default: 10)
