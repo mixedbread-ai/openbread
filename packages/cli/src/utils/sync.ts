@@ -170,7 +170,7 @@ export async function analyzeChanges(
 export function formatChangeSummary(analysis: SyncAnalysis): string {
   const lines: string[] = [];
 
-  lines.push(chalk.bold("Changes to apply:"));
+  lines.push(chalk.bold("\nChanges to apply:"));
 
   if (analysis.modified.length > 0) {
     lines.push(
@@ -188,7 +188,8 @@ export function formatChangeSummary(analysis: SyncAnalysis): string {
       `  ${chalk.green("New:")} (${formatCountWithSuffix(analysis.added.length, "file")})`
     );
     analysis.added.forEach((file) => {
-      const size = file.size ? ` (${formatBytes(file.size)})` : "";
+      const size =
+        typeof file.size === "number" ? ` (${formatBytes(file.size)})` : "";
       lines.push(`    • ${path.relative(process.cwd(), file.path)}${size}`);
     });
     lines.push("");
@@ -228,13 +229,14 @@ export async function executeSyncChanges(
   analysis: SyncAnalysis,
   options: {
     strategy?: FileCreateParams.Experimental["parsing_strategy"];
+    contextualization?: boolean;
     metadata?: Record<string, unknown>;
     gitInfo?: { commit: string; branch: string };
-    concurrency?: number;
+    parallel?: number;
   }
 ): Promise<SyncResults> {
-  const concurrency = options.concurrency ?? 5;
-  const limit = pLimit(concurrency);
+  const parallel = options.parallel ?? 5;
+  const limit = pLimit(parallel);
   const totalOperations =
     analysis.added.length +
     analysis.modified.length * 2 +
@@ -338,6 +340,7 @@ export async function executeSyncChanges(
           await uploadFile(client, vectorStoreId, file.path, {
             metadata: finalMetadata,
             strategy: options.strategy,
+            contextualization: options.contextualization,
           });
 
           completed++;
@@ -378,7 +381,11 @@ export async function executeSyncChanges(
 export function displaySyncResultsSummary(
   syncResults: SyncResults,
   gitInfo: { commit: string; branch: string; isRepo: boolean },
-  fromGit?: string
+  fromGit?: string,
+  uploadOptions?: {
+    strategy?: FileCreateParams.Experimental["parsing_strategy"];
+    contextualization?: boolean;
+  }
 ): void {
   console.log("");
   console.log(chalk.bold("Summary:"));
@@ -417,6 +424,15 @@ export function displaySyncResultsSummary(
       chalk.red("✗"),
       `${formatCountWithSuffix(failedDeletions, "file")} failed to delete`
     );
+  }
+
+  if (successfulUploads > 0 && uploadOptions) {
+    const strategy = uploadOptions.strategy ?? "fast";
+    const contextText = uploadOptions.contextualization
+      ? "enabled"
+      : "disabled";
+    console.log(chalk.gray(`Strategy: ${strategy}`));
+    console.log(chalk.gray(`Contextualization: ${contextText}`));
   }
 
   const hasFailures = failedUploads > 0 || failedDeletions > 0;
