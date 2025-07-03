@@ -24,8 +24,8 @@ importers:
   packages/cli:
     dependencies:
       '@mixedbread/sdk':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: ^0.16.0
+        version: 0.16.0
       '@pnpm/tabtab':
         specifier: ^0.5.4
         version: 0.5.4
@@ -725,8 +725,8 @@ packages:
   '@jridgewell/sourcemap-codec@1.5.0':
     resolution: {integrity: sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==}
 
-  '@jridgewell/sourcemap-codec@1.5.3':
-    resolution: {integrity: sha512-AiR5uKpFxP3PjO4R19kQGIMwxyRyPuXmKEEy301V1C0+1rVjS94EZQXf1QKZYN8Q0YM+estSPhmx5JwNftv6nw==}
+  '@jridgewell/sourcemap-codec@1.5.4':
+    resolution: {integrity: sha512-VT2+G1VQs/9oz078bLrYbecdZKs912zQlkelYpuf+SXF+QvZDYJlbx/LSx+meSAwdDFnF8FVXW92AVjjkVmgFw==}
 
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
@@ -744,8 +744,8 @@ packages:
     resolution: {integrity: sha512-23h+EiNLxTtftmWTpz7arbHC5f1SZ96V5tFPkNL1dM+WDQt8H3EJwHOIIF7RyQNWBc8zGYEqi77BsSBS+rWGVg==}
     hasBin: true
 
-  '@mixedbread/sdk@0.14.0':
-    resolution: {integrity: sha512-ORTHuCeXsboulqXy/9rf5MeukmwUDWOP5d8a7TSsnuInK2cONXyPGl0LdAnYOygws5zcy3MqVCdWMOI+SprWoQ==}
+  '@mixedbread/sdk@0.16.0':
+    resolution: {integrity: sha512-BrcUgvERDZN8cD63FQq90cwsIDYUjJPuD+xgiu0gyT41XrVm3tA4aqWeEwcT5ALGtlwXxfdS+je3TtMNML6TEQ==}
     hasBin: true
 
   '@modelcontextprotocol/sdk@1.13.0':
@@ -3376,7 +3376,7 @@ snapshots:
 
   '@jridgewell/sourcemap-codec@1.5.0': {}
 
-  '@jridgewell/sourcemap-codec@1.5.3':
+  '@jridgewell/sourcemap-codec@1.5.4':
     optional: true
 
   '@jridgewell/trace-mapping@0.3.25':
@@ -3387,7 +3387,7 @@ snapshots:
   '@jridgewell/trace-mapping@0.3.9':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.3
+      '@jridgewell/sourcemap-codec': 1.5.4
     optional: true
 
   '@manypkg/find-root@1.1.0':
@@ -3408,7 +3408,7 @@ snapshots:
 
   '@mixedbread/sdk@0.11.1': {}
 
-  '@mixedbread/sdk@0.14.0': {}
+  '@mixedbread/sdk@0.16.0': {}
 
   '@modelcontextprotocol/sdk@1.13.0':
     dependencies:
