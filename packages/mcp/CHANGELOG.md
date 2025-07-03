@@ -1,5 +1,13 @@
 # @mixedbread/mcp
 
+## 1.1.6
+
+### Patch Changes
+
+- Update SDK dependency and homepage URL
+
+  - Bump @mixedbread/sdk from 0.11.1 to 0.16.0 for latest features and bug fixes
+
 ## 1.1.5
 
 ### Patch Changes
