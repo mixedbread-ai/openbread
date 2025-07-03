@@ -1,5 +1,11 @@
 import path from "node:path";
-import { install, log, parseEnv, uninstall } from "@pnpm/tabtab";
+import {
+  getShellFromEnv,
+  install,
+  log,
+  parseEnv,
+  uninstall,
+} from "@pnpm/tabtab";
 import { Command } from "commander";
 
 const SUPPORTED_SHELLS = ["bash", "zsh", "fish", "pwsh"] as const;
@@ -104,57 +110,57 @@ export function createCompletionServerCommand(): Command {
         return;
       }
 
-      const shell =
-        (process.env.SHELL &&
-          (path.basename(process.env.SHELL) as SupportedShell)) ||
-        "bash";
+      const shell = getShellFromEnv(process.env);
 
-      const words = env.line.trim().split(/\s+/);
-
-      // Root level completions - "mxbai "
-      if (words.length === 1) {
-        ["config", "vs", "completion", "--help", "--version"].forEach((cmd) =>
-          console.log(cmd)
+      // Root level completions - "mxbai " (when no previous command)
+      if (env.words === 1) {
+        return log(
+          ["config", "vs", "completion", "--help", "--version"],
+          shell,
+          console.log
         );
-        return;
       }
 
-      const lastCmd = words[1];
-
       // Vector store completions
-      if (lastCmd === "vs" || lastCmd === "vector-store") {
-        if (words.length === 2) {
-          // "mxbai vs " - show vs subcommands
-          return log(
-            [
-              "create",
-              "delete",
-              "get",
-              "list",
-              "update",
-              "upload",
-              "search",
-              "qa",
-              "sync",
-              "files",
-            ],
-            shell
-          );
-        }
-        if (words.length === 3 && words[2] === "files") {
-          // "mxbai vs files " - show files subcommands
-          return log(["list", "get", "delete"], shell);
+      if (env.prev === "vs" || env.prev === "vector-store") {
+        return log(
+          [
+            "create",
+            "delete",
+            "get",
+            "list",
+            "update",
+            "upload",
+            "search",
+            "qa",
+            "sync",
+            "files",
+          ],
+          shell,
+          console.log
+        );
+      }
+
+      // Vector store files completions
+      if (env.prev === "files") {
+        // Check if we're in "mxbai vs files " context
+        const words = env.line.trim().split(/\s+/);
+        if (
+          words.length >= 3 &&
+          (words[1] === "vs" || words[1] === "vector-store")
+        ) {
+          return log(["list", "get", "delete"], shell, console.log);
         }
       }
 
       // Config completions
-      if (lastCmd === "config" && words.length === 2) {
-        return log(["get", "set"], shell);
+      if (env.prev === "config") {
+        return log(["get", "set"], shell, console.log);
       }
 
       // Completion completions
-      if (lastCmd === "completion" && words.length === 2) {
-        return log(["install", "uninstall"], shell);
+      if (env.prev === "completion") {
+        return log(["install", "uninstall"], shell, console.log);
       }
     });
 
