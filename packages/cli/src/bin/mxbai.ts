@@ -27,6 +27,10 @@ try {
   }
 }
 
+import {
+  createCompletionCommand,
+  createCompletionServerCommand,
+} from "../commands/completion";
 import { createConfigCommand } from "../commands/config";
 import { createVectorStoreCommand } from "../commands/vector-store";
 import { setupGlobalOptions } from "../utils/global-options";
@@ -44,6 +48,8 @@ setupGlobalOptions(program);
 // Add commands
 program.addCommand(createVectorStoreCommand());
 program.addCommand(createConfigCommand());
+program.addCommand(createCompletionCommand());
+program.addCommand(createCompletionServerCommand());
 
 // Show help without error exit code when no command provided
 program.action(() => {
