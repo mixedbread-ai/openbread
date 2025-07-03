@@ -12,7 +12,6 @@ import mockFs from "mock-fs";
 import { createGetCommand } from "../../../src/commands/config/get";
 import { getTestConfigDir } from "../../helpers/test-utils";
 
-
 describe("Config Get Command", () => {
   const configDir = getTestConfigDir();
   const configFile = join(configDir, "config.json");

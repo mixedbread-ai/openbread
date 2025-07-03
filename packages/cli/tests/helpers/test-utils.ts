@@ -247,7 +247,7 @@ export const createMockConfig = (overrides: Record<string, any> = {}) => ({
 export const getTestConfigDir = () => {
   const home = homedir();
   const os = platform();
-  
+
   switch (os) {
     case "win32":
       return process.env.APPDATA

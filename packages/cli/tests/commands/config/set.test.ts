@@ -13,7 +13,6 @@ import { createSetCommand } from "../../../src/commands/config/set";
 import { loadConfig } from "../../../src/utils/config";
 import { getTestConfigDir } from "../../helpers/test-utils";
 
-
 describe("Config Set Command", () => {
   const configDir = getTestConfigDir();
   const configFile = join(configDir, "config.json");

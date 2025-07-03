@@ -45,9 +45,10 @@ const mockGetVectorStoreFiles =
 const mockLoadConfig = configUtils.loadConfig as jest.MockedFunction<
   typeof configUtils.loadConfig
 >;
-const mockUploadFilesInBatch = uploadUtils.uploadFilesInBatch as jest.MockedFunction<
-  typeof uploadUtils.uploadFilesInBatch
->;
+const mockUploadFilesInBatch =
+  uploadUtils.uploadFilesInBatch as jest.MockedFunction<
+    typeof uploadUtils.uploadFilesInBatch
+  >;
 
 describe("Vector Store Upload Command", () => {
   let command: Command;
@@ -94,7 +95,7 @@ describe("Vector Store Upload Command", () => {
         },
       })
     );
-    
+
     // Setup uploadFilesInBatch mock
     mockUploadFilesInBatch.mockResolvedValue({
       uploaded: 1,
@@ -471,7 +472,7 @@ describe("Vector Store Upload Command", () => {
       (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
         "test.md",
       ]);
-      
+
       // Mock uploadFilesInBatch to return failure results
       mockUploadFilesInBatch.mockResolvedValue({
         uploaded: 0,
@@ -513,7 +514,7 @@ describe("Vector Store Upload Command", () => {
         "readable.md",
         "unreadable.md",
       ]);
-      
+
       // Mock uploadFilesInBatch to handle the unreadable file
       mockUploadFilesInBatch.mockResolvedValue({
         uploaded: 1,
@@ -540,7 +541,7 @@ describe("Vector Store Upload Command", () => {
         "file1.md",
         "file2.md",
       ]);
-      
+
       // Mock uploadFilesInBatch to return successful results
       mockUploadFilesInBatch.mockResolvedValue({
         uploaded: 2,

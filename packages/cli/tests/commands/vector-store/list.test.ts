@@ -19,7 +19,6 @@ jest.mock("../../../src/utils/output", () => ({
   formatOutput: jest.fn(),
 }));
 
-
 // Explicit mock definitions
 const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
   typeof clientUtils.createClient
@@ -27,7 +26,6 @@ const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
 const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
-
 
 describe("Vector Store List Command", () => {
   let command: Command;

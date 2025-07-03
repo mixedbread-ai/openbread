@@ -1,10 +1,4 @@
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import Table from "cli-table3";
 import { formatBytes, formatOutput } from "../../src/utils/output";
 
@@ -13,7 +7,6 @@ jest.mock("cli-table3");
 
 // Explicit mock definition
 const MockTable = Table as jest.MockedClass<typeof Table>;
-
 
 describe("Output Utils", () => {
   beforeEach(() => {

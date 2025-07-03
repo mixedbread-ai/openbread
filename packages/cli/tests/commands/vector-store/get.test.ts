@@ -21,7 +21,6 @@ jest.mock("../../../src/utils/output", () => ({
   formatOutput: jest.fn(),
 }));
 
-
 // Explicit mock definitions
 const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
   typeof clientUtils.createClient
@@ -33,7 +32,6 @@ const mockResolveVectorStore =
 const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
-
 
 describe("Vector Store Get Command", () => {
   let command: Command;
@@ -86,7 +84,7 @@ describe("Vector Store Get Command", () => {
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
         expect.objectContaining({
-          vectorStores: expect.any(Object)
+          vectorStores: expect.any(Object),
         }),
         "test-store"
       );
@@ -200,10 +198,7 @@ describe("Vector Store Get Command", () => {
         "json",
       ]);
 
-      expect(mockFormatOutput).toHaveBeenCalledWith(
-        expect.any(Object),
-        "json"
-      );
+      expect(mockFormatOutput).toHaveBeenCalledWith(expect.any(Object), "json");
     });
 
     it("should format as CSV when specified", async () => {
@@ -221,10 +216,7 @@ describe("Vector Store Get Command", () => {
         "csv",
       ]);
 
-      expect(mockFormatOutput).toHaveBeenCalledWith(
-        expect.any(Object),
-        "csv"
-      );
+      expect(mockFormatOutput).toHaveBeenCalledWith(expect.any(Object), "csv");
     });
   });
 

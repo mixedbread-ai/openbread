@@ -1,10 +1,4 @@
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Command } from "commander";
 import { z } from "zod";
 import {
@@ -13,7 +7,6 @@ import {
   parseOptions,
   setupGlobalOptions,
 } from "../../src/utils/global-options";
-
 
 describe("Global Options", () => {
   describe("setupGlobalOptions", () => {

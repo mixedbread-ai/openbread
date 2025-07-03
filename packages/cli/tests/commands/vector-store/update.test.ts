@@ -21,7 +21,6 @@ jest.mock("../../../src/utils/output", () => ({
   formatOutput: jest.fn(),
 }));
 
-
 // Explicit mock definitions
 const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
   typeof clientUtils.createClient
@@ -33,7 +32,6 @@ const mockResolveVectorStore =
 const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
-
 
 describe("Vector Store Update Command", () => {
   let command: Command;
@@ -92,7 +90,7 @@ describe("Vector Store Update Command", () => {
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
         expect.objectContaining({
-          vectorStores: expect.any(Object)
+          vectorStores: expect.any(Object),
         }),
         "test-store"
       );
