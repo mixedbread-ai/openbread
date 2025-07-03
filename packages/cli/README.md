@@ -83,6 +83,9 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 
 - `mxbai config set <key> <value>` - Set configuration values
 - `mxbai config get [key]` - Get configuration values
+- `mxbai completion install` - Install shell completion
+  - Options: `--shell <shell>` (manually specify shell: bash, zsh, fish, pwsh)
+- `mxbai completion uninstall` - Uninstall shell completion
 
 ## Features
 
@@ -246,6 +249,32 @@ The CLI looks for your API key in this order:
    - **macOS**: `~/Library/Application Support/mixedbread/config.json`
    - **Windows**: `%APPDATA%\mixedbread\config.json`
    - **Custom**: Set `MXBAI_CONFIG_PATH` environment variable to override
+
+## Shell Completion
+
+The CLI supports tab completion for commands. To set up completion:
+
+```bash
+# Install completion (auto-detects your shell)
+mxbai completion install
+
+# Install completion for a specific shell
+mxbai completion install --shell bash
+mxbai completion install --shell zsh
+mxbai completion install --shell fish
+mxbai completion install --shell pwsh
+
+# Remove completion
+mxbai completion uninstall
+```
+
+**Supported shells:** bash, zsh, fish, pwsh (PowerShell)
+
+After installation, restart your shell or reload your shell configuration:
+- **bash**: `source ~/.bashrc` or restart terminal
+- **zsh**: `source ~/.zshrc` or restart terminal  
+- **fish**: Completion is ready to use (fish auto-loads completions)
+- **pwsh**: `. $PROFILE` or restart terminal
 
 ## Global Options
 
