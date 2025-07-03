@@ -6,6 +6,7 @@ import {
   parseEnv,
   uninstall,
 } from "@pnpm/tabtab";
+import chalk from "chalk";
 import { Command } from "commander";
 
 const SUPPORTED_SHELLS = ["bash", "zsh", "fish", "pwsh"] as const;
@@ -21,8 +22,10 @@ function getShellInfo(options: { shell?: string }) {
       shell = options.shell as SupportedShell;
       installMethod = "manual";
     } else {
-      console.error(`Error: Unsupported shell '${options.shell}'.`);
-      console.error(`Supported shells: ${SUPPORTED_SHELLS.join(", ")}`);
+      console.error(chalk.red(`Error: Unsupported shell '${options.shell}'.`));
+      console.error(
+        chalk.gray(`Supported shells: ${SUPPORTED_SHELLS.join(", ")}`)
+      );
       process.exit(1);
     }
   } else {
@@ -69,40 +72,62 @@ export function createCompletionCommand(): Command {
           });
 
           console.log(
-            `Shell completion installed for ${name} (${shell}${installMethod === "auto-detected" ? " - auto-detected" : ""}).`
+            chalk.green("✓"),
+            `Shell completion installed for ${chalk.bold(name)} ${chalk.cyan(`(${shell}${installMethod === "auto-detected" ? " - auto-detected" : ""})`)}.`
           );
 
           // Show shell-specific instructions
           switch (shell) {
             case "bash":
-              console.log("Run 'source ~/.bashrc' or restart your terminal.");
+              console.log(
+                "→ Run",
+                chalk.cyan("'source ~/.bashrc'"),
+                "or restart your terminal."
+              );
               break;
             case "zsh":
-              console.log("Run 'source ~/.zshrc' or restart your terminal.");
+              console.log(
+                "→ Run",
+                chalk.cyan("'source ~/.zshrc'"),
+                "or restart your terminal."
+              );
               break;
             case "fish":
               console.log(
-                "Completion is ready to use (fish auto-loads completions)."
+                "→ Completion is ready to use (fish auto-loads completions)."
               );
               break;
             case "pwsh":
-              console.log("Run '. $PROFILE' or restart your terminal.");
+              console.log(
+                "→ Run",
+                chalk.cyan("'. $PROFILE'"),
+                "or restart your terminal."
+              );
               break;
           }
         } else {
           // Could not auto-detect - let tabtab prompt
+          console.log(
+            chalk.yellow(
+              "⚠ Could not auto-detect shell. Please select your shell:"
+            )
+          );
+
           await install({
             name,
             completer: name,
           });
 
-          console.log(`Shell completion installed for ${name}.`);
           console.log(
-            "Reload your shell configuration or restart your terminal."
+            chalk.green("✓"),
+            `Shell completion installed for ${chalk.bold(name)}.`
+          );
+          console.log(
+            "→ Reload your shell configuration or restart your terminal."
           );
         }
       } catch (error) {
-        console.error("Error installing completion:", error);
+        console.error(chalk.red("✗"), "Error installing completion:", error);
         process.exit(1);
       }
     });
@@ -115,9 +140,12 @@ export function createCompletionCommand(): Command {
 
       try {
         await uninstall({ name });
-        console.log(`Shell completion uninstalled for ${name}`);
+        console.log(
+          chalk.green("✓"),
+          `Shell completion uninstalled for ${chalk.bold(name)}`
+        );
       } catch (error) {
-        console.error("Error uninstalling completion:", error);
+        console.error(chalk.red("✗"), "Error uninstalling completion:", error);
         process.exit(1);
       }
     });
