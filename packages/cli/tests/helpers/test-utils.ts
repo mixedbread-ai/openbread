@@ -1,6 +1,6 @@
-import { expect, jest } from "@jest/globals";
 import { homedir, platform } from "node:os";
 import { join } from "node:path";
+import { expect, jest } from "@jest/globals";
 import type { Command } from "commander";
 
 /**
@@ -247,7 +247,7 @@ export const createMockConfig = (overrides: Record<string, any> = {}) => ({
 export const getTestConfigDir = () => {
   const home = homedir();
   const os = platform();
-  
+
   switch (os) {
     case "win32":
       return process.env.APPDATA

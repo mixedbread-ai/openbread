@@ -1,3 +1,4 @@
+import { statSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type Mixedbread from "@mixedbread/sdk";
@@ -32,6 +33,7 @@ interface SyncAnalysis {
 interface SyncResult {
   file: FileChange;
   success: boolean;
+  skipped?: boolean;
   error?: Error;
 }
 
@@ -262,7 +264,7 @@ export async function executeSyncChanges(
       )
     );
 
-    const deletePromises = filesToDelete.map((file) =>
+    const deletePromises: Promise<SyncResult>[] = filesToDelete.map((file) =>
       limit(async () => {
         const deleteSpinner = ora(
           `Deleting ${path.relative(process.cwd(), file.path)}`
@@ -313,7 +315,7 @@ export async function executeSyncChanges(
       )
     );
 
-    const uploadPromises = filesToUpload.map((file) =>
+    const uploadPromises: Promise<SyncResult>[] = filesToUpload.map((file) =>
       limit(async () => {
         const uploadSpinner = ora(
           `Uploading ${path.relative(process.cwd(), file.path)}`
@@ -335,6 +337,16 @@ export async function executeSyncChanges(
             ...options.metadata,
             ...syncMetadata,
           };
+
+          // Check if file is empty
+          const stats = statSync(file.path);
+          if (stats.size === 0) {
+            completed++;
+            uploadSpinner.warn(
+              `[${completed}/${totalOperations}] Skipped empty file ${path.relative(process.cwd(), file.path)}`
+            );
+            return { file, success: false, skipped: true };
+          }
 
           // Upload file
           await uploadFile(client, vectorStoreIdentifier, file.path, {
@@ -387,17 +399,28 @@ export function displaySyncResultsSummary(
     contextualization?: boolean;
   }
 ): void {
-  console.log("");
-  console.log(chalk.bold("Summary:"));
+  console.log(chalk.bold("\nSummary:"));
 
   // Upload summary
   const successfulUploads = syncResults.uploads.successful.length;
-  const failedUploads = syncResults.uploads.failed.length;
+  const failedUploads = syncResults.uploads.failed.filter(
+    (f) => !f.skipped
+  ).length;
+  const skippedUploads = syncResults.uploads.failed.filter(
+    (f) => f.skipped
+  ).length;
 
   if (successfulUploads > 0) {
     console.log(
       chalk.green("✓"),
       `${formatCountWithSuffix(successfulUploads, "file")} uploaded successfully`
+    );
+  }
+
+  if (skippedUploads > 0) {
+    console.log(
+      chalk.yellow("⚠"),
+      `${formatCountWithSuffix(skippedUploads, "file")} skipped`
     );
   }
 

@@ -23,8 +23,8 @@ export interface FileToUpload {
 export interface UploadResults {
   uploaded: number;
   updated: number;
+  skipped: number;
   failed: number;
-  errors: string[];
   successfulSize: number;
 }
 
@@ -82,8 +82,8 @@ export async function uploadFilesInBatch(
   const results: UploadResults = {
     uploaded: 0,
     updated: 0,
+    skipped: 0,
     failed: 0,
-    errors: [],
     successfulSize: 0,
   };
 
@@ -119,7 +119,16 @@ export async function uploadFilesInBatch(
           ...file.metadata,
         };
 
-        // Upload the file
+        // Check if file is empty
+        const stats = statSync(file.path);
+        if (stats.size === 0) {
+          spinner.warn(
+            `${relative(process.cwd(), file.path)} - Empty file skipped`
+          );
+          results.skipped++;
+          return;
+        }
+
         const fileContent = readFileSync(file.path);
         const fileName = basename(file.path);
         const mimeType = lookup(file.path) || "application/octet-stream";
@@ -138,8 +147,6 @@ export async function uploadFilesInBatch(
             },
           }
         );
-
-        const stats = statSync(file.path);
 
         if (unique && existingFiles.has(relativePath)) {
           results.updated++;
@@ -163,7 +170,6 @@ export async function uploadFilesInBatch(
         results.failed++;
         const errorMsg =
           error instanceof Error ? error.message : "Unknown error";
-        results.errors.push(`${file.path}: ${errorMsg}`);
         spinner.fail(`${relative(process.cwd(), file.path)} - ${errorMsg}`);
       }
     });
@@ -183,6 +189,13 @@ export async function uploadFilesInBatch(
   if (results.updated > 0) {
     console.log(
       chalk.blue(`↻ ${formatCountWithSuffix(results.updated, "file")} updated`)
+    );
+  }
+  if (results.skipped > 0) {
+    console.log(
+      chalk.yellow(
+        `⚠ ${formatCountWithSuffix(results.skipped, "file")} skipped`
+      )
     );
   }
   if (results.failed > 0) {

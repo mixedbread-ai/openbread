@@ -1,3 +1,5 @@
+import { jest } from "@jest/globals";
+
 // Mock inquirer to avoid ESM issues in tests
 const mockInquirer = {
   prompt: jest.fn(),

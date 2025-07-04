@@ -19,7 +19,6 @@ import {
 } from "../../src/utils/config";
 import { getTestConfigDir } from "../helpers/test-utils";
 
-
 describe("Config Utils", () => {
   const configDir = getTestConfigDir();
   const configFile = join(configDir, "config.json");

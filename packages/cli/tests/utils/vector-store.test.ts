@@ -14,7 +14,6 @@ import { resolveVectorStore } from "../../src/utils/vector-store";
 // Mock config utils
 jest.mock("../../src/utils/config");
 
-
 describe("Vector Store Utils", () => {
   describe("resolveVectorStore", () => {
     let mockClient: {

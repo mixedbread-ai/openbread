@@ -83,6 +83,9 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 
 - `mxbai config set <key> <value>` - Set configuration values
 - `mxbai config get [key]` - Get configuration values
+- `mxbai completion install` - Install shell completion
+  - Options: `--shell <shell>` (manually specify shell: bash, zsh, fish, pwsh)
+- `mxbai completion uninstall` - Uninstall shell completion
 
 ## Features
 
@@ -247,6 +250,32 @@ The CLI looks for your API key in this order:
    - **Windows**: `%APPDATA%\mixedbread\config.json`
    - **Custom**: Set `MXBAI_CONFIG_PATH` environment variable to override
 
+## Shell Completion
+
+The CLI supports tab completion for commands and subcommands. To set up completion:
+
+```bash
+# Install completion (auto-detects your shell)
+mxbai completion install
+
+# Install completion for a specific shell
+mxbai completion install --shell bash
+mxbai completion install --shell zsh
+mxbai completion install --shell fish
+mxbai completion install --shell pwsh
+
+# Remove completion
+mxbai completion uninstall
+```
+
+**Supported shells:** bash, zsh, fish, pwsh (PowerShell)
+
+After installation, restart your shell or reload your shell configuration:
+- **bash**: `source ~/.bashrc` or restart terminal
+- **zsh**: `source ~/.zshrc` or restart terminal  
+- **fish**: Completion is ready to use (fish auto-loads completions)
+- **pwsh**: `. $PROFILE` or restart terminal
+
 ## Global Options
 
 All commands support these global options:
@@ -298,11 +327,28 @@ This CLI is built on top of the `@mixedbread/sdk` and provides a convenient comm
    cd packages/cli && pnpm dev
    ```
 
-2. **In another terminal, test your changes:**
+2. **Test your changes** (in another terminal):
 
+   **Option A: Quick testing** (no tab completion)
    ```bash
    pnpm mxbai vs --help
    pnpm mxbai vs list
+   ```
+
+   **Option B: Full CLI experience with tab completion**
+   ```bash
+   # First, uninstall any global version to avoid conflicts
+   npm uninstall -g @mixedbread/cli
+   
+   # Link your local build
+   cd packages/cli && npm link
+   
+   # Now test with full CLI features
+   mxbai vs --help
+   mxbai [TAB]  # Tab completion works!
+   
+   # To unlink when done
+   npm unlink -g @mixedbread/cli
    ```
 
 3. **Run tests:**

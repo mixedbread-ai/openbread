@@ -1,3 +1,5 @@
+import { jest } from "@jest/globals";
+
 // Mock ora to avoid ESM issues in tests
 const mockOra = jest.fn(() => ({
   start: jest.fn().mockReturnThis(),
@@ -16,6 +18,12 @@ const mockOra = jest.fn(() => ({
   fail: jest.fn((message?: string) => {
     if (message) {
       console.log("✗", message);
+    }
+    return this;
+  }),
+  warn: jest.fn((message?: string) => {
+    if (message) {
+      console.log("⚠", message);
     }
     return this;
   }),

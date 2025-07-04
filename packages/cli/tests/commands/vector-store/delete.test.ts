@@ -58,13 +58,16 @@ describe("Delete Command", () => {
 
   describe("Basic deletion", () => {
     it("should delete vector store with force flag", async () => {
-      mockClient.vectorStores.delete.mockResolvedValue({ id: "550e8400-e29b-41d4-a716-446655440040", deleted: true });
+      mockClient.vectorStores.delete.mockResolvedValue({
+        id: "550e8400-e29b-41d4-a716-446655440040",
+        deleted: true,
+      });
 
       await command.parseAsync(["node", "delete", "test-store", "--force"]);
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
         expect.objectContaining({
-          vectorStores: expect.any(Object)
+          vectorStores: expect.any(Object),
         }),
         "test-store"
       );
@@ -80,7 +83,10 @@ describe("Delete Command", () => {
     });
 
     it("should skip confirmation when force flag is used", async () => {
-      mockClient.vectorStores.delete.mockResolvedValue({ id: "550e8400-e29b-41d4-a716-446655440040", deleted: true });
+      mockClient.vectorStores.delete.mockResolvedValue({
+        id: "550e8400-e29b-41d4-a716-446655440040",
+        deleted: true,
+      });
 
       await command.parseAsync(["node", "delete", "test-store", "--force"]);
 
@@ -137,7 +143,10 @@ describe("Delete Command", () => {
 
   describe("Global options", () => {
     it("should support API key option", async () => {
-      mockClient.vectorStores.delete.mockResolvedValue({ id: "550e8400-e29b-41d4-a716-446655440040", deleted: true });
+      mockClient.vectorStores.delete.mockResolvedValue({
+        id: "550e8400-e29b-41d4-a716-446655440040",
+        deleted: true,
+      });
 
       await command.parseAsync([
         "node",

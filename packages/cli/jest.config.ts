@@ -18,12 +18,10 @@ const config: JestConfigWithTsJest = {
     "^ora$": "<rootDir>/tests/__mocks__/ora.ts",
     "^inquirer$": "<rootDir>/tests/__mocks__/inquirer.ts",
     "^glob$": "<rootDir>/tests/__mocks__/glob.ts",
+    "^p-limit$": "<rootDir>/tests/__mocks__/p-limit.ts",
   },
   testTimeout: 10000,
   setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
-  transformIgnorePatterns: [
-    "node_modules/(?!(chalk|ora|inquirer|cli-spinners|strip-ansi|ansi-regex|is-unicode-supported)/)",
-  ],
 };
 
 export default config;
