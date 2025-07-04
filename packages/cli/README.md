@@ -327,11 +327,28 @@ This CLI is built on top of the `@mixedbread/sdk` and provides a convenient comm
    cd packages/cli && pnpm dev
    ```
 
-2. **In another terminal, test your changes:**
+2. **Test your changes** (in another terminal):
 
+   **Option A: Quick testing** (no tab completion)
    ```bash
    pnpm mxbai vs --help
    pnpm mxbai vs list
+   ```
+
+   **Option B: Full CLI experience with tab completion**
+   ```bash
+   # First, uninstall any global version to avoid conflicts
+   npm uninstall -g @mixedbread/cli
+   
+   # Link your local build
+   cd packages/cli && npm link
+   
+   # Now test with full CLI features
+   mxbai vs --help
+   mxbai [TAB]  # Tab completion works!
+   
+   # To unlink when done
+   npm unlink -g @mixedbread/cli
    ```
 
 3. **Run tests:**

@@ -44,7 +44,7 @@
     "lint": "biome lint --write .",
     "format": "biome format --write .",
     "check-types": "tsc --noEmit",
-    "mxbai": "pnpm dlx tsx src/bin/mxbai.ts",
+    "mxbai": "node ./dist/bin/mxbai.js",
     "postinstall": "node ./scripts/postinstall.js",
     "setup-cli": "node ./scripts/setup-cli.js"
   },
