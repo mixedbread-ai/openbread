@@ -1,5 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { createCompletionCommand, createCompletionServerCommand } from "../../src/commands/completion";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
+import {
+  createCompletionCommand,
+  createCompletionServerCommand,
+} from "../../src/commands/completion";
 import { mockConsole, parseCommand } from "../helpers/test-utils";
 
 // Mock @pnpm/tabtab
@@ -34,29 +44,43 @@ describe("Completion Commands", () => {
   let mockConsoleOutput: ReturnType<typeof mockConsole>;
   let originalShell: string | undefined;
   let mockInstall: jest.MockedFunction<typeof import("@pnpm/tabtab").install>;
-  let mockUninstall: jest.MockedFunction<typeof import("@pnpm/tabtab").uninstall>;
+  let mockUninstall: jest.MockedFunction<
+    typeof import("@pnpm/tabtab").uninstall
+  >;
   let mockParseEnv: jest.MockedFunction<typeof import("@pnpm/tabtab").parseEnv>;
   let mockLog: jest.MockedFunction<typeof import("@pnpm/tabtab").log>;
-  let mockGetShellFromEnv: jest.MockedFunction<typeof import("@pnpm/tabtab").getShellFromEnv>;
+  let mockGetShellFromEnv: jest.MockedFunction<
+    typeof import("@pnpm/tabtab").getShellFromEnv
+  >;
 
   beforeEach(() => {
     mockConsoleOutput = mockConsole();
     originalShell = process.env.SHELL;
-    
+
     // Get mocked functions
     const tabtab = jest.mocked(require("@pnpm/tabtab"));
-    mockInstall = tabtab.install as jest.MockedFunction<typeof import("@pnpm/tabtab").install>;
-    mockUninstall = tabtab.uninstall as jest.MockedFunction<typeof import("@pnpm/tabtab").uninstall>;
-    mockParseEnv = tabtab.parseEnv as jest.MockedFunction<typeof import("@pnpm/tabtab").parseEnv>;
-    mockLog = tabtab.log as jest.MockedFunction<typeof import("@pnpm/tabtab").log>;
-    mockGetShellFromEnv = tabtab.getShellFromEnv as jest.MockedFunction<typeof import("@pnpm/tabtab").getShellFromEnv>;
-    
+    mockInstall = tabtab.install as jest.MockedFunction<
+      typeof import("@pnpm/tabtab").install
+    >;
+    mockUninstall = tabtab.uninstall as jest.MockedFunction<
+      typeof import("@pnpm/tabtab").uninstall
+    >;
+    mockParseEnv = tabtab.parseEnv as jest.MockedFunction<
+      typeof import("@pnpm/tabtab").parseEnv
+    >;
+    mockLog = tabtab.log as jest.MockedFunction<
+      typeof import("@pnpm/tabtab").log
+    >;
+    mockGetShellFromEnv = tabtab.getShellFromEnv as jest.MockedFunction<
+      typeof import("@pnpm/tabtab").getShellFromEnv
+    >;
+
     // Reset all mocks
     jest.clearAllMocks();
-    
+
     // Set default shell
     process.env.SHELL = "/bin/bash";
-    
+
     // Default mock implementations
     mockInstall.mockResolvedValue(undefined);
     mockUninstall.mockResolvedValue(undefined);
@@ -68,7 +92,7 @@ describe("Completion Commands", () => {
       partial: "",
       last: "",
       lastPartial: "",
-      prev: ""
+      prev: "",
     });
     mockGetShellFromEnv.mockReturnValue("bash");
   });
@@ -82,7 +106,7 @@ describe("Completion Commands", () => {
     describe("command structure", () => {
       it("should create completion command with correct name and description", () => {
         const command = createCompletionCommand();
-        
+
         expect(command.name()).toBe("completion");
         expect(command.description()).toBe("Manage shell completion");
       });
@@ -90,10 +114,10 @@ describe("Completion Commands", () => {
       it("should have install and uninstall subcommands", () => {
         const command = createCompletionCommand();
         const subcommands = command.commands;
-        
+
         expect(subcommands).toHaveLength(2);
-        expect(subcommands.map(cmd => cmd.name())).toContain("install");
-        expect(subcommands.map(cmd => cmd.name())).toContain("uninstall");
+        expect(subcommands.map((cmd) => cmd.name())).toContain("install");
+        expect(subcommands.map((cmd) => cmd.name())).toContain("uninstall");
       });
 
       it("should show help when no subcommand is provided", async () => {
@@ -102,9 +126,9 @@ describe("Completion Commands", () => {
           // help() method doesn't return a value, it just outputs help
           return undefined as never;
         });
-        
+
         await parseCommand(command, []);
-        
+
         expect(helpSpy).toHaveBeenCalled();
       });
     });
@@ -113,16 +137,16 @@ describe("Completion Commands", () => {
       describe("successful installation", () => {
         it("should install completion with auto-detected bash shell", async () => {
           process.env.SHELL = "/bin/bash";
-          
+
           const command = createCompletionCommand();
           await parseCommand(command, ["install"]);
-          
+
           expect(mockInstall).toHaveBeenCalledWith({
             name: "mxbai",
             completer: "mxbai",
             shell: "bash",
           });
-          
+
           expect(mockConsoleOutput.logs).toContainEqual(
             expect.stringContaining("Shell completion installed for")
           );
@@ -133,16 +157,16 @@ describe("Completion Commands", () => {
 
         it("should install completion with auto-detected zsh shell", async () => {
           process.env.SHELL = "/usr/local/bin/zsh";
-          
+
           const command = createCompletionCommand();
           await parseCommand(command, ["install"]);
-          
+
           expect(mockInstall).toHaveBeenCalledWith({
             name: "mxbai",
             completer: "mxbai",
             shell: "zsh",
           });
-          
+
           expect(mockConsoleOutput.logs).toContainEqual(
             expect.stringContaining("Shell completion installed for")
           );
@@ -154,13 +178,13 @@ describe("Completion Commands", () => {
         it("should install completion with manually specified shell", async () => {
           const command = createCompletionCommand();
           await parseCommand(command, ["install", "--shell", "fish"]);
-          
+
           expect(mockInstall).toHaveBeenCalledWith({
             name: "mxbai",
             completer: "mxbai",
             shell: "fish",
           });
-          
+
           expect(mockConsoleOutput.logs).toContainEqual(
             expect.stringContaining("Shell completion installed for")
           );
@@ -171,10 +195,10 @@ describe("Completion Commands", () => {
 
         it("should show auto-detected indicator in success message", async () => {
           process.env.SHELL = "/bin/bash";
-          
+
           const command = createCompletionCommand();
           await parseCommand(command, ["install"]);
-          
+
           expect(mockConsoleOutput.logs).toContainEqual(
             expect.stringContaining("auto-detected")
           );
@@ -183,8 +207,8 @@ describe("Completion Commands", () => {
         it("should not show auto-detected indicator for manual shell", async () => {
           const command = createCompletionCommand();
           await parseCommand(command, ["install", "--shell", "bash"]);
-          
-          const successMessage = mockConsoleOutput.logs.find(log => 
+
+          const successMessage = mockConsoleOutput.logs.find((log) =>
             log.includes("Shell completion installed for")
           );
           expect(successMessage).not.toContain("auto-detected");
@@ -203,7 +227,7 @@ describe("Completion Commands", () => {
           it(`should show correct instructions for ${shell}`, async () => {
             const command = createCompletionCommand();
             await parseCommand(command, ["install", "--shell", shell]);
-            
+
             expect(mockConsoleOutput.logs).toContainEqual(
               expect.stringContaining(instruction)
             );
@@ -214,8 +238,12 @@ describe("Completion Commands", () => {
       describe("error handling", () => {
         it("should show error for unsupported shell", async () => {
           const command = createCompletionCommand();
-          const result = await parseCommand(command, ["install", "--shell", "unsupported"]);
-          
+          const result = await parseCommand(command, [
+            "install",
+            "--shell",
+            "unsupported",
+          ]);
+
           expect(result.exitCode).toBe(1);
           expect(mockConsoleOutput.errors).toContainEqual(
             expect.stringContaining("Unsupported shell 'unsupported'")
@@ -228,10 +256,10 @@ describe("Completion Commands", () => {
         it("should handle installation errors gracefully", async () => {
           const errorMessage = "Installation failed";
           mockInstall.mockRejectedValueOnce(new Error(errorMessage));
-          
+
           const command = createCompletionCommand();
           const result = await parseCommand(command, ["install"]);
-          
+
           expect(result.exitCode).toBe(1);
           expect(mockConsoleOutput.errors).toContainEqual(
             expect.stringContaining("Error installing completion")
@@ -240,15 +268,15 @@ describe("Completion Commands", () => {
 
         it("should handle shell auto-detection failure", async () => {
           process.env.SHELL = undefined;
-          
+
           const command = createCompletionCommand();
           await parseCommand(command, ["install"]);
-          
+
           expect(mockInstall).toHaveBeenCalledWith({
             name: "mxbai",
             completer: "mxbai",
           });
-          
+
           expect(mockConsoleOutput.logs).toContainEqual(
             expect.stringContaining("Could not auto-detect shell")
           );
@@ -256,15 +284,15 @@ describe("Completion Commands", () => {
 
         it("should handle unsupported detected shell", async () => {
           process.env.SHELL = "/bin/tcsh";
-          
+
           const command = createCompletionCommand();
           await parseCommand(command, ["install"]);
-          
+
           expect(mockInstall).toHaveBeenCalledWith({
             name: "mxbai",
             completer: "mxbai",
           });
-          
+
           expect(mockConsoleOutput.logs).toContainEqual(
             expect.stringContaining("Could not auto-detect shell")
           );
@@ -274,10 +302,10 @@ describe("Completion Commands", () => {
       describe("edge cases", () => {
         it("should handle empty SHELL environment variable", async () => {
           process.env.SHELL = "";
-          
+
           const command = createCompletionCommand();
           await parseCommand(command, ["install"]);
-          
+
           expect(mockInstall).toHaveBeenCalledWith({
             name: "mxbai",
             completer: "mxbai",
@@ -286,10 +314,10 @@ describe("Completion Commands", () => {
 
         it("should handle SHELL with path components", async () => {
           process.env.SHELL = "/usr/local/bin/zsh";
-          
+
           const command = createCompletionCommand();
           await parseCommand(command, ["install"]);
-          
+
           expect(mockInstall).toHaveBeenCalledWith({
             name: "mxbai",
             completer: "mxbai",
@@ -303,7 +331,7 @@ describe("Completion Commands", () => {
       it("should uninstall completion successfully", async () => {
         const command = createCompletionCommand();
         await parseCommand(command, ["uninstall"]);
-        
+
         expect(mockUninstall).toHaveBeenCalledWith({ name: "mxbai" });
         expect(mockConsoleOutput.logs).toContainEqual(
           expect.stringContaining("Shell completion uninstalled for")
@@ -313,10 +341,10 @@ describe("Completion Commands", () => {
       it("should handle uninstall errors gracefully", async () => {
         const errorMessage = "Uninstall failed";
         mockUninstall.mockRejectedValueOnce(new Error(errorMessage));
-        
+
         const command = createCompletionCommand();
         const result = await parseCommand(command, ["uninstall"]);
-        
+
         expect(result.exitCode).toBe(1);
         expect(mockConsoleOutput.errors).toContainEqual(
           expect.stringContaining("Error uninstalling completion")
@@ -329,13 +357,16 @@ describe("Completion Commands", () => {
     describe("command structure", () => {
       it("should create completion server command with correct configuration", async () => {
         const command = createCompletionServerCommand();
-        
+
         expect(command.name()).toBe("completion-server");
         expect(command.description()).toBe("Internal completion server");
-        
+
         // Test that the command accepts unknown options and excess arguments
         // by verifying it doesn't exit with error for unknown options
-        const result = await parseCommand(command, ["--unknown-option", "extra-arg"]);
+        const result = await parseCommand(command, [
+          "--unknown-option",
+          "extra-arg",
+        ]);
         expect(result.exitCode).toBeUndefined();
       });
     });
@@ -350,12 +381,12 @@ describe("Completion Commands", () => {
           partial: "",
           last: "",
           lastPartial: "",
-          prev: ""
+          prev: "",
         });
-        
+
         const command = createCompletionServerCommand();
         await parseCommand(command, []);
-        
+
         expect(mockLog).not.toHaveBeenCalled();
       });
 
@@ -368,13 +399,13 @@ describe("Completion Commands", () => {
           partial: "",
           last: "mxbai",
           lastPartial: "",
-          prev: ""
+          prev: "",
         });
         mockGetShellFromEnv.mockReturnValue("bash");
-        
+
         const command = createCompletionServerCommand();
         await parseCommand(command, []);
-        
+
         expect(mockLog).toHaveBeenCalledWith(
           ["config", "vs", "completion", "--help", "--version"],
           "bash",
@@ -384,8 +415,16 @@ describe("Completion Commands", () => {
 
       describe("vector store completions", () => {
         const vectorStoreCommands = [
-          "create", "delete", "get", "list", "update", 
-          "upload", "search", "qa", "sync", "files"
+          "create",
+          "delete",
+          "get",
+          "list",
+          "update",
+          "upload",
+          "search",
+          "qa",
+          "sync",
+          "files",
         ];
 
         it("should provide vector store completions for 'vs' command", async () => {
@@ -397,13 +436,13 @@ describe("Completion Commands", () => {
             partial: "",
             last: "vs",
             lastPartial: "",
-            prev: "vs"
+            prev: "vs",
           });
           mockGetShellFromEnv.mockReturnValue("zsh");
-          
+
           const command = createCompletionServerCommand();
           await parseCommand(command, []);
-          
+
           expect(mockLog).toHaveBeenCalledWith(
             vectorStoreCommands,
             "zsh",
@@ -420,13 +459,13 @@ describe("Completion Commands", () => {
             partial: "",
             last: "vector-store",
             lastPartial: "",
-            prev: "vector-store"
+            prev: "vector-store",
           });
           mockGetShellFromEnv.mockReturnValue("fish");
-          
+
           const command = createCompletionServerCommand();
           await parseCommand(command, []);
-          
+
           expect(mockLog).toHaveBeenCalledWith(
             vectorStoreCommands,
             "fish",
@@ -447,13 +486,13 @@ describe("Completion Commands", () => {
             partial: "",
             last: "files",
             lastPartial: "",
-            prev: "files"
+            prev: "files",
           });
           mockGetShellFromEnv.mockReturnValue("bash");
-          
+
           const command = createCompletionServerCommand();
           await parseCommand(command, []);
-          
+
           expect(mockLog).toHaveBeenCalledWith(
             filesCommands,
             "bash",
@@ -470,13 +509,13 @@ describe("Completion Commands", () => {
             partial: "",
             last: "files",
             lastPartial: "",
-            prev: "files"
+            prev: "files",
           });
           mockGetShellFromEnv.mockReturnValue("bash");
-          
+
           const command = createCompletionServerCommand();
           await parseCommand(command, []);
-          
+
           expect(mockLog).toHaveBeenCalledWith(
             filesCommands,
             "bash",
@@ -493,13 +532,13 @@ describe("Completion Commands", () => {
             partial: "",
             last: "files",
             lastPartial: "",
-            prev: "files"
+            prev: "files",
           });
           mockGetShellFromEnv.mockReturnValue("bash");
-          
+
           const command = createCompletionServerCommand();
           await parseCommand(command, []);
-          
+
           expect(mockLog).not.toHaveBeenCalled();
         });
       });
@@ -514,13 +553,13 @@ describe("Completion Commands", () => {
             partial: "",
             last: "config",
             lastPartial: "",
-            prev: "config"
+            prev: "config",
           });
           mockGetShellFromEnv.mockReturnValue("pwsh");
-          
+
           const command = createCompletionServerCommand();
           await parseCommand(command, []);
-          
+
           expect(mockLog).toHaveBeenCalledWith(
             ["get", "set"],
             "pwsh",
@@ -539,13 +578,13 @@ describe("Completion Commands", () => {
             partial: "",
             last: "completion",
             lastPartial: "",
-            prev: "completion"
+            prev: "completion",
           });
           mockGetShellFromEnv.mockReturnValue("bash");
-          
+
           const command = createCompletionServerCommand();
           await parseCommand(command, []);
-          
+
           expect(mockLog).toHaveBeenCalledWith(
             ["install", "uninstall"],
             "bash",
@@ -564,13 +603,13 @@ describe("Completion Commands", () => {
             partial: "",
             last: "unknown",
             lastPartial: "",
-            prev: "unknown"
+            prev: "unknown",
           });
           mockGetShellFromEnv.mockReturnValue("bash");
-          
+
           const command = createCompletionServerCommand();
           await parseCommand(command, []);
-          
+
           expect(mockLog).not.toHaveBeenCalled();
         });
 
@@ -583,13 +622,13 @@ describe("Completion Commands", () => {
             partial: "",
             last: "files",
             lastPartial: "",
-            prev: "files"
+            prev: "files",
           });
           mockGetShellFromEnv.mockReturnValue("bash");
-          
+
           const command = createCompletionServerCommand();
           await parseCommand(command, []);
-          
+
           expect(mockLog).not.toHaveBeenCalled();
         });
 
@@ -602,13 +641,13 @@ describe("Completion Commands", () => {
             partial: "",
             last: "files",
             lastPartial: "",
-            prev: "files"
+            prev: "files",
           });
           mockGetShellFromEnv.mockReturnValue("bash");
-          
+
           const command = createCompletionServerCommand();
           await parseCommand(command, []);
-          
+
           expect(mockLog).not.toHaveBeenCalled();
         });
       });
@@ -617,7 +656,7 @@ describe("Completion Commands", () => {
     describe("shell integration", () => {
       const supportedShells = ["bash", "zsh", "fish", "pwsh"];
 
-      supportedShells.forEach(shell => {
+      supportedShells.forEach((shell) => {
         it(`should work with ${shell} shell`, async () => {
           mockParseEnv.mockReturnValue({
             complete: true,
@@ -627,13 +666,15 @@ describe("Completion Commands", () => {
             partial: "",
             last: "mxbai",
             lastPartial: "",
-            prev: ""
+            prev: "",
           });
-          mockGetShellFromEnv.mockReturnValue(shell as "bash" | "zsh" | "fish" | "pwsh");
-          
+          mockGetShellFromEnv.mockReturnValue(
+            shell as "bash" | "zsh" | "fish" | "pwsh"
+          );
+
           const command = createCompletionServerCommand();
           await parseCommand(command, []);
-          
+
           expect(mockLog).toHaveBeenCalledWith(
             ["config", "vs", "completion", "--help", "--version"],
             shell as "bash" | "zsh" | "fish" | "pwsh",
@@ -648,10 +689,10 @@ describe("Completion Commands", () => {
     it("should integrate completion server with main completion command", () => {
       const completionCommand = createCompletionCommand();
       const serverCommand = createCompletionServerCommand();
-      
+
       expect(completionCommand.name()).toBe("completion");
       expect(serverCommand.name()).toBe("completion-server");
-      
+
       // Both commands should be separate and independent
       expect(completionCommand.commands.length).toBe(2); // install, uninstall
       expect(serverCommand.commands.length).toBe(0); // no subcommands

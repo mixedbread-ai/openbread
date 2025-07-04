@@ -252,7 +252,7 @@ The CLI looks for your API key in this order:
 
 ## Shell Completion
 
-The CLI supports tab completion for commands. To set up completion:
+The CLI supports tab completion for commands and subcommands. To set up completion:
 
 ```bash
 # Install completion (auto-detects your shell)

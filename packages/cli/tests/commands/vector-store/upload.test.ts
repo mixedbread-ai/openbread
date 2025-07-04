@@ -100,8 +100,8 @@ describe("Vector Store Upload Command", () => {
     mockUploadFilesInBatch.mockResolvedValue({
       uploaded: 1,
       updated: 0,
+      skipped: 0,
       failed: 0,
-      errors: [],
       successfulSize: 1024,
     });
   });
@@ -477,8 +477,8 @@ describe("Vector Store Upload Command", () => {
       mockUploadFilesInBatch.mockResolvedValue({
         uploaded: 0,
         updated: 0,
+        skipped: 0,
         failed: 1,
-        errors: ["test.md: Upload failed"],
         successfulSize: 0,
       });
 
@@ -519,14 +519,136 @@ describe("Vector Store Upload Command", () => {
       mockUploadFilesInBatch.mockResolvedValue({
         uploaded: 1,
         updated: 0,
+        skipped: 0,
         failed: 1,
-        errors: ["unreadable.md: Permission denied"],
         successfulSize: 7,
       });
 
       await command.parseAsync(["node", "upload", "test-store", "*.md"]);
 
       expect(mockUploadFilesInBatch).toHaveBeenCalled();
+    });
+  });
+
+  describe("Empty file handling", () => {
+    it("should handle empty files correctly", async () => {
+      mockFs({
+        "content.md": "Real content",
+        "empty1.md": "",
+        "empty2.md": "",
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "content.md",
+        "empty1.md",
+        "empty2.md",
+      ]);
+
+      // Mock uploadFilesInBatch to return results with skipped files
+      mockUploadFilesInBatch.mockResolvedValue({
+        uploaded: 1,
+        updated: 0,
+        failed: 0,
+        skipped: 2,
+        successfulSize: 12,
+      });
+
+      await command.parseAsync(["node", "upload", "test-store", "*.md"]);
+
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130",
+        expect.arrayContaining([
+          expect.objectContaining({ path: "content.md" }),
+          expect.objectContaining({ path: "empty1.md" }),
+          expect.objectContaining({ path: "empty2.md" }),
+        ]),
+        expect.any(Object)
+      );
+    });
+
+    it("should handle all empty files scenario", async () => {
+      mockFs({
+        "empty1.md": "",
+        "empty2.md": "",
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "empty1.md",
+        "empty2.md",
+      ]);
+
+      // Mock uploadFilesInBatch to return all skipped
+      mockUploadFilesInBatch.mockResolvedValue({
+        uploaded: 0,
+        updated: 0,
+        failed: 0,
+        skipped: 2,
+        successfulSize: 0,
+      });
+
+      await command.parseAsync(["node", "upload", "test-store", "*.md"]);
+
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130",
+        expect.arrayContaining([
+          expect.objectContaining({ path: "empty1.md" }),
+          expect.objectContaining({ path: "empty2.md" }),
+        ]),
+        expect.any(Object)
+      );
+    });
+
+    it("should handle empty files with unique flag", async () => {
+      mockFs({
+        "existing.md": "Existing content",
+        "empty.md": "",
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "existing.md",
+        "empty.md",
+      ]);
+
+      mockGetVectorStoreFiles.mockResolvedValue([
+        {
+          id: "existing_file_id",
+          vector_store_id: "550e8400-e29b-41d4-a716-446655440130",
+          created_at: "2021-02-18T12:00:00Z",
+          metadata: { file_path: "existing.md" },
+        },
+      ]);
+
+      // Mock uploadFilesInBatch to return updated and skipped
+      mockUploadFilesInBatch.mockResolvedValue({
+        uploaded: 0,
+        updated: 1,
+        failed: 0,
+        skipped: 1,
+        successfulSize: 16,
+      });
+
+      await command.parseAsync([
+        "node",
+        "upload",
+        "test-store",
+        "*.md",
+        "--unique",
+      ]);
+
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130",
+        expect.arrayContaining([
+          expect.objectContaining({ path: "existing.md" }),
+          expect.objectContaining({ path: "empty.md" }),
+        ]),
+        expect.objectContaining({
+          unique: true,
+          existingFiles: expect.any(Map),
+        })
+      );
     });
   });
 
@@ -546,8 +668,8 @@ describe("Vector Store Upload Command", () => {
       mockUploadFilesInBatch.mockResolvedValue({
         uploaded: 2,
         updated: 0,
+        skipped: 0,
         failed: 0,
-        errors: [],
         successfulSize: 16,
       });
 
@@ -581,8 +703,8 @@ describe("Vector Store Upload Command", () => {
       mockUploadFilesInBatch.mockResolvedValue({
         uploaded: 2,
         updated: 0,
+        skipped: 0,
         failed: 1,
-        errors: ["file2.md: Upload failed"],
         successfulSize: 16,
       });
 
@@ -595,6 +717,39 @@ describe("Vector Store Upload Command", () => {
           expect.objectContaining({ path: "file1.md" }),
           expect.objectContaining({ path: "file2.md" }),
           expect.objectContaining({ path: "file3.md" }),
+        ]),
+        expect.any(Object)
+      );
+    });
+
+    it("should show correct summary with skipped files", async () => {
+      mockFs({
+        "content.md": "Real content",
+        "empty.md": "",
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "content.md",
+        "empty.md",
+      ]);
+
+      // Mock uploadFilesInBatch to return results with skipped files
+      mockUploadFilesInBatch.mockResolvedValue({
+        uploaded: 1,
+        updated: 0,
+        failed: 0,
+        skipped: 1,
+        successfulSize: 12,
+      });
+
+      await command.parseAsync(["node", "upload", "test-store", "*.md"]);
+
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130",
+        expect.arrayContaining([
+          expect.objectContaining({ path: "content.md" }),
+          expect.objectContaining({ path: "empty.md" }),
         ]),
         expect.any(Object)
       );

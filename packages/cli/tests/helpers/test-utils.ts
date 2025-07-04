@@ -1,6 +1,6 @@
-import { expect, jest } from "@jest/globals";
 import { homedir, platform } from "node:os";
 import { join } from "node:path";
+import { expect, jest } from "@jest/globals";
 import type { Command } from "commander";
 
 /**

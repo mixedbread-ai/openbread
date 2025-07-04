@@ -7,6 +7,11 @@ import {
   jest,
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
+import type { CursorResponse } from "@mixedbread/sdk/core/pagination.mjs";
+import type {
+  VectorStore,
+  VectorStoresCursor,
+} from "@mixedbread/sdk/resources/index.mjs";
 import type { Command } from "commander";
 import { createListCommand } from "../../../src/commands/vector-store/list";
 import * as clientUtils from "../../../src/utils/client";
@@ -26,6 +31,19 @@ const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
 const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
+
+// Helper to create a properly typed mock cursor
+// Since the Cursor class has private fields, we need to use type assertion
+// but we avoid 'any' by being specific about what we're mocking
+const createMockCursor = (
+  data: VectorStore[],
+  pagination: CursorResponse.Pagination
+): VectorStoresCursor => {
+  return {
+    data,
+    pagination,
+  } as unknown as VectorStoresCursor;
+};
 
 describe("Vector Store List Command", () => {
   let command: Command;
@@ -77,7 +95,14 @@ describe("Vector Store List Command", () => {
         },
       ];
 
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor(mockData, {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: true,
+          total: 2,
+        })
+      );
 
       await command.parseAsync(["node", "list"]);
 
@@ -131,7 +156,14 @@ describe("Vector Store List Command", () => {
         },
       ];
 
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor(mockData, {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: true,
+          total: 2,
+        })
+      );
 
       await command.parseAsync(["node", "list"]);
 
@@ -143,7 +175,14 @@ describe("Vector Store List Command", () => {
     });
 
     it("should handle empty results", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] } as any);
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor([], {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: false,
+          total: 0,
+        })
+      );
 
       await command.parseAsync(["node", "list"]);
 
@@ -154,7 +193,14 @@ describe("Vector Store List Command", () => {
 
   describe("Pagination", () => {
     it("should handle custom limit", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] } as any);
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor([], {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: false,
+          total: 0,
+        })
+      );
 
       await command.parseAsync(["node", "list", "--limit", "50"]);
 
@@ -188,7 +234,14 @@ describe("Vector Store List Command", () => {
     ];
 
     it("should format as table by default", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor(mockData, {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: true,
+          total: 2,
+        })
+      );
 
       await command.parseAsync(["node", "list"]);
 
@@ -199,7 +252,14 @@ describe("Vector Store List Command", () => {
     });
 
     it("should format as JSON when specified", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor(mockData, {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: true,
+          total: 2,
+        })
+      );
 
       await command.parseAsync(["node", "list", "--format", "json"]);
 
@@ -207,7 +267,14 @@ describe("Vector Store List Command", () => {
     });
 
     it("should format as CSV when specified", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor(mockData, {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: true,
+          total: 2,
+        })
+      );
 
       await command.parseAsync(["node", "list", "--format", "csv"]);
 
@@ -257,7 +324,14 @@ describe("Vector Store List Command", () => {
 
   describe("API key handling", () => {
     it("should use API key from command line", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] } as any);
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor([], {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: true,
+          total: 2,
+        })
+      );
 
       await command.parseAsync(["node", "list", "--api-key", "mxb_test123"]);
 
@@ -269,7 +343,14 @@ describe("Vector Store List Command", () => {
     });
 
     it("should work without explicit API key (uses env/config)", async () => {
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] } as any);
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor([], {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: true,
+          total: 2,
+        })
+      );
 
       await command.parseAsync(["node", "list"]);
 
@@ -290,7 +371,14 @@ describe("Vector Store List Command", () => {
         },
       ];
 
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor(mockData, {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: true,
+          total: 2,
+        })
+      );
 
       await command.parseAsync(["node", "list"]);
 
@@ -319,7 +407,14 @@ describe("Vector Store List Command", () => {
         },
       ];
 
-      mockClient.vectorStores.list.mockResolvedValue({ data: mockData } as any);
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor(mockData, {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: true,
+          total: 2,
+        })
+      );
 
       await command.parseAsync(["node", "list"]);
 
