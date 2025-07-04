@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- ebb2703: Tab completion and other enhancements
+  - Add tab autocompletion
+  - Update sdk version to 0.16.0
+  - Skip empty files and show warnings
+
 ## 0.3.0
 
 ### Minor Changes
