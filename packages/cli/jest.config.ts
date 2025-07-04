@@ -22,9 +22,6 @@ const config: JestConfigWithTsJest = {
   },
   testTimeout: 10000,
   setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
-  transformIgnorePatterns: [
-    "node_modules/(?!(chalk|ora|inquirer|cli-spinners|strip-ansi|ansi-regex|is-unicode-supported|p-limit|yocto-queue)/)",
-  ],
 };
 
 export default config;

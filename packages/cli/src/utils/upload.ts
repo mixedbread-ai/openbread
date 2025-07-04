@@ -129,7 +129,6 @@ export async function uploadFilesInBatch(
           return;
         }
 
-        // Upload the file
         const fileContent = readFileSync(file.path);
         const fileName = basename(file.path);
         const mimeType = lookup(file.path) || "application/octet-stream";

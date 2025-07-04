@@ -1,3 +1,5 @@
+import { jest } from "@jest/globals";
+
 // Mock glob to avoid ESM issues in tests
 const mockGlob = {
   glob: jest.fn(),
