@@ -18,7 +18,7 @@ const config: JestConfigWithTsJest = {
     "^ora$": "<rootDir>/tests/__mocks__/ora.ts",
     "^inquirer$": "<rootDir>/tests/__mocks__/inquirer.ts",
     "^glob$": "<rootDir>/tests/__mocks__/glob.ts",
-    "^p-limit$": "<rootDir>/tests/__mocks__/p-limit.js",
+    "^p-limit$": "<rootDir>/tests/__mocks__/p-limit.ts",
   },
   testTimeout: 10000,
   setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],

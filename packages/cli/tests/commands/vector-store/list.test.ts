@@ -8,10 +8,7 @@ import {
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
 import type { CursorResponse } from "@mixedbread/sdk/core/pagination.mjs";
-import type {
-  VectorStore,
-  VectorStoresCursor,
-} from "@mixedbread/sdk/resources/index.mjs";
+import type { VectorStore } from "@mixedbread/sdk/resources/index.mjs";
 import type { Command } from "commander";
 import { createListCommand } from "../../../src/commands/vector-store/list";
 import * as clientUtils from "../../../src/utils/client";
@@ -38,18 +35,20 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
 const createMockCursor = (
   data: VectorStore[],
   pagination: CursorResponse.Pagination
-): VectorStoresCursor => {
+): CursorResponse<VectorStore> => {
   return {
     data,
     pagination,
-  } as unknown as VectorStoresCursor;
+  } as unknown as CursorResponse<VectorStore>;
 };
 
 describe("Vector Store List Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
-      list: jest.MockedFunction<Mixedbread["vectorStores"]["list"]>;
+      list: jest.MockedFunction<
+        (options: { limit?: number }) => Promise<CursorResponse<VectorStore>>
+      >;
     };
   };
 
