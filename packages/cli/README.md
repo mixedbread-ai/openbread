@@ -11,7 +11,10 @@ npm install -g @mixedbread/cli
 ## Quick Start
 
 ```bash
-# Set your API key
+# Add and set your API key
+mxbai config keys add mxb_xxxxx work
+
+# Or use environment variable
 export MXBAI_API_KEY=mxb_xxxxx
 
 ## Check available commands and their options
@@ -83,6 +86,10 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 
 - `mxbai config set <key> <value>` - Set configuration values
 - `mxbai config get [key]` - Get configuration values
+- `mxbai config keys add <key> [name]` - Add a new API key
+- `mxbai config keys list` - List all API keys
+- `mxbai config keys remove <name>` - Remove an API key
+- `mxbai config keys set-default <name>` - Set the default API key
 - `mxbai completion install` - Install shell completion
   - Options: `--shell <shell>` (manually specify shell: bash, zsh, fish, pwsh)
 - `mxbai completion uninstall` - Uninstall shell completion
@@ -220,8 +227,22 @@ mxbai config set defaults.upload.parallel 10             # Concurrent operations
 mxbai config set defaults.search.top_k 20                # Number of results (default: 10)
 mxbai config set defaults.search.rerank true             # Enable reranking (default: false)
 
-# API key (alternative to environment variable)
-mxbai config set api_key mxb_xxxxx
+# API key management (alternative to environment variable)
+# Add API keys with names for easy switching
+mxbai config keys add mxb_... work
+mxbai config keys add mxb_... personal
+
+# List all API keys
+mxbai config keys list
+# Output:
+#   work
+# * personal (default)
+
+# Set default API key
+mxbai config keys set-default work
+
+# Remove an API key
+mxbai config keys remove personal
 
 # Create aliases for frequently used vector stores
 mxbai config set aliases.docs "My Documentation"
@@ -242,13 +263,31 @@ mxbai config get defaults.upload
 
 The CLI looks for your API key in this order:
 
-1. `--api-key` command line flag
+1. `--api-key` command line flag (can be an API key name or actual key)
 2. `MXBAI_API_KEY` environment variable
-3. Config file (platform-specific location):
+3. Default API key from config file (platform-specific location):
    - **Linux/Unix**: `~/.config/mixedbread/config.json` (or `$XDG_CONFIG_HOME/mixedbread/config.json`)
    - **macOS**: `~/Library/Application Support/mixedbread/config.json`
    - **Windows**: `%APPDATA%\mixedbread\config.json`
    - **Custom**: Set `MXBAI_CONFIG_PATH` environment variable to override
+
+### Multi-Organization Support
+
+The CLI supports multiple API keys for different organizations or environments:
+
+```bash
+# Add API keys with descriptive names
+mxbai config keys add mxb_... work
+mxbai config keys add mxb_... personal
+
+# Use a specific API key for a command
+mxbai vs upload "My Docs" "*.md" --api-key work
+mxbai vs search "Knowledge Base" "query" --api-key personal
+
+# The last added key becomes default automatically
+# Or explicitly set a default
+mxbai config keys set-default personal
+```
 
 ## Shell Completion
 
@@ -280,7 +319,7 @@ After installation, restart your shell or reload your shell configuration:
 
 All commands support these global options:
 
-- `--api-key <key>` - API key for authentication (must start with "mxb\_")
+- `--api-key <key>` - API key name or actual key for authentication
 - `--format <format>` - Output format: table, json, or csv (default: table)
 - `--debug` - Enable debug output (can also set `MXBAI_DEBUG=true`)
 
@@ -315,8 +354,8 @@ This CLI is built on top of the `@mixedbread/sdk` and provides a convenient comm
 
    ```bash
    export MXBAI_API_KEY=mxb_xxxxx
-   # Or create a config file
-   cd packages/cli && pnpm build && pnpm mxbai config set api_key mxb_xxxxx
+   # Or add to config file
+   cd packages/cli && pnpm build && pnpm mxbai config keys add mxb_xxxxx dev
    ```
 
 #### Development Workflow
