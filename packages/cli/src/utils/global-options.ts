@@ -12,7 +12,6 @@ export interface GlobalOptions {
 export const GlobalOptionsSchema = z.object({
   apiKey: z
     .string()
-    .startsWith("mxb_", '"api-key" must start with "mxb_"')
     .optional(),
   baseURL: z.string().url('"base-url" must be a valid URL').optional(),
   format: z
@@ -25,7 +24,7 @@ export const GlobalOptionsSchema = z.object({
 
 export function setupGlobalOptions(program: Command): void {
   program
-    .option("--api-key <key>", "API key for authentication")
+    .option("--api-key <key>", "API key name or actual key for authentication")
     .option("--base-url <url>", "Base URL for the API")
     .option("--format <format>", "Output format", "table")
     .option("--debug", "Enable debug output", false)
@@ -39,7 +38,7 @@ export function setupGlobalOptions(program: Command): void {
 
 export function addGlobalOptions(command: Command): Command {
   return command
-    .option("--api-key <key>", "API key for authentication")
+    .option("--api-key <key>", "API key name or actual key for authentication")
     .option("--base-url <url>", "Base URL for the API")
     .option("--format <format>", "Output format (table|json|csv)");
 }

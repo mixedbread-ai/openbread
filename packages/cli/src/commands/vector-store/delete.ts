@@ -60,7 +60,7 @@ export function createDeleteCommand(): Command {
         ]);
 
         if (!confirmed) {
-          console.log(chalk.yellow("Cancelled."));
+          console.log(chalk.yellow("Deletion cancelled."));
           return;
         }
       }

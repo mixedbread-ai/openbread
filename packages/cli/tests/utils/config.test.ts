@@ -1,16 +1,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from "@jest/globals";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import mockFs from "mock-fs";
 import {
-  type CliConfig,
+  type CLIConfig,
   getApiKey,
   loadConfig,
   parseConfigValue,
@@ -52,7 +45,7 @@ describe("Config Utils", () => {
     });
 
     it("should load and validate config from file", () => {
-      const testConfig: CliConfig = {
+      const testConfig: CLIConfig = {
         version: "1.0",
         api_key: "mxb_test123",
         defaults: {
@@ -110,7 +103,7 @@ describe("Config Utils", () => {
     it("should create config directory if it does not exist", () => {
       mockFs({});
 
-      const config: CliConfig = {
+      const config: CLIConfig = {
         version: "1.0",
         api_key: "mxb_test123",
       };
@@ -123,7 +116,7 @@ describe("Config Utils", () => {
 
     it("should overwrite existing config file", () => {
       const oldConfig = { version: "1.0", api_key: "mxb_old" };
-      const newConfig: CliConfig = { version: "1.0", api_key: "mxb_new" };
+      const newConfig: CLIConfig = { version: "1.0", api_key: "mxb_new" };
 
       mockFs({
         [configFile]: JSON.stringify(oldConfig),
