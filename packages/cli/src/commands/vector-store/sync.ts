@@ -163,7 +163,7 @@ export function createSyncCommand(): Command {
         if (totalChanges === 0) {
           console.log(
             chalk.green(
-              "🎉 Vector store is already in sync - no changes needed!"
+              "✓ Vector store is already in sync - no changes needed!"
             )
           );
           return;
@@ -196,7 +196,7 @@ export function createSyncCommand(): Command {
           ]);
 
           if (!proceed) {
-            console.log(chalk.yellow("❌ Sync cancelled by user"));
+            console.log(chalk.yellow("✗ Sync cancelled by user"));
             return;
           }
         } else if (parsedOptions.ci) {

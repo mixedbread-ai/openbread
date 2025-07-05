@@ -16,8 +16,8 @@ export function createKeysCommand(): Command {
     .action(async (key: string, name?: string) => {
       // Validate API key format
       if (!key.startsWith("mxb_")) {
-        console.error(chalk.red("Error:"), 'API key must start with "mxb_"');
-        process.exit(1);
+        console.log(chalk.red("✗"), 'API key must start with "mxb_"');
+        return;
       }
 
       const config = loadConfig();
@@ -76,7 +76,6 @@ export function createKeysCommand(): Command {
     .description("List all API keys")
     .action(() => {
       const config = loadConfig();
-      config.api_keys = {};
 
       if (!config.api_keys || Object.keys(config.api_keys).length === 0) {
         console.log("No API keys configured");
@@ -99,7 +98,7 @@ export function createKeysCommand(): Command {
         console.log(chalk.red("✗"), `No API key found with name "${name}"`);
 
         if (config.api_keys && Object.keys(config.api_keys).length > 0) {
-          console.error("\nAvailable API keys:");
+          console.log("\nAvailable API keys:");
           outputAvailableKeys(config);
         }
         return;

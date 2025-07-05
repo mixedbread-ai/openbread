@@ -216,7 +216,19 @@ export function createCompletionServerCommand(): Command {
 
       // Config completions
       if (env.prev === "config") {
-        return log(["get", "set"], shell, console.log);
+        return log(["get", "set", "keys"], shell, console.log);
+      }
+
+      if (env.prev === "keys") {
+        // Check if we're in "mxbai config keys " context
+        const words = env.line.trim().split(/\s+/);
+        if (words.length >= 3 && words[1] === "config") {
+          return log(
+            ["list", "add", "remove", "set-default"],
+            shell,
+            console.log
+          );
+        }
       }
 
       // Completion completions

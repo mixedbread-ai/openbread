@@ -172,7 +172,7 @@ export function getApiKey(options?: { apiKey?: string }): string {
 
   // Check for old format and prompt for migration
   if (config.api_key && Object.keys(config.api_keys).length === 0) {
-    console.log(chalk.yellow("\n\n⚠️  Migration Required"));
+    console.log(chalk.yellow("\n\n⚠  Migration Required"));
     console.log(
       "The API key storage format has changed. Please migrate your existing API key:"
     );
