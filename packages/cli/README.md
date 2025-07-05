@@ -89,6 +89,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 - `mxbai config keys add <key> [name]` - Add a new API key
 - `mxbai config keys list` - List all API keys
 - `mxbai config keys remove <name>` - Remove an API key
+  - Options: `--force` (skip confirmation)
 - `mxbai config keys set-default <name>` - Set the default API key
 - `mxbai completion install` - Install shell completion
   - Options: `--shell <shell>` (manually specify shell: bash, zsh, fish, pwsh)
@@ -243,6 +244,9 @@ mxbai config keys set-default work
 
 # Remove an API key
 mxbai config keys remove personal
+
+# Remove an API key without confirmation
+mxbai config keys remove personal --force
 
 # Create aliases for frequently used vector stores
 mxbai config set aliases.docs "My Documentation"

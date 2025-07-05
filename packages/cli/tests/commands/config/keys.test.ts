@@ -271,6 +271,87 @@ describe("Config Keys Command", () => {
         'No API key found with name "nonexistent"'
       );
     });
+
+    it("should remove API key with --force flag without confirmation", async () => {
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {
+            work: "mxb_work123",
+            personal: "mxb_personal123",
+          },
+        }),
+      });
+
+      await command.parseAsync(["node", "keys", "remove", "work", "--force"]);
+
+      const config = loadConfig();
+      expect(config.api_keys?.work).toBeUndefined();
+      expect(config.api_keys?.personal).toBe("mxb_personal123");
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining("✓"),
+        'API key "work" removed'
+      );
+      // Should not call inquirer.prompt when using --force
+      expect(mockInquirer.prompt).not.toHaveBeenCalled();
+    });
+
+    it("should remove default API key with --force flag without confirmation", async () => {
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {
+            work: "mxb_work123",
+            personal: "mxb_personal123",
+          },
+          defaults: {
+            api_key: "work",
+          },
+        }),
+      });
+
+      await command.parseAsync(["node", "keys", "remove", "work", "--force"]);
+
+      const config = loadConfig();
+      expect(config.api_keys?.work).toBeUndefined();
+      expect(config.defaults?.api_key).toBeUndefined();
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining("✓"),
+        'API key "work" removed'
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining("⚠"),
+        "No default API key set. Set a new default:"
+      );
+      // Should not call inquirer.prompt when using --force
+      expect(mockInquirer.prompt).not.toHaveBeenCalled();
+    });
+
+    it("should handle --force flag with non-existent key", async () => {
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {
+            work: "mxb_work123",
+          },
+        }),
+      });
+
+      await command.parseAsync([
+        "node",
+        "keys",
+        "remove",
+        "nonexistent",
+        "--force",
+      ]);
+
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining("✗"),
+        'No API key found with name "nonexistent"'
+      );
+      // Should not call inquirer.prompt even with --force when key doesn't exist
+      expect(mockInquirer.prompt).not.toHaveBeenCalled();
+    });
   });
 
   describe("set-default command", () => {

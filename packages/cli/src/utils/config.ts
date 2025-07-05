@@ -113,6 +113,7 @@ const DEFAULT_CONFIG: CLIConfig = {
       top_k: 10,
       rerank: false,
     },
+    api_key: null,
   },
   aliases: {},
 };

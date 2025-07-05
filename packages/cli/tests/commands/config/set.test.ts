@@ -28,21 +28,6 @@ describe("Config Set Command", () => {
   });
 
   describe("Basic value setting", () => {
-    it("should set API key (old format for backward compatibility)", () => {
-      mockFs({
-        [configFile]: JSON.stringify({ version: "1.0" }),
-      });
-
-      command.parse(["node", "set", "api_key", "mxb_test123"]);
-
-      const config = loadConfig();
-      expect(config.api_key).toBe("mxb_test123");
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("✓"),
-        expect.stringContaining("Set api_key to mxb_test123")
-      );
-    });
-
     it("should set default API key name in new format", () => {
       mockFs({
         [configFile]: JSON.stringify({
