@@ -156,18 +156,24 @@ describe("Global Options", () => {
       expect(parsed).toEqual({});
     });
 
-    it("should validate API key format", () => {
+    it("should accept any string as API key (validation moved to resolution)", () => {
       const options = {
-        apiKey: "invalid_key",
+        apiKey: "work", // API key name
       };
 
-      parseOptions(GlobalOptionsSchema, options);
+      const parsed = parseOptions(GlobalOptionsSchema, options);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining('"api-key" must start with "mxb_"')
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(parsed).toEqual(options);
+    });
+
+    it("should accept actual API keys", () => {
+      const options = {
+        apiKey: "mxb_test123", // Actual API key
+      };
+
+      const parsed = parseOptions(GlobalOptionsSchema, options);
+
+      expect(parsed).toEqual(options);
     });
 
     it("should validate format enum", () => {
@@ -186,9 +192,9 @@ describe("Global Options", () => {
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it("should handle multiple validation errors", () => {
+    it("should handle validation errors for format", () => {
       const options = {
-        apiKey: "invalid",
+        apiKey: "work", // Valid API key name
         format: "invalid",
       };
 
@@ -196,7 +202,7 @@ describe("Global Options", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining('must start with "mxb_"')
+        expect.stringContaining('"format" must be either "table", "json", or "csv"')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

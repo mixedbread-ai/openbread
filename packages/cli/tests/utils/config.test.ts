@@ -48,11 +48,16 @@ describe("Config Utils", () => {
       const testConfig: CLIConfig = {
         version: "1.0",
         api_key: "mxb_test123",
+        api_keys: {
+          work: "mxb_work123",
+          personal: "mxb_personal123",
+        },
         defaults: {
           upload: {
             strategy: "high_quality",
             parallel: 10,
           },
+          api_key: "work",
         },
         aliases: {
           docs: "vs_abc123",
@@ -66,6 +71,9 @@ describe("Config Utils", () => {
       const config = loadConfig();
 
       expect(config.api_key).toBe("mxb_test123");
+      expect(config.api_keys?.work).toBe("mxb_work123");
+      expect(config.api_keys?.personal).toBe("mxb_personal123");
+      expect(config.defaults?.api_key).toBe("work");
       expect(config.defaults?.upload?.strategy).toBe("high_quality");
       expect(config.aliases?.docs).toBe("vs_abc123");
     });
@@ -140,12 +148,17 @@ describe("Config Utils", () => {
       }
     });
 
-    it("should prioritize command line option", () => {
+    it("should prioritize command line option with direct API key", () => {
       process.env.MXBAI_API_KEY = "mxb_env123";
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
-          api_key: "mxb_config123",
+          api_keys: {
+            work: "mxb_work123",
+          },
+          defaults: {
+            api_key: "work",
+          },
         }),
       });
 
@@ -154,12 +167,33 @@ describe("Config Utils", () => {
       expect(apiKey).toBe("mxb_cli123");
     });
 
+    it("should resolve API key name from command line option", () => {
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {
+            work: "mxb_work123",
+            personal: "mxb_personal123",
+          },
+          defaults: {
+            api_key: "work",
+          },
+        }),
+      });
+
+      const apiKey = getApiKey({ apiKey: "personal" });
+
+      expect(apiKey).toBe("mxb_personal123");
+    });
+
     it("should use environment variable when no CLI option", () => {
       process.env.MXBAI_API_KEY = "mxb_env123";
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
-          api_key: "mxb_config123",
+          api_keys: {
+            work: "mxb_work123",
+          },
         }),
       });
 
@@ -168,27 +202,97 @@ describe("Config Utils", () => {
       expect(apiKey).toBe("mxb_env123");
     });
 
-    it("should use config file when no CLI option or env var", () => {
+    it("should use default API key from new format", () => {
       delete process.env.MXBAI_API_KEY;
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
-          api_key: "mxb_config123",
+          api_keys: {
+            work: "mxb_work123",
+            personal: "mxb_personal123",
+          },
+          defaults: {
+            api_key: "work",
+          },
         }),
       });
 
       const apiKey = getApiKey();
 
-      expect(apiKey).toBe("mxb_config123");
+      expect(apiKey).toBe("mxb_work123");
+    });
+
+    it("should prompt for migration when old format detected", () => {
+      delete process.env.MXBAI_API_KEY;
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_key: "mxb_old123",
+          api_keys: {},
+        }),
+      });
+
+      getApiKey();
+
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining("⚠  Migration Required")
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should show available keys when no default set", () => {
+      delete process.env.MXBAI_API_KEY;
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {
+            work: "mxb_work123",
+            personal: "mxb_personal123",
+          },
+        }),
+      });
+
+      getApiKey();
+
+      expect(console.log).toHaveBeenCalledWith(
+        expect.any(String),
+        "No default API key set.\n"
+      );
+      expect(console.log).toHaveBeenCalledWith("Available API keys:");
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should exit with error when API key name not found", () => {
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {
+            work: "mxb_work123",
+          },
+        }),
+      });
+
+      getApiKey({ apiKey: "nonexistent" });
+
+      expect(console.log).toHaveBeenCalledWith(
+        expect.any(String),
+        'No API key found with name "nonexistent"'
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
 
     it("should exit with error when no API key found", () => {
       delete process.env.MXBAI_API_KEY;
-      mockFs({});
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {},
+        }),
+      });
 
       getApiKey();
 
-      expect(console.error).toHaveBeenCalledWith(
+      expect(console.log).toHaveBeenCalledWith(
         expect.any(String),
         "No API key found.\n"
       );

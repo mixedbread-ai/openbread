@@ -561,8 +561,77 @@ describe("Completion Commands", () => {
           await parseCommand(command, []);
 
           expect(mockLog).toHaveBeenCalledWith(
-            ["get", "set"],
+            ["get", "set", "keys"],
             "pwsh",
+            console.log
+          );
+        });
+      });
+
+      describe("keys subcommand completions", () => {
+        const keysCommands = ["list", "add", "remove", "set-default"];
+
+        it("should provide keys completions for 'mxbai config keys' context", async () => {
+          mockParseEnv.mockReturnValue({
+            complete: true,
+            words: 3,
+            point: 0,
+            line: "mxbai config keys ",
+            partial: "",
+            last: "keys",
+            lastPartial: "",
+            prev: "keys",
+          });
+          mockGetShellFromEnv.mockReturnValue("bash");
+
+          const command = createCompletionServerCommand();
+          await parseCommand(command, []);
+
+          expect(mockLog).toHaveBeenCalledWith(
+            keysCommands,
+            "bash",
+            console.log
+          );
+        });
+
+        it("should not provide keys completions for non-config contexts", async () => {
+          mockParseEnv.mockReturnValue({
+            complete: true,
+            words: 2,
+            point: 0,
+            line: "mxbai vs keys ",
+            partial: "",
+            last: "keys",
+            lastPartial: "",
+            prev: "keys",
+          });
+          mockGetShellFromEnv.mockReturnValue("bash");
+
+          const command = createCompletionServerCommand();
+          await parseCommand(command, []);
+
+          expect(mockLog).not.toHaveBeenCalled();
+        });
+
+        it("should handle keys completions with different word counts", async () => {
+          mockParseEnv.mockReturnValue({
+            complete: true,
+            words: 4,
+            point: 0,
+            line: "mxbai config keys add ",
+            partial: "",
+            last: "add",
+            lastPartial: "",
+            prev: "keys",
+          });
+          mockGetShellFromEnv.mockReturnValue("zsh");
+
+          const command = createCompletionServerCommand();
+          await parseCommand(command, []);
+
+          expect(mockLog).toHaveBeenCalledWith(
+            keysCommands,
+            "zsh",
             console.log
           );
         });

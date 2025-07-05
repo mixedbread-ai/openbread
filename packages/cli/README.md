@@ -229,8 +229,8 @@ mxbai config set defaults.search.rerank true             # Enable reranking (def
 
 # API key management (alternative to environment variable)
 # Add API keys with names for easy switching
-mxbai config keys add mxb_... work
-mxbai config keys add mxb_... personal
+mxbai config keys add mxb_xxxxx work
+mxbai config keys add mxb_xxxxx personal
 
 # List all API keys
 mxbai config keys list
@@ -277,8 +277,8 @@ The CLI supports multiple API keys for different organizations or environments:
 
 ```bash
 # Add API keys with descriptive names
-mxbai config keys add mxb_... work
-mxbai config keys add mxb_... personal
+mxbai config keys add mxb_xxxxx work
+mxbai config keys add mxb_xxxxx personal
 
 # Use a specific API key for a command
 mxbai vs upload "My Docs" "*.md" --api-key work

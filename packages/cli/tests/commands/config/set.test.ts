@@ -28,7 +28,7 @@ describe("Config Set Command", () => {
   });
 
   describe("Basic value setting", () => {
-    it("should set API key", () => {
+    it("should set API key (old format for backward compatibility)", () => {
       mockFs({
         [configFile]: JSON.stringify({ version: "1.0" }),
       });
@@ -40,6 +40,26 @@ describe("Config Set Command", () => {
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining("✓"),
         expect.stringContaining("Set api_key to mxb_test123")
+      );
+    });
+
+    it("should set default API key name in new format", () => {
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {
+            work: "mxb_work123",
+          },
+        }),
+      });
+
+      command.parse(["node", "set", "defaults.api_key", "work"]);
+
+      const config = loadConfig();
+      expect(config.defaults?.api_key).toBe("work");
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining("✓"),
+        expect.stringContaining("Set defaults.api_key to work")
       );
     });
 
