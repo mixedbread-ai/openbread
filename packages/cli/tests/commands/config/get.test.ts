@@ -30,7 +30,6 @@ describe("Config Get Command", () => {
     it("should display all config when no key provided", () => {
       const testConfig = {
         version: "1.0",
-        api_key: "mxb_test123",
         api_keys: {
           work: "mxb_work123",
           personal: "mxb_personal123",
@@ -112,9 +111,9 @@ describe("Config Get Command", () => {
     });
 
     it("should get top-level values", () => {
-      command.parse(["node", "get", "api_key"]);
+      command.parse(["node", "get", "version"]);
 
-      expect(console.log).toHaveBeenCalledWith("api_key:", '"mxb_test123"');
+      expect(console.log).toHaveBeenCalledWith("version:", '"1.0"');
     });
 
     it("should get nested values", () => {

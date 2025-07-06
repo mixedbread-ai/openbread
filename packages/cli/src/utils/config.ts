@@ -51,12 +51,8 @@ export const DefaultsSchema = z.object({
   api_key: z.string().optional(),
 });
 
-export const CliConfigSchema = z.object({
+export const CLIConfigSchema = z.object({
   version: z.string(),
-  api_key: z
-    .string()
-    .startsWith("mxb_", 'API key must start with "mxb_"')
-    .optional(),
   api_keys: z
     .record(
       z.string().min(1, "API key name cannot be empty"),
@@ -68,7 +64,7 @@ export const CliConfigSchema = z.object({
   aliases: z.record(z.string(), z.string()).optional(),
 });
 
-export type CLIConfig = z.infer<typeof CliConfigSchema>;
+export type CLIConfig = z.infer<typeof CLIConfigSchema>;
 
 function getConfigDir(): string {
   if (process.env.MXBAI_CONFIG_PATH) {
@@ -128,7 +124,7 @@ export function loadConfig(): CLIConfig {
     const rawConfig = JSON.parse(content);
 
     // Validate with Zod
-    const parseResult = CliConfigSchema.safeParse(rawConfig);
+    const parseResult = CLIConfigSchema.safeParse(rawConfig);
     if (parseResult.success) {
       return { ...DEFAULT_CONFIG, ...parseResult.data };
     } else {
@@ -172,16 +168,26 @@ export function getApiKey(options?: { apiKey?: string }): string {
   const config = loadConfig();
 
   // Check for old format and prompt for migration
-  if (config.api_key && Object.keys(config.api_keys).length === 0) {
-    console.log(chalk.yellow("\n\n⚠  Migration Required"));
-    console.log(
-      "The API key storage format has changed. Please migrate your existing API key:"
-    );
-    console.log(
-      chalk.cyan("  mxbai config keys add <your-current-key> <name>")
-    );
-    console.log("\nYour current key will not work until migrated.\n");
-    process.exit(1);
+  if (existsSync(CONFIG_FILE)) {
+    try {
+      const rawConfig = JSON.parse(readFileSync(CONFIG_FILE, "utf-8"));
+      if (
+        rawConfig.api_key &&
+        Object.keys(rawConfig.api_keys || {}).length === 0
+      ) {
+        console.log(chalk.yellow("\n\n⚠  Migration Required"));
+        console.log(
+          "The API key storage format has changed. Please migrate your existing API key:"
+        );
+        console.log(
+          chalk.cyan("  mxbai config keys add <your-current-key> <name>")
+        );
+        console.log("\nYour current key will not work until migrated.\n");
+        process.exit(1);
+      }
+    } catch {
+      // If we can't read the config file, continue with normal flow
+    }
   }
 
   // Get default API key from new format
@@ -279,7 +285,7 @@ export function parseConfigValue(key: string, value: string) {
   const pathSegments = key.split(".");
 
   // Try to resolve the schema for this key path
-  const targetSchema = resolveSchemaPath(CliConfigSchema, pathSegments);
+  const targetSchema = resolveSchemaPath(CLIConfigSchema, pathSegments);
 
   if (!targetSchema) {
     console.error(

@@ -47,7 +47,6 @@ describe("Config Utils", () => {
     it("should load and validate config from file", () => {
       const testConfig: CLIConfig = {
         version: "1.0",
-        api_key: "mxb_test123",
         api_keys: {
           work: "mxb_work123",
           personal: "mxb_personal123",
@@ -70,7 +69,6 @@ describe("Config Utils", () => {
 
       const config = loadConfig();
 
-      expect(config.api_key).toBe("mxb_test123");
       expect(config.api_keys?.work).toBe("mxb_work123");
       expect(config.api_keys?.personal).toBe("mxb_personal123");
       expect(config.defaults?.api_key).toBe("work");
@@ -96,14 +94,16 @@ describe("Config Utils", () => {
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
-          api_key: "invalid_key", // Should start with mxb_
+          api_keys: {
+            invalid: "invalid_key", // Should start with mxb_
+          },
         }),
       });
 
       const config = loadConfig();
 
       expect(console.warn).toHaveBeenCalled();
-      expect(config.api_key).toBeUndefined();
+      expect(config.api_keys).toEqual({});
     });
   });
 
@@ -113,7 +113,9 @@ describe("Config Utils", () => {
 
       const config: CLIConfig = {
         version: "1.0",
-        api_key: "mxb_test123",
+        api_keys: {
+          test: "mxb_test123",
+        },
       };
 
       saveConfig(config);
@@ -123,8 +125,14 @@ describe("Config Utils", () => {
     });
 
     it("should overwrite existing config file", () => {
-      const oldConfig = { version: "1.0", api_key: "mxb_old" };
-      const newConfig: CLIConfig = { version: "1.0", api_key: "mxb_new" };
+      const oldConfig: CLIConfig = {
+        version: "1.0",
+        api_keys: { old: "mxb_old" },
+      };
+      const newConfig: CLIConfig = {
+        version: "1.0",
+        api_keys: { new: "mxb_new" },
+      };
 
       mockFs({
         [configFile]: JSON.stringify(oldConfig),
@@ -133,7 +141,7 @@ describe("Config Utils", () => {
       saveConfig(newConfig);
 
       const savedContent = readFileSync(configFile, "utf-8");
-      expect(JSON.parse(savedContent).api_key).toBe("mxb_new");
+      expect(JSON.parse(savedContent).api_keys.new).toBe("mxb_new");
     });
   });
 
@@ -361,16 +369,18 @@ describe("Config Utils", () => {
     });
 
     it("should parse string values", () => {
-      expect(parseConfigValue("api_key", "mxb_test123")).toBe("mxb_test123");
+      expect(parseConfigValue("base_url", "https://api.example.com")).toBe(
+        "https://api.example.com"
+      );
       expect(parseConfigValue("aliases.docs", "vs_abc123")).toBe("vs_abc123");
     });
 
-    it("should validate api_key format", () => {
-      parseConfigValue("api_key", "invalid_key");
+    it("should validate URL format", () => {
+      parseConfigValue("base_url", "invalid_url");
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining("Invalid value for api_key:"),
+        expect.stringContaining("Invalid value for base_url:"),
         expect.any(String)
       );
       expect(process.exit).toHaveBeenCalledWith(1);
