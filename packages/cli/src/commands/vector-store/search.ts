@@ -166,9 +166,9 @@ export function createSearchCommand(): Command {
       } catch (error) {
         spinner?.fail("Search failed");
         if (error instanceof Error) {
-          console.error(chalk.red("\nError:"), error.message);
+          console.error(chalk.red("\n✗"), error.message);
         } else {
-          console.error(chalk.red("\nError:"), "Failed to search vector store");
+          console.error(chalk.red("\n✗"), "Failed to search vector store");
         }
         process.exit(1);
       }

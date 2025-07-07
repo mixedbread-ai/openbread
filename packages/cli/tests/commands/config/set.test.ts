@@ -154,8 +154,7 @@ describe("Config Set Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining("Invalid value for defaults.upload.strategy:"),
-        expect.any(String)
+        expect.stringContaining("Invalid value for defaults.upload.strategy:")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -194,8 +193,7 @@ describe("Config Set Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining("Invalid value for defaults.upload.parallel:"),
-        expect.any(String)
+        expect.stringContaining("Invalid value for defaults.upload.parallel:")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

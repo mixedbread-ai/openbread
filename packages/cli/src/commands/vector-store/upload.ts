@@ -111,7 +111,7 @@ export function createUploadCommand(): Command {
 
         if (!parsedOptions.patterns || parsedOptions.patterns.length === 0) {
           console.error(
-            chalk.red("Error:"),
+            chalk.red("✗"),
             "No file patterns provided. Use --manifest for manifest-based uploads."
           );
           process.exit(1);
@@ -175,7 +175,7 @@ export function createUploadCommand(): Command {
                 console.log(`    Metadata: ${JSON.stringify(metadata)}`);
               }
             } catch (_error) {
-              console.log(`  ${file} (${chalk.red("Error: File not found")})`);
+              console.log(`  ${file} (${chalk.red("✗ File not found")})`);
             }
           });
           return;
@@ -231,9 +231,9 @@ export function createUploadCommand(): Command {
         });
       } catch (error) {
         if (error instanceof Error) {
-          console.error(chalk.red("\nError:"), error.message);
+          console.error(chalk.red("\n✗"), error.message);
         } else {
-          console.error(chalk.red("\nError:"), "Failed to upload files");
+          console.error(chalk.red("\n✗"), "Failed to upload files");
         }
         process.exit(1);
       }

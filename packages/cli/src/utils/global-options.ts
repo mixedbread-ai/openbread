@@ -10,9 +10,7 @@ export interface GlobalOptions {
 }
 
 export const GlobalOptionsSchema = z.object({
-  apiKey: z
-    .string()
-    .optional(),
+  apiKey: z.string().optional(),
   baseURL: z.string().url('"base-url" must be a valid URL').optional(),
   format: z
     .enum(["table", "json", "csv"], {
@@ -78,7 +76,7 @@ export function parseOptions<T>(
 
   if (!parsed.success) {
     console.error(
-      chalk.red("\nError:"),
+      chalk.red("\n✗"),
       parsed.error.issues.map((i) => i.message).join(", ")
     );
     process.exit(1);

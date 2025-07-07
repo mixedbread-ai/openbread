@@ -29,10 +29,7 @@ export async function resolveVectorStore(
   );
 
   if (fuzzyMatches.length === 0) {
-    console.error(
-      chalk.red("Error:"),
-      `Vector store "${nameOrId}" not found.\n`
-    );
+    console.error(chalk.red("✗"), `Vector store "${nameOrId}" not found.\n`);
     console.error("Run 'mxbai vs list' to see all vector stores.");
     process.exit(1);
   }
@@ -56,15 +53,12 @@ export async function resolveVectorStore(
     ]);
     return selected;
   } else {
-    console.error(
-      chalk.red("Error:"),
-      `Vector store "${nameOrId}" not found.\n`
-    );
-    console.error("Did you mean one of these?");
+    console.error(chalk.red("✗"), `Vector store "${nameOrId}" not found.\n`);
+    console.log("Did you mean one of these?");
     fuzzyMatches.forEach((vs) => {
-      console.error(`  • ${vs.name}`);
+      console.log(`  • ${vs.name}`);
     });
-    console.error("\nRun 'mxbai vs list' to see all vector stores.");
+    console.log("\nRun 'mxbai vs list' to see all vector stores.");
     process.exit(1);
   }
 }

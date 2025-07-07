@@ -68,7 +68,7 @@ export function createDeleteCommand(): Command {
           }
         }
 
-        ora("Deleting file...").start();
+        spinner = ora("Deleting file...").start();
 
         await client.vectorStores.files.delete(parsedOptions.fileId, {
           vector_store_identifier: vectorStore.id,
@@ -76,11 +76,11 @@ export function createDeleteCommand(): Command {
 
         spinner.succeed(`File ${parsedOptions.fileId} deleted successfully`);
       } catch (error) {
-        spinner.fail("Failed to delete file");
+        spinner?.fail("Failed to delete file");
         if (error instanceof Error) {
-          console.error(chalk.red("\nError:"), error.message);
+          console.error(chalk.red("\n✗"), error.message);
         } else {
-          console.error(chalk.red("\nError:"), "Failed to delete file");
+          console.error(chalk.red("\n✗"), "Failed to delete file");
         }
         process.exit(1);
       }

@@ -2,6 +2,7 @@ import chalk from "chalk";
 import { Command } from "commander";
 import inquirer from "inquirer";
 import {
+  isMxbaiAPIKey,
   loadConfig,
   outputAvailableKeys,
   saveConfig,
@@ -14,9 +15,8 @@ export function createKeysCommand(): Command {
     .command("add <key> [name]")
     .description("Add a new API key")
     .action(async (key: string, name?: string) => {
-      // Validate API key format
-      if (!key.startsWith("mxb_")) {
-        console.log(chalk.red("✗"), 'API key must start with "mxb_"');
+      if (!isMxbaiAPIKey(key)) {
+        console.error(chalk.red("✗"), 'API key must start with "mxb_"');
         return;
       }
 
@@ -42,11 +42,11 @@ export function createKeysCommand(): Command {
       } else {
         // Validate name if provided
         if (!name.trim()) {
-          console.log(chalk.red("✗"), "Name cannot be empty");
+          console.error(chalk.red("✗"), "Name cannot be empty");
           return;
         }
         if (config.api_keys?.[name]) {
-          console.log(chalk.red("✗"), `API key "${name}" already exists`);
+          console.error(chalk.red("✗"), `API key "${name}" already exists`);
           return;
         }
       }
@@ -96,7 +96,7 @@ export function createKeysCommand(): Command {
       const config = loadConfig();
 
       if (!config.api_keys?.[name]) {
-        console.log(chalk.red("✗"), `No API key found with name "${name}"`);
+        console.error(chalk.red("✗"), `No API key found with name "${name}"`);
 
         if (config.api_keys && Object.keys(config.api_keys).length > 0) {
           console.log("\nAvailable API keys:");
@@ -158,7 +158,7 @@ export function createKeysCommand(): Command {
       const config = loadConfig();
 
       if (!config.api_keys?.[name]) {
-        console.log(chalk.red("✗"), `No API key found with name "${name}"`);
+        console.error(chalk.red("✗"), `No API key found with name "${name}"`);
 
         if (config.api_keys && Object.keys(config.api_keys).length > 0) {
           console.log("\nAvailable API keys:");

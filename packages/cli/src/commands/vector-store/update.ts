@@ -81,7 +81,7 @@ export function createUpdateCommand(): Command {
 
       if (Object.keys(updateData).length === 0) {
         console.error(
-          chalk.red("Error:"),
+          chalk.red("✗"),
           "No update fields provided. Use --name, --description, or --metadata"
         );
         process.exit(1);
@@ -121,9 +121,9 @@ export function createUpdateCommand(): Command {
     } catch (error) {
       spinner?.fail("Failed to update vector store");
       if (error instanceof Error) {
-        console.error(chalk.red("\nError:"), error.message);
+        console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(chalk.red("\nError:"), "Failed to update vector store");
+        console.error(chalk.red("\n✗"), "Failed to update vector store");
       }
       process.exit(1);
     }

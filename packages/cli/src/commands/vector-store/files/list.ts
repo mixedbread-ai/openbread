@@ -101,9 +101,9 @@ export function createListCommand(): Command {
     } catch (error) {
       spinner.fail("Failed to load files");
       if (error instanceof Error) {
-        console.error(chalk.red("\nError:"), error.message);
+        console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(chalk.red("\nError:"), "Failed to list files");
+        console.error(chalk.red("\n✗"), "Failed to list files");
       }
       process.exit(1);
     }

@@ -79,7 +79,7 @@ describe("Config Keys Command", () => {
 
       command.parse(["node", "keys", "add", "invalid_key", "test"]);
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining("✗"),
         'API key must start with "mxb_"'
       );
@@ -92,7 +92,7 @@ describe("Config Keys Command", () => {
 
       command.parse(["node", "keys", "add", "mxb_test123", "   "]);
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining("✗"),
         "Name cannot be empty"
       );
@@ -108,7 +108,7 @@ describe("Config Keys Command", () => {
 
       command.parse(["node", "keys", "add", "mxb_test123", "work"]);
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining("✗"),
         'API key "work" already exists'
       );
@@ -266,7 +266,7 @@ describe("Config Keys Command", () => {
 
       await command.parseAsync(["node", "keys", "remove", "nonexistent"]);
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining("✗"),
         'No API key found with name "nonexistent"'
       );
@@ -345,7 +345,7 @@ describe("Config Keys Command", () => {
         "--force",
       ]);
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining("✗"),
         'No API key found with name "nonexistent"'
       );
@@ -391,7 +391,7 @@ describe("Config Keys Command", () => {
 
       command.parse(["node", "keys", "set-default", "nonexistent"]);
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining("✗"),
         'No API key found with name "nonexistent"'
       );

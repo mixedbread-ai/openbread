@@ -159,10 +159,7 @@ export function getApiKey(options?: { apiKey?: string }): string {
   // Priority: 1. Command line flag, 2. Environment variable, 3. Config file
   if (options?.apiKey) {
     const config = loadConfig();
-    if (
-      !options.apiKey.startsWith("mxb_") &&
-      config.api_keys?.[options.apiKey]
-    ) {
+    if (!isMxbaiAPIKey(options.apiKey) && config.api_keys?.[options.apiKey]) {
       const resolvedKey = config.api_keys[options.apiKey];
       displayApiKeyUsage(resolvedKey, "from --api-key", options.apiKey);
       return resolvedKey;
@@ -213,7 +210,7 @@ export function getApiKey(options?: { apiKey?: string }): string {
 
   // If no default but keys exist, show available keys
   if (config.api_keys && Object.keys(config.api_keys).length > 0) {
-    console.log(chalk.red("\n\n✗"), "No default API key set.\n");
+    console.error(chalk.red("\n\n✗"), "No default API key set.\n");
     console.log("Available API keys:");
     outputAvailableKeys(config);
     console.log("\nSet a default API key:");
@@ -221,7 +218,7 @@ export function getApiKey(options?: { apiKey?: string }): string {
     process.exit(1);
   }
 
-  console.log(chalk.red("\n\n✗"), "No API key found.\n");
+  console.error(chalk.red("\n\n✗"), "No API key found.\n");
   console.log("Please add an API key using:");
   console.log("  1. Command flag: --api-key <name>");
   console.log("  2. Environment variable: export MXBAI_API_KEY=mxb_xxxxx");
@@ -238,7 +235,7 @@ function resolveApiKey(nameOrKey: string, config?: CLIConfig): string {
   }
 
   // If it's already a valid API key, return it
-  if (nameOrKey.startsWith("mxb_")) {
+  if (isMxbaiAPIKey(nameOrKey)) {
     return nameOrKey;
   }
 
@@ -247,7 +244,7 @@ function resolveApiKey(nameOrKey: string, config?: CLIConfig): string {
     return config.api_keys[nameOrKey];
   }
 
-  console.log(chalk.red("✗"), `No API key found with name "${nameOrKey}"`);
+  console.error(chalk.red("✗"), `No API key found with name "${nameOrKey}"`);
 
   if (config.api_keys && Object.keys(config.api_keys).length > 0) {
     console.log("\nAvailable API keys:");
@@ -255,6 +252,10 @@ function resolveApiKey(nameOrKey: string, config?: CLIConfig): string {
   }
 
   process.exit(1);
+}
+
+export function isMxbaiAPIKey(key: string): boolean {
+  return key.startsWith("mxb_");
 }
 
 export function getBaseURL(options?: { baseURL?: string }): string {
@@ -306,23 +307,20 @@ export function parseConfigValue(key: string, value: string) {
 
   if (!targetSchema) {
     console.error(
-      chalk.red("Error:"),
+      chalk.red("✗"),
       `Unknown config key: ${key}. Use 'mxbai config --help' to see available options.`
     );
     process.exit(1);
-    return; // This won't be reached in normal execution, but helps with testing
   }
 
   const parsed = targetSchema.safeParse(value);
 
   if (!parsed.success) {
     console.error(
-      chalk.red("Error:"),
-      `Invalid value for ${key}:`,
-      parsed.error.issues.map((i) => i.message).join(", ")
+      chalk.red("✗"),
+      `Invalid value for ${key}: ${parsed.error.issues.map((i) => i.message).join(", ")}`
     );
     process.exit(1);
-    return; // This won't be reached in normal execution, but helps with testing
   }
 
   return parsed.data;

@@ -35,7 +35,7 @@ export function createSetCommand(): Command {
         );
       } catch (error) {
         console.error(
-          chalk.red("Error:"),
+          chalk.red("✗"),
           "Failed to set configuration:",
           error instanceof Error ? error.message : String(error)
         );

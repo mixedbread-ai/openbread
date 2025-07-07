@@ -25,7 +25,7 @@ export function createGetCommand(): Command {
             current = current[currentKey];
           } else {
             console.error(
-              chalk.red("Error:"),
+              chalk.red("✗"),
               `Configuration key ${chalk.cyan(key)} not found`
             );
             process.exit(1);
@@ -35,7 +35,7 @@ export function createGetCommand(): Command {
         console.log(chalk.cyan(`${key}:`), JSON.stringify(current, null, 2));
       } catch (error) {
         console.error(
-          chalk.red("Error:"),
+          chalk.red("✗"),
           "Failed to get configuration:",
           error instanceof Error ? error.message : String(error)
         );

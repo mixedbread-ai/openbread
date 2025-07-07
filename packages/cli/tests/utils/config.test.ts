@@ -262,7 +262,7 @@ describe("Config Utils", () => {
 
       getApiKey();
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
         "No default API key set.\n"
       );
@@ -280,9 +280,17 @@ describe("Config Utils", () => {
         }),
       });
 
-      getApiKey({ apiKey: "nonexistent" });
+      // Mock process.exit to throw an error to stop execution
+      const mockExit = jest.fn().mockImplementation(() => {
+        throw new Error("process.exit called");
+      });
+      process.exit = mockExit as never;
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(() => {
+        getApiKey({ apiKey: "nonexistent" });
+      }).toThrow("process.exit called");
+
+      expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
         'No API key found with name "nonexistent"'
       );
@@ -300,7 +308,7 @@ describe("Config Utils", () => {
 
       getApiKey();
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
         "No API key found.\n"
       );
@@ -380,8 +388,7 @@ describe("Config Utils", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining("Invalid value for base_url:"),
-        expect.any(String)
+        expect.stringContaining("Invalid value for base_url:")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -391,8 +398,7 @@ describe("Config Utils", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining("Invalid value for defaults.upload.strategy:"),
-        expect.any(String)
+        expect.stringContaining("Invalid value for defaults.upload.strategy:")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -402,14 +408,21 @@ describe("Config Utils", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining("Invalid value for defaults.upload.parallel:"),
-        expect.stringContaining("positive")
+        expect.stringContaining("Invalid value for defaults.upload.parallel:")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
     it("should handle unknown config keys", () => {
-      parseConfigValue("unknown.key", "value");
+      // Mock process.exit to throw an error to stop execution
+      const mockExit = jest.fn().mockImplementation(() => {
+        throw new Error("process.exit called");
+      });
+      process.exit = mockExit as never;
+
+      expect(() => {
+        parseConfigValue("unknown.key", "value");
+      }).toThrow("process.exit called");
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
