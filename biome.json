@@ -40,7 +40,11 @@
         "noUndeclaredVariables": "off",
         "noUndeclaredDependencies": "off",
         "useImportExtensions": "off",
-        "noNodejsModules": "off"
+        "noNodejsModules": "off",
+        "noUnusedImports": {
+          "level": "warn",
+          "fix": "safe"
+        }
       },
       "nursery": {
         "noSecrets": "off",
