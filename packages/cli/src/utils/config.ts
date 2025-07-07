@@ -155,19 +155,47 @@ export function saveConfig(config: CLIConfig): void {
   writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
 }
 
-export function getApiKey(options?: { apiKey?: string }): string {
-  // Priority: 1. Command line flag, 2. Environment variable, 3. Config file
+export function getApiKey(options?: {
+  apiKey?: string;
+  savedKey?: string;
+}): string {
+  // Priority: 1. Command line flags, 2. Environment variable, 3. Config file
+
+  // Handle --api-key (actual API key)
   if (options?.apiKey) {
-    const config = loadConfig();
-    if (!isMxbaiAPIKey(options.apiKey) && config.api_keys?.[options.apiKey]) {
-      const resolvedKey = config.api_keys[options.apiKey];
-      displayApiKeyUsage(resolvedKey, "from --api-key", options.apiKey);
-      return resolvedKey;
-    } else {
-      const resolvedKey = resolveApiKey(options.apiKey, config);
-      displayApiKeyUsage(resolvedKey, "from --api-key");
-      return resolvedKey;
+    if (!isMxbaiAPIKey(options.apiKey)) {
+      console.error(
+        chalk.red("✗"),
+        "Invalid API key format. API keys must start with 'mxb_'."
+      );
+      process.exit(1);
     }
+    displayApiKeyUsage(options.apiKey, "from --api-key");
+    return options.apiKey;
+  }
+
+  // Handle --saved-key (key name from config)
+  if (options?.savedKey) {
+    const config = loadConfig();
+    if (!config.api_keys?.[options.savedKey]) {
+      console.error(
+        chalk.red("✗"),
+        `No saved API key found with name "${options.savedKey}".`
+      );
+      if (config.api_keys && Object.keys(config.api_keys).length > 0) {
+        console.log("\nAvailable saved keys:");
+        outputAvailableKeys(config);
+      } else {
+        console.log(
+          "\nNo saved keys found. Add one with: ",
+          chalk.cyan("mxbai config keys add <key> <name>")
+        );
+      }
+      process.exit(1);
+    }
+    const resolvedKey = config.api_keys[options.savedKey];
+    displayApiKeyUsage(resolvedKey, "from --saved-key", options.savedKey);
+    return resolvedKey;
   }
 
   if (process.env.MXBAI_API_KEY) {
@@ -220,37 +248,12 @@ export function getApiKey(options?: { apiKey?: string }): string {
 
   console.error(chalk.red("\n\n✗"), "No API key found.\n");
   console.log("Please add an API key using:");
-  console.log("  1. Command flag: --api-key <name>");
+  console.log("  1. Command flag: --api-key <key> or --saved-key <name>");
   console.log("  2. Environment variable: export MXBAI_API_KEY=mxb_xxxxx");
   console.log("  3. Config file: mxbai config keys add <key> <name>\n");
   console.log(
     "Get your API key at: https://www.platform.mixedbread.com/platform?next=api-keys"
   );
-  process.exit(1);
-}
-
-function resolveApiKey(nameOrKey: string, config?: CLIConfig): string {
-  if (!config) {
-    config = loadConfig();
-  }
-
-  // If it's already a valid API key, return it
-  if (isMxbaiAPIKey(nameOrKey)) {
-    return nameOrKey;
-  }
-
-  // Otherwise, try to resolve it as a name
-  if (config.api_keys?.[nameOrKey]) {
-    return config.api_keys[nameOrKey];
-  }
-
-  console.error(chalk.red("✗"), `No API key found with name "${nameOrKey}"`);
-
-  if (config.api_keys && Object.keys(config.api_keys).length > 0) {
-    console.log("\nAvailable API keys:");
-    outputAvailableKeys(config);
-  }
-
   process.exit(1);
 }
 

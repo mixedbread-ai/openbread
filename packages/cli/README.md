@@ -267,7 +267,7 @@ mxbai config get defaults.upload
 
 The CLI looks for your API key in this order:
 
-1. `--api-key` command line flag (can be an API key name or actual key)
+1. `--api-key` or `--saved-key` command line flags
 2. `MXBAI_API_KEY` environment variable
 3. Default API key from config file (platform-specific location):
    - **Linux/Unix**: `~/.config/mixedbread/config.json` (or `$XDG_CONFIG_HOME/mixedbread/config.json`)
@@ -284,9 +284,12 @@ The CLI supports multiple API keys for different organizations or environments:
 mxbai config keys add mxb_xxxxx work
 mxbai config keys add mxb_xxxxx personal
 
-# Use a specific API key for a command
-mxbai vs upload "My Docs" "*.md" --api-key work
-mxbai vs search "Knowledge Base" "query" --api-key personal
+# Use a specific saved API key for a command
+mxbai vs upload "My Docs" "*.md" --saved-key work
+mxbai vs search "Knowledge Base" "query" --saved-key personal
+
+# Or use an actual API key directly
+mxbai vs upload "My Docs" "*.md" --api-key mxb_xxxxx
 
 # The last added key becomes default automatically
 # Or explicitly set a default
@@ -323,7 +326,8 @@ After installation, restart your shell or reload your shell configuration:
 
 All commands support these global options:
 
-- `--api-key <key>` - API key name or actual key for authentication
+- `--api-key <key>` - Actual API key for authentication
+- `--saved-key <name>` - Name of saved API key from config
 - `--format <format>` - Output format: table, json, or csv (default: table)
 - `--debug` - Enable debug output (can also set `MXBAI_DEBUG=true`)
 

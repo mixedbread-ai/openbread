@@ -6,14 +6,14 @@ import z from "zod";
 import { createClient } from "../../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../../utils/global-options";
 import { resolveVectorStore } from "../../../utils/vector-store";
 
-const DeleteFileSchema = GlobalOptionsSchema.extend({
+const DeleteFileSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   fileId: z.string().min(1, { message: '"file-id" is required' }),
   force: z.boolean().optional(),

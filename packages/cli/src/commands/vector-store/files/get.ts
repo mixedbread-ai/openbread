@@ -5,15 +5,15 @@ import { z } from "zod";
 import { createClient } from "../../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../../utils/global-options";
 import { formatBytes, formatOutput } from "../../../utils/output";
 import { resolveVectorStore } from "../../../utils/vector-store";
 
-const GetFileSchema = GlobalOptionsSchema.extend({
+const GetFileSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   fileId: z.string().min(1, { message: '"file-id" is required' }),
 });

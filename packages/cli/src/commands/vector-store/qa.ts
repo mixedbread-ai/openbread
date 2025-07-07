@@ -6,15 +6,15 @@ import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
 import { formatOutput } from "../../utils/output";
 import { resolveVectorStore } from "../../utils/vector-store";
 
-const QAVectorStoreSchema = GlobalOptionsSchema.extend({
+const QAVectorStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   question: z.string().min(1, { message: '"question" is required' }),
   topK: z.coerce

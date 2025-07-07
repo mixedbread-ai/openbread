@@ -7,15 +7,15 @@ import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
 import { formatCountWithSuffix, formatOutput } from "../../utils/output";
 import { resolveVectorStore } from "../../utils/vector-store";
 
-const SearchVectorStoreSchema = GlobalOptionsSchema.extend({
+const SearchVectorStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   query: z.string().min(1, { message: '"query" is required' }),
   topK: z.coerce

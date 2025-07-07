@@ -5,15 +5,15 @@ import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
 import { formatBytes, formatOutput } from "../../utils/output";
 import { resolveVectorStore } from "../../utils/vector-store";
 
-const GetVectorStoreSchema = GlobalOptionsSchema.extend({
+const GetVectorStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
 });
 
@@ -76,10 +76,7 @@ export function createGetCommand(): Command {
       if (error instanceof Error) {
         console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(
-          chalk.red("\n✗"),
-          "Failed to get vector store details"
-        );
+        console.error(chalk.red("\n✗"), "Failed to get vector store details");
       }
       process.exit(1);
     }

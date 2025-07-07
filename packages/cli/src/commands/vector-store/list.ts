@@ -5,8 +5,8 @@ import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
@@ -16,7 +16,7 @@ import {
   formatOutput,
 } from "../../utils/output";
 
-const ListVectorStoreSchema = GlobalOptionsSchema.extend({
+const ListVectorStoreSchema = extendGlobalOptions({
   filter: z.string().optional(),
   limit: z.coerce
     .number({ message: '"limit" must be a number' })

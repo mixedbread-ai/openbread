@@ -6,8 +6,8 @@ import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
@@ -15,7 +15,7 @@ import { validateMetadata } from "../../utils/metadata";
 import { formatOutput } from "../../utils/output";
 import { resolveVectorStore } from "../../utils/vector-store";
 
-const UpdateVectorStoreSchema = GlobalOptionsSchema.extend({
+const UpdateVectorStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   name: z.string().optional(),
   description: z.string().optional(),

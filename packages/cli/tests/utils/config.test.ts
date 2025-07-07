@@ -175,7 +175,25 @@ describe("Config Utils", () => {
       expect(apiKey).toBe("mxb_cli123");
     });
 
-    it("should resolve API key name from command line option", () => {
+    it("should exit with error when --api-key has invalid format", () => {
+      // Mock process.exit to throw an error to stop execution
+      const mockExit = jest.fn().mockImplementation(() => {
+        throw new Error("process.exit called");
+      });
+      process.exit = mockExit as never;
+
+      expect(() => {
+        getApiKey({ apiKey: "invalid_key_format" });
+      }).toThrow("process.exit called");
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        "Invalid API key format. API keys must start with 'mxb_'."
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should resolve API key name from --saved-key option", () => {
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
@@ -189,7 +207,7 @@ describe("Config Utils", () => {
         }),
       });
 
-      const apiKey = getApiKey({ apiKey: "personal" });
+      const apiKey = getApiKey({ savedKey: "personal" });
 
       expect(apiKey).toBe("mxb_personal123");
     });
@@ -270,7 +288,7 @@ describe("Config Utils", () => {
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it("should exit with error when API key name not found", () => {
+    it("should exit with error when saved API key name not found", () => {
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
@@ -287,12 +305,12 @@ describe("Config Utils", () => {
       process.exit = mockExit as never;
 
       expect(() => {
-        getApiKey({ apiKey: "nonexistent" });
+        getApiKey({ savedKey: "nonexistent" });
       }).toThrow("process.exit called");
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        'No API key found with name "nonexistent"'
+        'No saved API key found with name "nonexistent".'
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

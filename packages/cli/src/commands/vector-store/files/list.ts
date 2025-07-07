@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createClient } from "../../../utils/client";
 import {
   addGlobalOptions,
-  GlobalOptionsSchema,
+  extendGlobalOptions,
   mergeCommandOptions,
   parseOptions,
 } from "../../../utils/global-options";
@@ -18,7 +18,7 @@ import {
 import { resolveVectorStore } from "../../../utils/vector-store";
 import type { FilesOptions } from ".";
 
-const ListFilesSchema = GlobalOptionsSchema.extend({
+const ListFilesSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   status: z
     .enum(["all", "completed", "in_progress", "failed"], {

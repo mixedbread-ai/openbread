@@ -9,8 +9,8 @@ import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
@@ -23,7 +23,7 @@ import {
   resolveVectorStore,
 } from "../../utils/vector-store";
 
-const UploadVectorStoreSchema = GlobalOptionsSchema.extend({
+const UploadVectorStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   patterns: z.array(z.string()).optional(),
   strategy: z

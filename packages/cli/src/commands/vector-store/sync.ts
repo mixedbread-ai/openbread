@@ -7,8 +7,8 @@ import { createClient } from "../../utils/client";
 import { getGitInfo } from "../../utils/git";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
@@ -23,7 +23,7 @@ import {
 import { getSyncedFiles } from "../../utils/sync-state";
 import { resolveVectorStore } from "../../utils/vector-store";
 
-const SyncVectorStoreSchema = GlobalOptionsSchema.extend({
+const SyncVectorStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   patterns: z
     .array(z.string())

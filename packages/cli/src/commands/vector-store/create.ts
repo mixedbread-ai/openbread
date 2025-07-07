@@ -5,15 +5,15 @@ import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
 import { validateMetadata } from "../../utils/metadata";
 import { formatOutput } from "../../utils/output";
 
-const CreateVectorStoreSchema = GlobalOptionsSchema.extend({
+const CreateVectorStoreSchema = extendGlobalOptions({
   name: z.string().min(1, { message: '"name" is required' }),
   description: z.string().optional(),
   expiresAfter: z.coerce
