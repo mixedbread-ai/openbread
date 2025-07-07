@@ -84,9 +84,7 @@ export function createCreateCommand(): Command {
         parsedOptions.format
       );
     } catch (error) {
-      if (spinner) {
-        spinner.fail("Failed to create vector store");
-      }
+      spinner?.fail("Failed to create vector store");
       if (error instanceof Error) {
         console.error(chalk.red("\nError:"), error.message);
       } else {

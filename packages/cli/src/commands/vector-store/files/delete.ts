@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { Command } from "commander";
 import inquirer from "inquirer";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import z from "zod";
 import { createClient } from "../../../utils/client";
 import {
@@ -35,6 +35,7 @@ export function createDeleteCommand(): Command {
       fileId: string,
       options: GlobalOptions & { force?: boolean }
     ) => {
+      let spinner: Ora;
       try {
         const mergedOptions = mergeCommandOptions(deleteCommand, options);
 
@@ -67,7 +68,7 @@ export function createDeleteCommand(): Command {
           }
         }
 
-        const spinner = ora("Deleting file...").start();
+        ora("Deleting file...").start();
 
         await client.vectorStores.files.delete(parsedOptions.fileId, {
           vector_store_identifier: vectorStore.id,
@@ -75,6 +76,7 @@ export function createDeleteCommand(): Command {
 
         spinner.succeed(`File ${parsedOptions.fileId} deleted successfully`);
       } catch (error) {
+        spinner.fail("Failed to delete file");
         if (error instanceof Error) {
           console.error(chalk.red("\nError:"), error.message);
         } else {

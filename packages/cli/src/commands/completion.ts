@@ -22,8 +22,8 @@ function getShellInfo(options: { shell?: string }) {
       shell = options.shell as SupportedShell;
       installMethod = "manual";
     } else {
-      console.error(chalk.red(`Error: Unsupported shell '${options.shell}'.`));
-      console.error(
+      console.log(chalk.red(`✗ Unsupported shell '${options.shell}'.`));
+      console.log(
         chalk.gray(`Supported shells: ${SUPPORTED_SHELLS.join(", ")}`)
       );
       process.exit(1);

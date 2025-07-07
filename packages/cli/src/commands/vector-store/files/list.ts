@@ -1,7 +1,7 @@
 import type { VectorStoreFile } from "@mixedbread/sdk/resources/vector-stores";
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../../utils/client";
 import {
@@ -48,7 +48,7 @@ export function createListCommand(): Command {
   );
 
   listCommand.action(async (nameOrId: string, options: FilesOptions) => {
-    const spinner = ora("Loading files...").start();
+    let spinner: Ora;
 
     try {
       const mergedOptions = mergeCommandOptions(listCommand, options);
@@ -58,6 +58,7 @@ export function createListCommand(): Command {
       });
 
       const client = createClient(parsedOptions);
+      spinner = ora("Loading files...").start();
       const vectorStore = await resolveVectorStore(
         client,
         parsedOptions.nameOrId

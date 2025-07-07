@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
@@ -54,7 +54,7 @@ export function createQACommand(): Command {
 
   command.action(
     async (nameOrId: string, question: string, options: QAOptions) => {
-      const spinner = ora("Processing question...").start();
+      let spinner: Ora;
 
       try {
         const mergedOptions = mergeCommandOptions(command, options);
@@ -65,6 +65,7 @@ export function createQACommand(): Command {
         });
 
         const client = createClient(parsedOptions);
+        spinner = ora("Processing question...").start();
         const vectorStore = await resolveVectorStore(
           client,
           parsedOptions.nameOrId
@@ -120,7 +121,7 @@ export function createQACommand(): Command {
           formatOutput(sources, parsedOptions.format);
         }
       } catch (error) {
-        spinner.fail("Failed to process question");
+        spinner?.fail("Failed to process question");
         if (error instanceof Error) {
           console.error(chalk.red("\nError:"), error.message);
         } else {

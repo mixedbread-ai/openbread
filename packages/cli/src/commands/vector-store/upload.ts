@@ -80,8 +80,6 @@ export function createUploadCommand(): Command {
 
   command.action(
     async (nameOrId: string, patterns: string[], options: UploadOptions) => {
-      const spinner = ora("Initializing upload...").start();
-
       try {
         const mergedOptions = mergeCommandOptions(command, options);
 
@@ -92,6 +90,7 @@ export function createUploadCommand(): Command {
         });
 
         const client = createClient(parsedOptions);
+        const spinner = ora("Initializing upload...").start();
         const vectorStore = await resolveVectorStore(
           client,
           parsedOptions.nameOrId

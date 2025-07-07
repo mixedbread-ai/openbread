@@ -119,9 +119,7 @@ export function createUpdateCommand(): Command {
         parsedOptions.format
       );
     } catch (error) {
-      if (spinner) {
-        spinner.fail("Failed to update vector store");
-      }
+      spinner?.fail("Failed to update vector store");
       if (error instanceof Error) {
         console.error(chalk.red("\nError:"), error.message);
       } else {

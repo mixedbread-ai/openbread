@@ -158,10 +158,23 @@ export function saveConfig(config: CLIConfig): void {
 export function getApiKey(options?: { apiKey?: string }): string {
   // Priority: 1. Command line flag, 2. Environment variable, 3. Config file
   if (options?.apiKey) {
-    return resolveApiKey(options.apiKey);
+    const config = loadConfig();
+    if (
+      !options.apiKey.startsWith("mxb_") &&
+      config.api_keys?.[options.apiKey]
+    ) {
+      const resolvedKey = config.api_keys[options.apiKey];
+      displayApiKeyUsage(resolvedKey, "from --api-key", options.apiKey);
+      return resolvedKey;
+    } else {
+      const resolvedKey = resolveApiKey(options.apiKey, config);
+      displayApiKeyUsage(resolvedKey, "from --api-key");
+      return resolvedKey;
+    }
   }
 
   if (process.env.MXBAI_API_KEY) {
+    displayApiKeyUsage(process.env.MXBAI_API_KEY, "from MXBAI_API_KEY");
     return process.env.MXBAI_API_KEY;
   }
 
@@ -193,7 +206,9 @@ export function getApiKey(options?: { apiKey?: string }): string {
   // Get default API key from new format
   const defaultKeyName = config.defaults?.api_key;
   if (defaultKeyName && config.api_keys?.[defaultKeyName]) {
-    return config.api_keys[defaultKeyName];
+    const apiKey = config.api_keys[defaultKeyName];
+    displayApiKeyUsage(apiKey, "from config", defaultKeyName);
+    return apiKey;
   }
 
   // If no default but keys exist, show available keys
@@ -217,8 +232,10 @@ export function getApiKey(options?: { apiKey?: string }): string {
   process.exit(1);
 }
 
-function resolveApiKey(nameOrKey: string): string {
-  const config = loadConfig();
+function resolveApiKey(nameOrKey: string, config?: CLIConfig): string {
+  if (!config) {
+    config = loadConfig();
+  }
 
   // If it's already a valid API key, return it
   if (nameOrKey.startsWith("mxb_")) {
@@ -322,4 +339,22 @@ export function outputAvailableKeys(config?: CLIConfig) {
       `  ${isDefault ? "*" : " "} ${name}${isDefault ? " (default)" : ""}`
     );
   });
+}
+
+function truncateApiKey(apiKey: string): string {
+  if (apiKey.length <= 11) return apiKey;
+  return `${apiKey.slice(0, 7)}...${apiKey.slice(-4)}`;
+}
+
+function displayApiKeyUsage(apiKey: string, source: string, keyName?: string) {
+  let message = "[Using API key: ";
+
+  if (keyName) {
+    message += `${chalk.bold.cyan(keyName)} (${truncateApiKey(apiKey)}) `;
+  } else {
+    message += `${chalk.bold.cyan(truncateApiKey(apiKey))} `;
+  }
+
+  message += `${source}]`;
+  console.log(message);
 }

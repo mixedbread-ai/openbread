@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../../utils/client";
 import {
@@ -28,7 +28,7 @@ export function createGetCommand(): Command {
 
   getCommand.action(
     async (nameOrId: string, fileId: string, options: GlobalOptions) => {
-      const spinner = ora("Loading file details...").start();
+      let spinner: Ora;
 
       try {
         const mergedOptions = mergeCommandOptions(getCommand, options);
@@ -40,6 +40,7 @@ export function createGetCommand(): Command {
         });
 
         const client = createClient(parsedOptions);
+        spinner = ora("Loading file details...").start();
         const vectorStore = await resolveVectorStore(
           client,
           parsedOptions.nameOrId

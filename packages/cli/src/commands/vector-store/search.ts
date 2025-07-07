@@ -1,7 +1,7 @@
 import type Mixedbread from "@mixedbread/sdk";
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
@@ -93,7 +93,7 @@ export function createSearchCommand(): Command {
 
   command.action(
     async (nameOrId: string, query: string, options: SearchOptions) => {
-      const spinner = ora("Searching vector store...").start();
+      let spinner: Ora;
 
       try {
         const mergedOptions = mergeCommandOptions(command, options);
@@ -104,6 +104,7 @@ export function createSearchCommand(): Command {
         });
 
         const client = createClient(parsedOptions);
+        spinner = ora("Searching vector store...").start();
         const vectorStore = await resolveVectorStore(
           client,
           parsedOptions.nameOrId
@@ -163,7 +164,7 @@ export function createSearchCommand(): Command {
 
         formatOutput(output, parsedOptions.format);
       } catch (error) {
-        spinner.fail("Search failed");
+        spinner?.fail("Search failed");
         if (error instanceof Error) {
           console.error(chalk.red("\nError:"), error.message);
         } else {
