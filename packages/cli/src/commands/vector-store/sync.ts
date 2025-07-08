@@ -196,7 +196,7 @@ export function createSyncCommand(): Command {
           ]);
 
           if (!proceed) {
-            console.log(chalk.yellow("✗ Sync cancelled by user"));
+            console.log(chalk.yellow("Sync cancelled by user"));
             return;
           }
         } else if (parsedOptions.ci) {
