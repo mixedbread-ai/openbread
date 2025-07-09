@@ -30,12 +30,16 @@ describe("Config Get Command", () => {
     it("should display all config when no key provided", () => {
       const testConfig = {
         version: "1.0",
-        api_key: "mxb_test123",
+        api_keys: {
+          work: "mxb_work123",
+          personal: "mxb_personal123",
+        },
         defaults: {
           upload: {
             strategy: "fast",
             parallel: 5,
           },
+          api_key: "work",
         },
         aliases: {
           docs: "vs_abc123",
@@ -82,6 +86,10 @@ describe("Config Get Command", () => {
         [configFile]: JSON.stringify({
           version: "1.0",
           api_key: "mxb_test123",
+          api_keys: {
+            work: "mxb_work123",
+            personal: "mxb_personal123",
+          },
           defaults: {
             upload: {
               strategy: "high_quality",
@@ -92,6 +100,7 @@ describe("Config Get Command", () => {
               top_k: 20,
               rerank: false,
             },
+            api_key: "work",
           },
           aliases: {
             docs: "vs_abc123",
@@ -102,9 +111,9 @@ describe("Config Get Command", () => {
     });
 
     it("should get top-level values", () => {
-      command.parse(["node", "get", "api_key"]);
+      command.parse(["node", "get", "version"]);
 
-      expect(console.log).toHaveBeenCalledWith("api_key:", '"mxb_test123"');
+      expect(console.log).toHaveBeenCalledWith("version:", '"1.0"');
     });
 
     it("should get nested values", () => {
@@ -171,6 +180,37 @@ describe("Config Get Command", () => {
           2
         )
       );
+    });
+
+    it("should get api_keys object", () => {
+      command.parse(["node", "get", "api_keys"]);
+
+      expect(console.log).toHaveBeenCalledWith(
+        "api_keys:",
+        JSON.stringify(
+          {
+            work: "mxb_work123",
+            personal: "mxb_personal123",
+          },
+          null,
+          2
+        )
+      );
+    });
+
+    it("should get specific api_key", () => {
+      command.parse(["node", "get", "api_keys.work"]);
+
+      expect(console.log).toHaveBeenCalledWith(
+        "api_keys.work:",
+        '"mxb_work123"'
+      );
+    });
+
+    it("should get default api_key name", () => {
+      command.parse(["node", "get", "defaults.api_key"]);
+
+      expect(console.log).toHaveBeenCalledWith("defaults.api_key:", '"work"');
     });
   });
 

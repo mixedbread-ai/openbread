@@ -9,8 +9,8 @@ import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
@@ -23,7 +23,7 @@ import {
   resolveVectorStore,
 } from "../../utils/vector-store";
 
-const UploadVectorStoreSchema = GlobalOptionsSchema.extend({
+const UploadVectorStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   patterns: z.array(z.string()).optional(),
   strategy: z
@@ -80,8 +80,6 @@ export function createUploadCommand(): Command {
 
   command.action(
     async (nameOrId: string, patterns: string[], options: UploadOptions) => {
-      const spinner = ora("Initializing upload...").start();
-
       try {
         const mergedOptions = mergeCommandOptions(command, options);
 
@@ -92,6 +90,7 @@ export function createUploadCommand(): Command {
         });
 
         const client = createClient(parsedOptions);
+        const spinner = ora("Initializing upload...").start();
         const vectorStore = await resolveVectorStore(
           client,
           parsedOptions.nameOrId
@@ -112,7 +111,7 @@ export function createUploadCommand(): Command {
 
         if (!parsedOptions.patterns || parsedOptions.patterns.length === 0) {
           console.error(
-            chalk.red("Error:"),
+            chalk.red("✗"),
             "No file patterns provided. Use --manifest for manifest-based uploads."
           );
           process.exit(1);
@@ -176,7 +175,7 @@ export function createUploadCommand(): Command {
                 console.log(`    Metadata: ${JSON.stringify(metadata)}`);
               }
             } catch (_error) {
-              console.log(`  ${file} (${chalk.red("Error: File not found")})`);
+              console.log(`  ${file} (${chalk.red("✗ File not found")})`);
             }
           });
           return;
@@ -232,9 +231,9 @@ export function createUploadCommand(): Command {
         });
       } catch (error) {
         if (error instanceof Error) {
-          console.error(chalk.red("\nError:"), error.message);
+          console.error(chalk.red("\n✗"), error.message);
         } else {
-          console.error(chalk.red("\nError:"), "Failed to upload files");
+          console.error(chalk.red("\n✗"), "Failed to upload files");
         }
         process.exit(1);
       }

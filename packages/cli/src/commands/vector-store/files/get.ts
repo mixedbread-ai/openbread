@@ -1,19 +1,19 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../../utils/global-options";
 import { formatBytes, formatOutput } from "../../../utils/output";
 import { resolveVectorStore } from "../../../utils/vector-store";
 
-const GetFileSchema = GlobalOptionsSchema.extend({
+const GetFileSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   fileId: z.string().min(1, { message: '"file-id" is required' }),
 });
@@ -28,7 +28,7 @@ export function createGetCommand(): Command {
 
   getCommand.action(
     async (nameOrId: string, fileId: string, options: GlobalOptions) => {
-      const spinner = ora("Loading file details...").start();
+      let spinner: Ora;
 
       try {
         const mergedOptions = mergeCommandOptions(getCommand, options);
@@ -40,6 +40,7 @@ export function createGetCommand(): Command {
         });
 
         const client = createClient(parsedOptions);
+        spinner = ora("Loading file details...").start();
         const vectorStore = await resolveVectorStore(
           client,
           parsedOptions.nameOrId
@@ -70,9 +71,9 @@ export function createGetCommand(): Command {
       } catch (error) {
         spinner.fail("Failed to load file details");
         if (error instanceof Error) {
-          console.error(chalk.red("\nError:"), error.message);
+          console.error(chalk.red("\n✗"), error.message);
         } else {
-          console.error(chalk.red("\nError:"), "Failed to get file details");
+          console.error(chalk.red("\n✗"), "Failed to get file details");
         }
         process.exit(1);
       }

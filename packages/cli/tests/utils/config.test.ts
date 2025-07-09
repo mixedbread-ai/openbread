@@ -1,16 +1,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from "@jest/globals";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import mockFs from "mock-fs";
 import {
-  type CliConfig,
+  type CLIConfig,
   getApiKey,
   loadConfig,
   parseConfigValue,
@@ -52,14 +45,18 @@ describe("Config Utils", () => {
     });
 
     it("should load and validate config from file", () => {
-      const testConfig: CliConfig = {
+      const testConfig: CLIConfig = {
         version: "1.0",
-        api_key: "mxb_test123",
+        api_keys: {
+          work: "mxb_work123",
+          personal: "mxb_personal123",
+        },
         defaults: {
           upload: {
             strategy: "high_quality",
             parallel: 10,
           },
+          api_key: "work",
         },
         aliases: {
           docs: "vs_abc123",
@@ -72,7 +69,9 @@ describe("Config Utils", () => {
 
       const config = loadConfig();
 
-      expect(config.api_key).toBe("mxb_test123");
+      expect(config.api_keys?.work).toBe("mxb_work123");
+      expect(config.api_keys?.personal).toBe("mxb_personal123");
+      expect(config.defaults?.api_key).toBe("work");
       expect(config.defaults?.upload?.strategy).toBe("high_quality");
       expect(config.aliases?.docs).toBe("vs_abc123");
     });
@@ -95,14 +94,16 @@ describe("Config Utils", () => {
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
-          api_key: "invalid_key", // Should start with mxb_
+          api_keys: {
+            invalid: "invalid_key", // Should start with mxb_
+          },
         }),
       });
 
       const config = loadConfig();
 
       expect(console.warn).toHaveBeenCalled();
-      expect(config.api_key).toBeUndefined();
+      expect(config.api_keys).toEqual({});
     });
   });
 
@@ -110,9 +111,11 @@ describe("Config Utils", () => {
     it("should create config directory if it does not exist", () => {
       mockFs({});
 
-      const config: CliConfig = {
+      const config: CLIConfig = {
         version: "1.0",
-        api_key: "mxb_test123",
+        api_keys: {
+          test: "mxb_test123",
+        },
       };
 
       saveConfig(config);
@@ -122,8 +125,14 @@ describe("Config Utils", () => {
     });
 
     it("should overwrite existing config file", () => {
-      const oldConfig = { version: "1.0", api_key: "mxb_old" };
-      const newConfig: CliConfig = { version: "1.0", api_key: "mxb_new" };
+      const oldConfig: CLIConfig = {
+        version: "1.0",
+        api_keys: { old: "mxb_old" },
+      };
+      const newConfig: CLIConfig = {
+        version: "1.0",
+        api_keys: { new: "mxb_new" },
+      };
 
       mockFs({
         [configFile]: JSON.stringify(oldConfig),
@@ -132,7 +141,7 @@ describe("Config Utils", () => {
       saveConfig(newConfig);
 
       const savedContent = readFileSync(configFile, "utf-8");
-      expect(JSON.parse(savedContent).api_key).toBe("mxb_new");
+      expect(JSON.parse(savedContent).api_keys.new).toBe("mxb_new");
     });
   });
 
@@ -147,12 +156,17 @@ describe("Config Utils", () => {
       }
     });
 
-    it("should prioritize command line option", () => {
+    it("should prioritize command line option with direct API key", () => {
       process.env.MXBAI_API_KEY = "mxb_env123";
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
-          api_key: "mxb_config123",
+          api_keys: {
+            work: "mxb_work123",
+          },
+          defaults: {
+            api_key: "work",
+          },
         }),
       });
 
@@ -161,12 +175,51 @@ describe("Config Utils", () => {
       expect(apiKey).toBe("mxb_cli123");
     });
 
+    it("should exit with error when --api-key has invalid format", () => {
+      // Mock process.exit to throw an error to stop execution
+      const mockExit = jest.fn().mockImplementation(() => {
+        throw new Error("process.exit called");
+      });
+      process.exit = mockExit as never;
+
+      expect(() => {
+        getApiKey({ apiKey: "invalid_key_format" });
+      }).toThrow("process.exit called");
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        "Invalid API key format. API keys must start with 'mxb_'."
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should resolve API key name from --saved-key option", () => {
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {
+            work: "mxb_work123",
+            personal: "mxb_personal123",
+          },
+          defaults: {
+            api_key: "work",
+          },
+        }),
+      });
+
+      const apiKey = getApiKey({ savedKey: "personal" });
+
+      expect(apiKey).toBe("mxb_personal123");
+    });
+
     it("should use environment variable when no CLI option", () => {
       process.env.MXBAI_API_KEY = "mxb_env123";
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
-          api_key: "mxb_config123",
+          api_keys: {
+            work: "mxb_work123",
+          },
         }),
       });
 
@@ -175,23 +228,101 @@ describe("Config Utils", () => {
       expect(apiKey).toBe("mxb_env123");
     });
 
-    it("should use config file when no CLI option or env var", () => {
+    it("should use default API key from new format", () => {
       delete process.env.MXBAI_API_KEY;
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
-          api_key: "mxb_config123",
+          api_keys: {
+            work: "mxb_work123",
+            personal: "mxb_personal123",
+          },
+          defaults: {
+            api_key: "work",
+          },
         }),
       });
 
       const apiKey = getApiKey();
 
-      expect(apiKey).toBe("mxb_config123");
+      expect(apiKey).toBe("mxb_work123");
+    });
+
+    it("should prompt for migration when old format detected", () => {
+      delete process.env.MXBAI_API_KEY;
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_key: "mxb_old123",
+          api_keys: {},
+        }),
+      });
+
+      getApiKey();
+
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining("⚠  Migration Required")
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should show available keys when no default set", () => {
+      delete process.env.MXBAI_API_KEY;
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {
+            work: "mxb_work123",
+            personal: "mxb_personal123",
+          },
+        }),
+      });
+
+      getApiKey();
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        "No default API key set.\n"
+      );
+      expect(console.log).toHaveBeenCalledWith("Available API keys:");
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should exit with error when saved API key name not found", () => {
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {
+            work: "mxb_work123",
+          },
+        }),
+      });
+
+      // Mock process.exit to throw an error to stop execution
+      const mockExit = jest.fn().mockImplementation(() => {
+        throw new Error("process.exit called");
+      });
+      process.exit = mockExit as never;
+
+      expect(() => {
+        getApiKey({ savedKey: "nonexistent" });
+      }).toThrow("process.exit called");
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        'No saved API key found with name "nonexistent".'
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
 
     it("should exit with error when no API key found", () => {
       delete process.env.MXBAI_API_KEY;
-      mockFs({});
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {},
+        }),
+      });
 
       getApiKey();
 
@@ -264,17 +395,18 @@ describe("Config Utils", () => {
     });
 
     it("should parse string values", () => {
-      expect(parseConfigValue("api_key", "mxb_test123")).toBe("mxb_test123");
+      expect(parseConfigValue("base_url", "https://api.example.com")).toBe(
+        "https://api.example.com"
+      );
       expect(parseConfigValue("aliases.docs", "vs_abc123")).toBe("vs_abc123");
     });
 
-    it("should validate api_key format", () => {
-      parseConfigValue("api_key", "invalid_key");
+    it("should validate URL format", () => {
+      parseConfigValue("base_url", "invalid_url");
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining("Invalid value for api_key:"),
-        expect.any(String)
+        expect.stringContaining("Invalid value for base_url:")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -284,8 +416,7 @@ describe("Config Utils", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining("Invalid value for defaults.upload.strategy:"),
-        expect.any(String)
+        expect.stringContaining("Invalid value for defaults.upload.strategy:")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -295,14 +426,21 @@ describe("Config Utils", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining("Invalid value for defaults.upload.parallel:"),
-        expect.stringContaining("positive")
+        expect.stringContaining("Invalid value for defaults.upload.parallel:")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
     it("should handle unknown config keys", () => {
-      parseConfigValue("unknown.key", "value");
+      // Mock process.exit to throw an error to stop execution
+      const mockExit = jest.fn().mockImplementation(() => {
+        throw new Error("process.exit called");
+      });
+      process.exit = mockExit as never;
+
+      expect(() => {
+        parseConfigValue("unknown.key", "value");
+      }).toThrow("process.exit called");
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),

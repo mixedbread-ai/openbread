@@ -5,15 +5,15 @@ import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
 import { validateMetadata } from "../../utils/metadata";
 import { formatOutput } from "../../utils/output";
 
-const CreateVectorStoreSchema = GlobalOptionsSchema.extend({
+const CreateVectorStoreSchema = extendGlobalOptions({
   name: z.string().min(1, { message: '"name" is required' }),
   description: z.string().optional(),
   expiresAfter: z.coerce
@@ -84,13 +84,11 @@ export function createCreateCommand(): Command {
         parsedOptions.format
       );
     } catch (error) {
-      if (spinner) {
-        spinner.fail("Failed to create vector store");
-      }
+      spinner?.fail("Failed to create vector store");
       if (error instanceof Error) {
-        console.error(chalk.red("\nError:"), error.message);
+        console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(chalk.red("\nError:"), "Failed to create vector store");
+        console.error(chalk.red("\n✗"), "Failed to create vector store");
       }
       process.exit(1);
     }

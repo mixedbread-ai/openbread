@@ -1,12 +1,12 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
@@ -16,7 +16,7 @@ import {
   formatOutput,
 } from "../../utils/output";
 
-const ListVectorStoreSchema = GlobalOptionsSchema.extend({
+const ListVectorStoreSchema = extendGlobalOptions({
   filter: z.string().optional(),
   limit: z.coerce
     .number({ message: '"limit" must be a number' })
@@ -40,7 +40,7 @@ export function createListCommand(): Command {
   );
 
   command.action(async (options: ListOptions) => {
-    const spinner = ora("Loading vector stores...").start();
+    let spinner: Ora;
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);
@@ -50,6 +50,7 @@ export function createListCommand(): Command {
       );
 
       const client = createClient(parsedOptions);
+      spinner = ora("Loading vector stores...").start();
       const response = await client.vectorStores.list({
         limit: parsedOptions.limit || 10,
       });
@@ -87,11 +88,11 @@ export function createListCommand(): Command {
       );
       formatOutput(formattedData, parsedOptions.format);
     } catch (error) {
-      spinner.fail("Failed to load vector stores");
+      spinner?.fail("Failed to load vector stores");
       if (error instanceof Error) {
-        console.error(chalk.red("\nError:"), error.message);
+        console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(chalk.red("\nError:"), "Failed to list vector stores");
+        console.error(chalk.red("\n✗"), "Failed to list vector stores");
       }
       process.exit(1);
     }

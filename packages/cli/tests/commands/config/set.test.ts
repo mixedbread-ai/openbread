@@ -28,18 +28,23 @@ describe("Config Set Command", () => {
   });
 
   describe("Basic value setting", () => {
-    it("should set API key", () => {
+    it("should set default API key name in new format", () => {
       mockFs({
-        [configFile]: JSON.stringify({ version: "1.0" }),
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          api_keys: {
+            work: "mxb_work123",
+          },
+        }),
       });
 
-      command.parse(["node", "set", "api_key", "mxb_test123"]);
+      command.parse(["node", "set", "defaults.api_key", "work"]);
 
       const config = loadConfig();
-      expect(config.api_key).toBe("mxb_test123");
+      expect(config.defaults?.api_key).toBe("work");
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining("✓"),
-        expect.stringContaining("Set api_key to mxb_test123")
+        expect.stringContaining("Set defaults.api_key to work")
       );
     });
 
@@ -140,21 +145,6 @@ describe("Config Set Command", () => {
   });
 
   describe("Validation", () => {
-    it("should validate API key format", () => {
-      mockFs({
-        [configFile]: JSON.stringify({ version: "1.0" }),
-      });
-
-      command.parse(["node", "set", "api_key", "invalid_key"]);
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining("Invalid value for api_key:"),
-        expect.any(String)
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
-    });
-
     it("should validate enum values", () => {
       mockFs({
         [configFile]: JSON.stringify({ version: "1.0" }),
@@ -164,8 +154,7 @@ describe("Config Set Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining("Invalid value for defaults.upload.strategy:"),
-        expect.any(String)
+        expect.stringContaining("Invalid value for defaults.upload.strategy:")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -204,8 +193,7 @@ describe("Config Set Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining("Invalid value for defaults.upload.parallel:"),
-        expect.any(String)
+        expect.stringContaining("Invalid value for defaults.upload.parallel:")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -245,10 +233,10 @@ describe("Config Set Command", () => {
     it("should create config file if it does not exist", () => {
       mockFs({});
 
-      command.parse(["node", "set", "api_key", "mxb_test123"]);
+      command.parse(["node", "set", "base_url", "https://api.example.com"]);
 
       const config = loadConfig();
-      expect(config.api_key).toBe("mxb_test123");
+      expect(config.base_url).toBe("https://api.example.com");
     });
   });
 });

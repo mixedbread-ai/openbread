@@ -1,21 +1,21 @@
 import type Mixedbread from "@mixedbread/sdk";
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
 import { formatCountWithSuffix, formatOutput } from "../../utils/output";
 import { resolveVectorStore } from "../../utils/vector-store";
 
-const SearchVectorStoreSchema = GlobalOptionsSchema.extend({
+const SearchVectorStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   query: z.string().min(1, { message: '"query" is required' }),
   topK: z.coerce
@@ -93,7 +93,7 @@ export function createSearchCommand(): Command {
 
   command.action(
     async (nameOrId: string, query: string, options: SearchOptions) => {
-      const spinner = ora("Searching vector store...").start();
+      let spinner: Ora;
 
       try {
         const mergedOptions = mergeCommandOptions(command, options);
@@ -104,6 +104,7 @@ export function createSearchCommand(): Command {
         });
 
         const client = createClient(parsedOptions);
+        spinner = ora("Searching vector store...").start();
         const vectorStore = await resolveVectorStore(
           client,
           parsedOptions.nameOrId
@@ -163,11 +164,11 @@ export function createSearchCommand(): Command {
 
         formatOutput(output, parsedOptions.format);
       } catch (error) {
-        spinner.fail("Search failed");
+        spinner?.fail("Search failed");
         if (error instanceof Error) {
-          console.error(chalk.red("\nError:"), error.message);
+          console.error(chalk.red("\n✗"), error.message);
         } else {
-          console.error(chalk.red("\nError:"), "Failed to search vector store");
+          console.error(chalk.red("\n✗"), "Failed to search vector store");
         }
         process.exit(1);
       }

@@ -48,20 +48,23 @@ export const SearchDefaultsSchema = z.object({
 export const DefaultsSchema = z.object({
   upload: UploadDefaultsSchema.optional(),
   search: SearchDefaultsSchema.optional(),
+  api_key: z.string().optional(),
 });
 
-export const CliConfigSchema = z.object({
+export const CLIConfigSchema = z.object({
   version: z.string(),
-  api_key: z
-    .string()
-    .startsWith("mxb_", 'API key must start with "mxb_"')
+  api_keys: z
+    .record(
+      z.string().min(1, "API key name cannot be empty"),
+      z.string().startsWith("mxb_", 'API key must start with "mxb_"')
+    )
     .optional(),
   base_url: z.string().url("Base URL must be a valid URL").optional(),
   defaults: DefaultsSchema.optional(),
   aliases: z.record(z.string(), z.string()).optional(),
 });
 
-export type CliConfig = z.infer<typeof CliConfigSchema>;
+export type CLIConfig = z.infer<typeof CLIConfigSchema>;
 
 function getConfigDir(): string {
   if (process.env.MXBAI_CONFIG_PATH) {
@@ -93,8 +96,9 @@ function getConfigDir(): string {
 const CONFIG_DIR = getConfigDir();
 const CONFIG_FILE = join(CONFIG_DIR, "config.json");
 
-const DEFAULT_CONFIG: CliConfig = {
+const DEFAULT_CONFIG: CLIConfig = {
   version: "1.0",
+  api_keys: {},
   defaults: {
     upload: {
       strategy: "fast",
@@ -105,11 +109,12 @@ const DEFAULT_CONFIG: CliConfig = {
       top_k: 10,
       rerank: false,
     },
+    api_key: null,
   },
   aliases: {},
 };
 
-export function loadConfig(): CliConfig {
+export function loadConfig(): CLIConfig {
   if (!existsSync(CONFIG_FILE)) {
     return DEFAULT_CONFIG;
   }
@@ -119,7 +124,7 @@ export function loadConfig(): CliConfig {
     const rawConfig = JSON.parse(content);
 
     // Validate with Zod
-    const parseResult = CliConfigSchema.safeParse(rawConfig);
+    const parseResult = CLIConfigSchema.safeParse(rawConfig);
     if (parseResult.success) {
       return { ...DEFAULT_CONFIG, ...parseResult.data };
     } else {
@@ -142,7 +147,7 @@ export function loadConfig(): CliConfig {
   }
 }
 
-export function saveConfig(config: CliConfig): void {
+export function saveConfig(config: CLIConfig): void {
   if (!existsSync(CONFIG_DIR)) {
     mkdirSync(CONFIG_DIR, { recursive: true });
   }
@@ -150,24 +155,110 @@ export function saveConfig(config: CliConfig): void {
   writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
 }
 
-export function getApiKey(options?: { apiKey?: string }): string {
-  // Priority: 1. Command line flag, 2. Environment variable, 3. Config file
-  const apiKey =
-    options?.apiKey || process.env.MXBAI_API_KEY || loadConfig().api_key;
+export function getApiKey(options?: {
+  apiKey?: string;
+  savedKey?: string;
+}): string {
+  // Priority: 1. Command line flags, 2. Environment variable, 3. Config file
 
-  if (!apiKey) {
-    console.error(chalk.red("\n\nError:"), "No API key found.\n");
-    console.error("Please provide your API key using one of these methods:");
-    console.error("  1. Command flag: --api-key mxb_xxxxx");
-    console.error("  2. Environment variable: export MXBAI_API_KEY=mxb_xxxxx");
-    console.error("  3. Config file: mxbai config set api_key mxb_xxxxx\n");
-    console.error(
-      "Get your API key at: https://www.platform.mixedbread.com/platform?next=api-keys"
-    );
+  // Handle --api-key (actual API key)
+  if (options?.apiKey) {
+    if (!isMxbaiAPIKey(options.apiKey)) {
+      console.error(
+        chalk.red("✗"),
+        "Invalid API key format. API keys must start with 'mxb_'."
+      );
+      process.exit(1);
+    }
+    displayApiKeyUsage(options.apiKey, "from --api-key");
+    return options.apiKey;
+  }
+
+  // Handle --saved-key (key name from config)
+  if (options?.savedKey) {
+    const config = loadConfig();
+    if (!config.api_keys?.[options.savedKey]) {
+      console.error(
+        chalk.red("✗"),
+        `No saved API key found with name "${options.savedKey}".`
+      );
+      if (config.api_keys && Object.keys(config.api_keys).length > 0) {
+        console.log("\nAvailable saved keys:");
+        outputAvailableKeys(config);
+      } else {
+        console.log(
+          "\nNo saved keys found. Add one with: ",
+          chalk.cyan("mxbai config keys add <key> <name>")
+        );
+      }
+      process.exit(1);
+    }
+    const resolvedKey = config.api_keys[options.savedKey];
+    displayApiKeyUsage(resolvedKey, "from --saved-key", options.savedKey);
+    return resolvedKey;
+  }
+
+  if (process.env.MXBAI_API_KEY) {
+    displayApiKeyUsage(process.env.MXBAI_API_KEY, "from MXBAI_API_KEY");
+    return process.env.MXBAI_API_KEY;
+  }
+
+  const config = loadConfig();
+
+  // Check for old format and prompt for migration
+  if (existsSync(CONFIG_FILE)) {
+    try {
+      const rawConfig = JSON.parse(readFileSync(CONFIG_FILE, "utf-8"));
+      if (
+        rawConfig.api_key &&
+        Object.keys(rawConfig.api_keys || {}).length === 0
+      ) {
+        console.log(chalk.yellow("\n\n⚠  Migration Required"));
+        console.log(
+          "The API key storage format has changed. Please migrate your existing API key:"
+        );
+        console.log(
+          chalk.cyan("  mxbai config keys add <your-current-key> <name>")
+        );
+        console.log("\nYour current key will not work until migrated.\n");
+        process.exit(1);
+      }
+    } catch {
+      // If we can't read the config file, continue with normal flow
+    }
+  }
+
+  // Get default API key from new format
+  const defaultKeyName = config.defaults?.api_key;
+  if (defaultKeyName && config.api_keys?.[defaultKeyName]) {
+    const apiKey = config.api_keys[defaultKeyName];
+    displayApiKeyUsage(apiKey, "from config", defaultKeyName);
+    return apiKey;
+  }
+
+  // If no default but keys exist, show available keys
+  if (config.api_keys && Object.keys(config.api_keys).length > 0) {
+    console.error(chalk.red("\n\n✗"), "No default API key set.\n");
+    console.log("Available API keys:");
+    outputAvailableKeys(config);
+    console.log("\nSet a default API key:");
+    console.log(chalk.cyan("  mxbai config keys set-default <name>\n"));
     process.exit(1);
   }
 
-  return apiKey;
+  console.error(chalk.red("\n\n✗"), "No API key found.\n");
+  console.log("Please add an API key using:");
+  console.log("  1. Command flag: --api-key <key> or --saved-key <name>");
+  console.log("  2. Environment variable: export MXBAI_API_KEY=mxb_xxxxx");
+  console.log("  3. Config file: mxbai config keys add <key> <name>\n");
+  console.log(
+    "Get your API key at: https://www.platform.mixedbread.com/platform?next=api-keys"
+  );
+  process.exit(1);
+}
+
+export function isMxbaiAPIKey(key: string): boolean {
+  return key.startsWith("mxb_");
 }
 
 export function getBaseURL(options?: { baseURL?: string }): string {
@@ -215,28 +306,56 @@ export function parseConfigValue(key: string, value: string) {
   const pathSegments = key.split(".");
 
   // Try to resolve the schema for this key path
-  const targetSchema = resolveSchemaPath(CliConfigSchema, pathSegments);
+  const targetSchema = resolveSchemaPath(CLIConfigSchema, pathSegments);
 
   if (!targetSchema) {
     console.error(
-      chalk.red("Error:"),
+      chalk.red("✗"),
       `Unknown config key: ${key}. Use 'mxbai config --help' to see available options.`
     );
     process.exit(1);
-    return; // This won't be reached in normal execution, but helps with testing
   }
 
   const parsed = targetSchema.safeParse(value);
 
   if (!parsed.success) {
     console.error(
-      chalk.red("Error:"),
-      `Invalid value for ${key}:`,
-      parsed.error.issues.map((i) => i.message).join(", ")
+      chalk.red("✗"),
+      `Invalid value for ${key}: ${parsed.error.issues.map((i) => i.message).join(", ")}`
     );
     process.exit(1);
-    return; // This won't be reached in normal execution, but helps with testing
   }
 
   return parsed.data;
+}
+
+export function outputAvailableKeys(config?: CLIConfig) {
+  if (!config) {
+    config = loadConfig();
+  }
+
+  Object.keys(config.api_keys).forEach((name) => {
+    const isDefault = config.defaults?.api_key === name;
+    console.log(
+      `  ${isDefault ? "*" : " "} ${name}${isDefault ? " (default)" : ""}`
+    );
+  });
+}
+
+function truncateApiKey(apiKey: string): string {
+  if (apiKey.length <= 11) return apiKey;
+  return `${apiKey.slice(0, 7)}...${apiKey.slice(-4)}`;
+}
+
+function displayApiKeyUsage(apiKey: string, source: string, keyName?: string) {
+  let message = "[Using API key: ";
+
+  if (keyName) {
+    message += `${chalk.bold.cyan(keyName)} (${truncateApiKey(apiKey)}) `;
+  } else {
+    message += `${chalk.bold.cyan(truncateApiKey(apiKey))} `;
+  }
+
+  message += `${source}]`;
+  console.log(message);
 }

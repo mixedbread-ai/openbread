@@ -286,7 +286,7 @@ describe("Vector Store Upload Command", () => {
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("Error:"),
+        expect.stringContaining("✗"),
         expect.stringContaining("Invalid JSON in metadata option")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -406,7 +406,7 @@ describe("Vector Store Upload Command", () => {
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("Error:"),
+        expect.stringContaining("✗"),
         expect.stringContaining("List failed")
       );
       expect(process.exit).toHaveBeenCalledWith(1);

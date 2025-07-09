@@ -6,14 +6,14 @@ import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
 import { resolveVectorStore } from "../../utils/vector-store";
 
-const DeleteVectorStoreSchema = GlobalOptionsSchema.extend({
+const DeleteVectorStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   force: z.boolean().optional(),
 });
@@ -60,7 +60,7 @@ export function createDeleteCommand(): Command {
         ]);
 
         if (!confirmed) {
-          console.log(chalk.yellow("Cancelled."));
+          console.log(chalk.yellow("Deletion cancelled."));
           return;
         }
       }
@@ -73,13 +73,11 @@ export function createDeleteCommand(): Command {
         `Vector store "${vectorStore.name}" deleted successfully`
       );
     } catch (error) {
-      if (spinner) {
-        spinner.fail("Failed to delete vector store");
-      }
+      spinner?.fail("Failed to delete vector store");
       if (error instanceof Error) {
-        console.error(chalk.red("\nError:"), error.message);
+        console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(chalk.red("\nError:"), "Failed to delete vector store");
+        console.error(chalk.red("\n✗"), "Failed to delete vector store");
       }
       process.exit(1);
     }

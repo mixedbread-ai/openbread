@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { Command } from "commander";
 import { z } from "zod";
 import {
+  BaseGlobalOptionsSchema,
   GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
@@ -17,6 +18,9 @@ describe("Global Options", () => {
       const options = command.options;
       expect(options).toContainEqual(
         expect.objectContaining({ long: "--api-key" })
+      );
+      expect(options).toContainEqual(
+        expect.objectContaining({ long: "--saved-key" })
       );
       expect(options).toContainEqual(
         expect.objectContaining({ long: "--format" })
@@ -149,6 +153,35 @@ describe("Global Options", () => {
       expect(parsed).toEqual(options);
     });
 
+    it("should parse valid options with savedKey", () => {
+      const options = {
+        savedKey: "work",
+        format: "json",
+        debug: true,
+      };
+
+      const parsed = parseOptions(GlobalOptionsSchema, options);
+
+      expect(parsed).toEqual(options);
+    });
+
+    it("should reject both apiKey and savedKey options", () => {
+      const options = {
+        apiKey: "mxb_test123",
+        savedKey: "work",
+      };
+
+      parseOptions(GlobalOptionsSchema, options);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining(
+          "Cannot specify both --api-key and --saved-key options"
+        )
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
     it("should allow optional fields to be undefined", () => {
       const options = {};
       const parsed = parseOptions(GlobalOptionsSchema, options);
@@ -156,18 +189,24 @@ describe("Global Options", () => {
       expect(parsed).toEqual({});
     });
 
-    it("should validate API key format", () => {
+    it("should accept any string as API key (validation moved to resolution)", () => {
       const options = {
-        apiKey: "invalid_key",
+        apiKey: "work", // API key name
       };
 
-      parseOptions(GlobalOptionsSchema, options);
+      const parsed = parseOptions(GlobalOptionsSchema, options);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining('"api-key" must start with "mxb_"')
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(parsed).toEqual(options);
+    });
+
+    it("should accept actual API keys", () => {
+      const options = {
+        apiKey: "mxb_test123", // Actual API key
+      };
+
+      const parsed = parseOptions(GlobalOptionsSchema, options);
+
+      expect(parsed).toEqual(options);
     });
 
     it("should validate format enum", () => {
@@ -186,9 +225,9 @@ describe("Global Options", () => {
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it("should handle multiple validation errors", () => {
+    it("should handle validation errors for format", () => {
       const options = {
-        apiKey: "invalid",
+        apiKey: "work", // Valid API key name
         format: "invalid",
       };
 
@@ -196,13 +235,15 @@ describe("Global Options", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining('must start with "mxb_"')
+        expect.stringContaining(
+          '"format" must be either "table", "json", or "csv"'
+        )
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
     it("should parse custom schemas", () => {
-      const customSchema = GlobalOptionsSchema.extend({
+      const customSchema = BaseGlobalOptionsSchema.extend({
         customField: z.string(),
       });
 
@@ -214,6 +255,29 @@ describe("Global Options", () => {
       const parsed = parseOptions(customSchema, options);
 
       expect(parsed).toEqual(options);
+    });
+
+    it("should reject both apiKey and savedKey in extended schemas", () => {
+      const { extendGlobalOptions } = require("../../src/utils/global-options");
+      const customSchema = extendGlobalOptions({
+        customField: z.string(),
+      });
+
+      const options = {
+        apiKey: "mxb_test123",
+        savedKey: "work",
+        customField: "test",
+      };
+
+      parseOptions(customSchema, options);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining(
+          "Cannot specify both --api-key and --saved-key options"
+        )
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
   });
 });

@@ -204,7 +204,7 @@ describe("Vector Store Create Command", () => {
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("Error:"),
+        expect.stringContaining("✗"),
         expect.stringContaining("Invalid JSON in metadata option")
       );
       expect(process.exit).toHaveBeenCalledWith(1);

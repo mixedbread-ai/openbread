@@ -1,20 +1,20 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
 import { formatOutput } from "../../utils/output";
 import { resolveVectorStore } from "../../utils/vector-store";
 
-const QAVectorStoreSchema = GlobalOptionsSchema.extend({
+const QAVectorStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   question: z.string().min(1, { message: '"question" is required' }),
   topK: z.coerce
@@ -54,7 +54,7 @@ export function createQACommand(): Command {
 
   command.action(
     async (nameOrId: string, question: string, options: QAOptions) => {
-      const spinner = ora("Processing question...").start();
+      let spinner: Ora;
 
       try {
         const mergedOptions = mergeCommandOptions(command, options);
@@ -65,6 +65,7 @@ export function createQACommand(): Command {
         });
 
         const client = createClient(parsedOptions);
+        spinner = ora("Processing question...").start();
         const vectorStore = await resolveVectorStore(
           client,
           parsedOptions.nameOrId
@@ -120,11 +121,11 @@ export function createQACommand(): Command {
           formatOutput(sources, parsedOptions.format);
         }
       } catch (error) {
-        spinner.fail("Failed to process question");
+        spinner?.fail("Failed to process question");
         if (error instanceof Error) {
-          console.error(chalk.red("\nError:"), error.message);
+          console.error(chalk.red("\n✗"), error.message);
         } else {
-          console.error(chalk.red("\nError:"), "Failed to process question");
+          console.error(chalk.red("\n✗"), "Failed to process question");
         }
         process.exit(1);
       }

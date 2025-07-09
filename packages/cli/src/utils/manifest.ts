@@ -163,7 +163,7 @@ export async function uploadFromManifest(
             console.log(`    Metadata: ${JSON.stringify(file.metadata)}`);
           }
         } catch (_error) {
-          console.log(`  ${file.path} (${chalk.red("Error: File not found")})`);
+          console.log(`  ${file.path} (${chalk.red("✗ File not found")})`);
         }
       });
       return;
@@ -210,14 +210,14 @@ export async function uploadFromManifest(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error(chalk.red("Error:"), "Invalid manifest file format:");
+      console.error(chalk.red("✗"), "Invalid manifest file format:");
       error.errors.forEach((err) => {
         console.error(chalk.red(`  - ${err.path.join(".")}: ${err.message}`));
       });
     } else if (error instanceof Error) {
-      console.error(chalk.red("Error:"), error.message);
+      console.error(chalk.red("✗"), error.message);
     } else {
-      console.error(chalk.red("Error:"), "Failed to process manifest file");
+      console.error(chalk.red("✗"), "Failed to process manifest file");
     }
     process.exit(1);
   }

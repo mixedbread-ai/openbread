@@ -1,19 +1,19 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
 import { formatBytes, formatOutput } from "../../utils/output";
 import { resolveVectorStore } from "../../utils/vector-store";
 
-const GetVectorStoreSchema = GlobalOptionsSchema.extend({
+const GetVectorStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
 });
 
@@ -27,7 +27,7 @@ export function createGetCommand(): Command {
   );
 
   command.action(async (nameOrId: string, options: GetOptions) => {
-    const spinner = ora("Loading vector store details...").start();
+    let spinner: Ora;
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);
@@ -38,6 +38,7 @@ export function createGetCommand(): Command {
       });
 
       const client = createClient(parsedOptions);
+      spinner = ora("Loading vector store details...").start();
       const vectorStore = await resolveVectorStore(
         client,
         parsedOptions.nameOrId
@@ -71,14 +72,11 @@ export function createGetCommand(): Command {
 
       formatOutput(formattedData, parsedOptions.format);
     } catch (error) {
-      spinner.fail("Failed to load vector store details");
+      spinner?.fail("Failed to load vector store details");
       if (error instanceof Error) {
-        console.error(chalk.red("\nError:"), error.message);
+        console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(
-          chalk.red("\nError:"),
-          "Failed to get vector store details"
-        );
+        console.error(chalk.red("\n✗"), "Failed to get vector store details");
       }
       process.exit(1);
     }

@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import { createGetCommand } from "./get";
+import { createKeysCommand } from "./keys";
 import { createSetCommand } from "./set";
 
 export function createConfigCommand(): Command {
@@ -9,6 +10,7 @@ export function createConfigCommand(): Command {
 
   configCommand.addCommand(createSetCommand());
   configCommand.addCommand(createGetCommand());
+  configCommand.addCommand(createKeysCommand());
 
   // Show help without error exit code when no subcommand provided
   configCommand.action(() => {

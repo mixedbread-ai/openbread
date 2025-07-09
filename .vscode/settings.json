@@ -21,10 +21,6 @@
   "editor.defaultFormatter": "biomejs.biome",
   "editor.formatOnPaste": true,
   "editor.formatOnSave": true,
-  "tailwindCSS.experimental.classRegex": [
-    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
-    ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
-  ],
   "typescript.tsdk": "node_modules/typescript/lib",
   "prettier.enable": false
 }

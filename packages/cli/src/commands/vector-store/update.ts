@@ -6,8 +6,8 @@ import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
@@ -15,7 +15,7 @@ import { validateMetadata } from "../../utils/metadata";
 import { formatOutput } from "../../utils/output";
 import { resolveVectorStore } from "../../utils/vector-store";
 
-const UpdateVectorStoreSchema = GlobalOptionsSchema.extend({
+const UpdateVectorStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   name: z.string().optional(),
   description: z.string().optional(),
@@ -81,7 +81,7 @@ export function createUpdateCommand(): Command {
 
       if (Object.keys(updateData).length === 0) {
         console.error(
-          chalk.red("Error:"),
+          chalk.red("✗"),
           "No update fields provided. Use --name, --description, or --metadata"
         );
         process.exit(1);
@@ -119,13 +119,11 @@ export function createUpdateCommand(): Command {
         parsedOptions.format
       );
     } catch (error) {
-      if (spinner) {
-        spinner.fail("Failed to update vector store");
-      }
+      spinner?.fail("Failed to update vector store");
       if (error instanceof Error) {
-        console.error(chalk.red("\nError:"), error.message);
+        console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(chalk.red("\nError:"), "Failed to update vector store");
+        console.error(chalk.red("\n✗"), "Failed to update vector store");
       }
       process.exit(1);
     }

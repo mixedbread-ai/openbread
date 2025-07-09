@@ -1,12 +1,12 @@
 import type { VectorStoreFile } from "@mixedbread/sdk/resources/vector-stores";
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../../utils/client";
 import {
   addGlobalOptions,
-  GlobalOptionsSchema,
+  extendGlobalOptions,
   mergeCommandOptions,
   parseOptions,
 } from "../../../utils/global-options";
@@ -18,7 +18,7 @@ import {
 import { resolveVectorStore } from "../../../utils/vector-store";
 import type { FilesOptions } from ".";
 
-const ListFilesSchema = GlobalOptionsSchema.extend({
+const ListFilesSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   status: z
     .enum(["all", "completed", "in_progress", "failed"], {
@@ -48,7 +48,7 @@ export function createListCommand(): Command {
   );
 
   listCommand.action(async (nameOrId: string, options: FilesOptions) => {
-    const spinner = ora("Loading files...").start();
+    let spinner: Ora;
 
     try {
       const mergedOptions = mergeCommandOptions(listCommand, options);
@@ -58,6 +58,7 @@ export function createListCommand(): Command {
       });
 
       const client = createClient(parsedOptions);
+      spinner = ora("Loading files...").start();
       const vectorStore = await resolveVectorStore(
         client,
         parsedOptions.nameOrId
@@ -100,9 +101,9 @@ export function createListCommand(): Command {
     } catch (error) {
       spinner.fail("Failed to load files");
       if (error instanceof Error) {
-        console.error(chalk.red("\nError:"), error.message);
+        console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(chalk.red("\nError:"), "Failed to list files");
+        console.error(chalk.red("\n✗"), "Failed to list files");
       }
       process.exit(1);
     }

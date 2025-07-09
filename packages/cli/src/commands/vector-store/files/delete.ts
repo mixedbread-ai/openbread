@@ -1,19 +1,19 @@
 import chalk from "chalk";
 import { Command } from "commander";
 import inquirer from "inquirer";
-import ora from "ora";
+import ora, { type Ora } from "ora";
 import z from "zod";
 import { createClient } from "../../../utils/client";
 import {
   addGlobalOptions,
+  extendGlobalOptions,
   type GlobalOptions,
-  GlobalOptionsSchema,
   mergeCommandOptions,
   parseOptions,
 } from "../../../utils/global-options";
 import { resolveVectorStore } from "../../../utils/vector-store";
 
-const DeleteFileSchema = GlobalOptionsSchema.extend({
+const DeleteFileSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   fileId: z.string().min(1, { message: '"file-id" is required' }),
   force: z.boolean().optional(),
@@ -35,6 +35,7 @@ export function createDeleteCommand(): Command {
       fileId: string,
       options: GlobalOptions & { force?: boolean }
     ) => {
+      let spinner: Ora;
       try {
         const mergedOptions = mergeCommandOptions(deleteCommand, options);
 
@@ -62,12 +63,12 @@ export function createDeleteCommand(): Command {
           ]);
 
           if (!confirmed) {
-            console.log(chalk.yellow("Cancelled."));
+            console.log(chalk.yellow("Deletion cancelled."));
             return;
           }
         }
 
-        const spinner = ora("Deleting file...").start();
+        spinner = ora("Deleting file...").start();
 
         await client.vectorStores.files.delete(parsedOptions.fileId, {
           vector_store_identifier: vectorStore.id,
@@ -75,10 +76,11 @@ export function createDeleteCommand(): Command {
 
         spinner.succeed(`File ${parsedOptions.fileId} deleted successfully`);
       } catch (error) {
+        spinner?.fail("Failed to delete file");
         if (error instanceof Error) {
-          console.error(chalk.red("\nError:"), error.message);
+          console.error(chalk.red("\n✗"), error.message);
         } else {
-          console.error(chalk.red("\nError:"), "Failed to delete file");
+          console.error(chalk.red("\n✗"), "Failed to delete file");
         }
         process.exit(1);
       }
