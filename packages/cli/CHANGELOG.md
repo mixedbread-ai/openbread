@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- 00c1641: - Update config object to store multiple api keys
+  - Add `--saved-key` global option
+
 ## 0.4.0
 
 ### Minor Changes
