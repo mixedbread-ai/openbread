@@ -18,11 +18,11 @@ The Mixedbread MCP Server allows you to:
 ### `vector_store_create`
 Create a new vector store to organize your documents.
 - **Input**: Vector store name
-- **Returns**: Store ID and configuration details
+- **Returns**: Vector store details
 
 ### `vector_store_list`
 List all vector stores in your account.
-- **Input**: Optional pagination parameters
+- **Input**: Optional search query to filter vector stores.
 - **Returns**: Array of vector stores with metadata
 
 ### `vector_store_retrieve`
@@ -37,18 +37,18 @@ Delete a vector store and all its contents.
 
 ### `vector_store_upload`
 Upload files to a vector store for processing and indexing.
-- **Input**: Vector store ID, file paths, processing options
+- **Input**: Vector store ID, file paths
 - **Returns**: Upload status and processed file information
 
 ### `vector_store_search`
 Search for specific chunks within a vector store.
 - **Input**: Vector store ID, search query, optional filters
-- **Returns**: Relevant document chunks with relevance scores
+- **Returns**: Relevant file chunks, scores,  metadata
 
 ### `vector_store_file_search`
 Search for specific files within a vector store.
-- **Input**: Vector store ID, file name pattern
-- **Returns**: Matching file metadata
+- **Input**: Vector store ID, search query, optional filters
+- **Returns**: Relevant files, scores, file chunks, metadata
 
 ### `vector_store_file_retrieve`
 Retrieve details about a specific file in a vector store.
