@@ -1,5 +1,5 @@
-import { getMixedbreadClient } from "../utils.js";
 import type { VectorStoreRetrieveInput } from "../types/index.js";
+import { getMixedbreadClient } from "../utils.js";
 
 export async function vectorStoreRetrieve(args: VectorStoreRetrieveInput) {
   const client = getMixedbreadClient();

@@ -1,5 +1,22 @@
 # @mixedbread/mcp
 
+## 1.1.7
+
+### Patch Changes
+
+- Update README with comprehensive documentation and fix import ordering
+
+  - Added detailed overview section explaining MCP server capabilities
+  - Included complete tool descriptions for all 8 available tools
+  - Enhanced configuration examples for all platforms (macOS, Windows, Linux)
+  - Added security best practices and API key management guidelines
+  - Included comprehensive troubleshooting section with common issues
+  - Added development instructions for building from source
+  - Improved usage examples with natural language queries
+  - Added links to relevant documentation and resources
+  - Restructured content for better readability and user experience
+  - Fixed import ordering in tool files for consistency
+
 ## 1.1.6
 
 ### Patch Changes

@@ -1,5 +1,5 @@
-import { getMixedbreadClient } from "../utils.js";
 import type { VectorStoreFileSearchInput } from "../types/index.js";
+import { getMixedbreadClient } from "../utils.js";
 
 export async function vectorStoreFileSearch(args: VectorStoreFileSearchInput) {
   const mxbai = getMixedbreadClient();
