@@ -103,8 +103,8 @@ importers:
   packages/mcp:
     dependencies:
       '@mixedbread/sdk':
-        specifier: ^0.16.0
-        version: 0.16.0
+        specifier: ^0.17.0
+        version: 0.17.0
       '@modelcontextprotocol/sdk':
         specifier: ^1.13.0
         version: 1.13.0
@@ -742,6 +742,10 @@ packages:
 
   '@mixedbread/sdk@0.16.0':
     resolution: {integrity: sha512-BrcUgvERDZN8cD63FQq90cwsIDYUjJPuD+xgiu0gyT41XrVm3tA4aqWeEwcT5ALGtlwXxfdS+je3TtMNML6TEQ==}
+    hasBin: true
+
+  '@mixedbread/sdk@0.17.0':
+    resolution: {integrity: sha512-oZbNamL4Pdo28N7NXz6228cP3e5J0Jmob1OlCVaVvRFcWtBXllLGbf9WKYAVGkDyOqYp6Y++ROKgP/eqTGtARA==}
     hasBin: true
 
   '@modelcontextprotocol/sdk@1.13.0':
@@ -3403,6 +3407,8 @@ snapshots:
       read-yaml-file: 1.1.0
 
   '@mixedbread/sdk@0.16.0': {}
+
+  '@mixedbread/sdk@0.17.0': {}
 
   '@modelcontextprotocol/sdk@1.13.0':
     dependencies:

@@ -9,6 +9,7 @@ export async function vectorStoreFileRetrieve(
   try {
     const response = await client.vectorStores.files.retrieve(args.file_id, {
       vector_store_identifier: args.vector_store_identifier,
+      return_chunks: args.return_chunks ?? true,
     });
 
     return {

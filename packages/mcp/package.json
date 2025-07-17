@@ -49,7 +49,7 @@
   },
   "homepage": "https://www.mixedbread.com/mcp",
   "dependencies": {
-    "@mixedbread/sdk": "^0.16.0",
+    "@mixedbread/sdk": "^0.17.0",
     "@modelcontextprotocol/sdk": "^1.13.0",
     "mime-types": "^3.0.1",
     "zod": "^3.25.67",
