@@ -1,5 +1,11 @@
 # @mixedbread/mcp
 
+## 1.1.8
+
+### Patch Changes
+
+- 247014f: Add the return_chunks parameter to the get vs file tool
+
 ## 1.1.7
 
 ### Patch Changes
