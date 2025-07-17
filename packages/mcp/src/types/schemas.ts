@@ -133,6 +133,12 @@ export const VectorStoreFileRetrieveSchema = z.object({
     .string()
     .min(1)
     .describe("The identifier of the vector store containing the file"),
+  return_chunks: z
+    .boolean()
+    .optional()
+    .describe(
+      "Whether to return the chunks for the file. This is enabled by default."
+    ),
 });
 
 // Inferred types
