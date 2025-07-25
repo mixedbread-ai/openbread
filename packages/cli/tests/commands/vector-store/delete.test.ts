@@ -57,13 +57,13 @@ describe("Delete Command", () => {
   });
 
   describe("Basic deletion", () => {
-    it("should delete vector store with force flag", async () => {
+    it("should delete vector store with yes flag", async () => {
       mockClient.vectorStores.delete.mockResolvedValue({
         id: "550e8400-e29b-41d4-a716-446655440040",
         deleted: true,
       });
 
-      await command.parseAsync(["node", "delete", "test-store", "--force"]);
+      await command.parseAsync(["node", "delete", "test-store", "--yes"]);
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -82,13 +82,13 @@ describe("Delete Command", () => {
       );
     });
 
-    it("should skip confirmation when force flag is used", async () => {
+    it("should skip confirmation when yes flag is used", async () => {
       mockClient.vectorStores.delete.mockResolvedValue({
         id: "550e8400-e29b-41d4-a716-446655440040",
         deleted: true,
       });
 
-      await command.parseAsync(["node", "delete", "test-store", "--force"]);
+      await command.parseAsync(["node", "delete", "test-store", "--yes"]);
 
       expect(mockClient.vectorStores.delete).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440040"
@@ -101,7 +101,7 @@ describe("Delete Command", () => {
       const error = new Error("API Error: Unauthorized");
       mockClient.vectorStores.delete.mockRejectedValue(error);
 
-      await command.parseAsync(["node", "delete", "test-store", "--force"]);
+      await command.parseAsync(["node", "delete", "test-store", "--yes"]);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
@@ -118,7 +118,7 @@ describe("Delete Command", () => {
         "node",
         "delete",
         "nonexistent-store",
-        "--force",
+        "--yes",
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
@@ -131,7 +131,7 @@ describe("Delete Command", () => {
     it("should handle non-Error rejections", async () => {
       mockClient.vectorStores.delete.mockRejectedValue("Unknown error");
 
-      await command.parseAsync(["node", "delete", "test-store", "--force"]);
+      await command.parseAsync(["node", "delete", "test-store", "--yes"]);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
@@ -152,7 +152,7 @@ describe("Delete Command", () => {
         "node",
         "delete",
         "test-store",
-        "--force",
+        "--yes",
         "--api-key",
         "mxb_test123",
       ]);
@@ -167,7 +167,7 @@ describe("Delete Command", () => {
 
   describe("Command validation", () => {
     it("should validate required name-or-id argument", async () => {
-      await command.parseAsync(["node", "delete", "", "--force"]);
+      await command.parseAsync(["node", "delete", "", "--yes"]);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),

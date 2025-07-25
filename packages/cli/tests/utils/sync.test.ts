@@ -102,7 +102,11 @@ describe("Sync Utils", () => {
       const syncedFiles = new Map();
       const gitInfo = { commit: "abc123", branch: "main", isRepo: true };
 
-      const analysis = await analyzeChanges(["*.txt"], syncedFiles, gitInfo);
+      const analysis = await analyzeChanges({
+        patterns: ["*.txt"],
+        syncedFiles,
+        gitInfo,
+      });
 
       expect(analysis.added).toHaveLength(2);
       expect(analysis.modified).toHaveLength(0);
@@ -128,7 +132,11 @@ describe("Sync Utils", () => {
       const syncedFiles = new Map();
       const gitInfo = { commit: "abc123", branch: "main", isRepo: true };
 
-      const analysis = await analyzeChanges(["*.txt"], syncedFiles, gitInfo);
+      const analysis = await analyzeChanges({
+        patterns: ["*.txt"],
+        syncedFiles,
+        gitInfo,
+      });
 
       // Based on the test results, empty files are included in the analysis
       expect(analysis.added).toHaveLength(3);
@@ -201,7 +209,11 @@ describe("Sync Utils", () => {
 
       const gitInfo = { commit: "abc123", branch: "main", isRepo: true };
 
-      const analysis = await analyzeChanges(["*.txt"], syncedFiles, gitInfo);
+      const analysis = await analyzeChanges({
+        patterns: ["*.txt"],
+        syncedFiles,
+        gitInfo,
+      });
 
       // Empty files are included in analysis
       expect(analysis.added).toHaveLength(1); // empty.txt is new
@@ -254,12 +266,12 @@ describe("Sync Utils", () => {
 
       const gitInfo = { commit: "abc123", branch: "main", isRepo: true };
 
-      const analysis = await analyzeChanges(
-        ["*.txt"],
+      const analysis = await analyzeChanges({
+        patterns: ["*.txt"],
         syncedFiles,
         gitInfo,
-        "HEAD~1"
-      );
+        fromGit: "HEAD~1",
+      });
 
       // When using git detection, empty files in git changes are still included
       expect(analysis.added).toHaveLength(2); // added.txt and empty.txt
@@ -302,6 +314,7 @@ describe("Sync Utils", () => {
         ],
         deleted: [],
         unchanged: 0,
+        totalFiles: 2,
         totalSize: 27,
       };
 
@@ -352,6 +365,7 @@ describe("Sync Utils", () => {
         modified: [],
         deleted: [],
         unchanged: 0,
+        totalFiles: 2,
         totalSize: 12,
       };
 
@@ -410,6 +424,7 @@ describe("Sync Utils", () => {
         ],
         deleted: [],
         unchanged: 0,
+        totalFiles: 3,
         totalSize: 31,
       };
 

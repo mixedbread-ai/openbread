@@ -272,7 +272,7 @@ describe("Config Keys Command", () => {
       );
     });
 
-    it("should remove API key with --force flag without confirmation", async () => {
+    it("should remove API key with --yes flag without confirmation", async () => {
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
@@ -283,7 +283,7 @@ describe("Config Keys Command", () => {
         }),
       });
 
-      await command.parseAsync(["node", "keys", "remove", "work", "--force"]);
+      await command.parseAsync(["node", "keys", "remove", "work", "--yes"]);
 
       const config = loadConfig();
       expect(config.api_keys?.work).toBeUndefined();
@@ -292,11 +292,11 @@ describe("Config Keys Command", () => {
         expect.stringContaining("✓"),
         'API key "work" removed'
       );
-      // Should not call inquirer.prompt when using --force
+      // Should not call inquirer.prompt when using --yes
       expect(mockInquirer.prompt).not.toHaveBeenCalled();
     });
 
-    it("should remove default API key with --force flag without confirmation", async () => {
+    it("should remove default API key with --yes flag without confirmation", async () => {
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
@@ -310,7 +310,7 @@ describe("Config Keys Command", () => {
         }),
       });
 
-      await command.parseAsync(["node", "keys", "remove", "work", "--force"]);
+      await command.parseAsync(["node", "keys", "remove", "work", "--yes"]);
 
       const config = loadConfig();
       expect(config.api_keys?.work).toBeUndefined();
@@ -323,11 +323,11 @@ describe("Config Keys Command", () => {
         expect.stringContaining("⚠"),
         "No default API key set. Set a new default:"
       );
-      // Should not call inquirer.prompt when using --force
+      // Should not call inquirer.prompt when using --yes
       expect(mockInquirer.prompt).not.toHaveBeenCalled();
     });
 
-    it("should handle --force flag with non-existent key", async () => {
+    it("should handle --yes flag with non-existent key", async () => {
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
@@ -342,14 +342,14 @@ describe("Config Keys Command", () => {
         "keys",
         "remove",
         "nonexistent",
-        "--force",
+        "--yes",
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining("✗"),
         'No API key found with name "nonexistent"'
       );
-      // Should not call inquirer.prompt even with --force when key doesn't exist
+      // Should not call inquirer.prompt even with --yes when key doesn't exist
       expect(mockInquirer.prompt).not.toHaveBeenCalled();
     });
   });

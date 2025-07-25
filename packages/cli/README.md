@@ -58,7 +58,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 - `mxbai vs update <name-or-id>` - Update vector store
   - Options: `--name <name>`, `--description <desc>`, `--expires-after <days>`, `--metadata <json>`
 - `mxbai vs delete <name-or-id>` - Delete vector store (alias: `rm`)
-  - Options: `--force` (skip confirmation)
+  - Options: `--yes/-y` (skip confirmation)
 
 ### File Management
 
@@ -68,7 +68,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
   - Options: `--status <status>` (pending|in_progress|cancelled|completed|failed), `--limit <n>`
 - `mxbai vs files get <name-or-id> <file-id>` - Get file details
 - `mxbai vs files delete <name-or-id> <file-id>` - Delete file (alias: `rm`)
-  - Options: `--force` (skip confirmation)
+  - Options: `--yes/-y` (skip confirmation)
 
 ### Search & Query
 
@@ -80,7 +80,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 ### Advanced Features
 
 - `mxbai vs sync <name-or-id> <patterns...>` - Sync files with intelligent change detection
-  - Options: `--strategy <strategy>`, `--contextualization`, `--from-git <ref>`, `--dry-run`, `--force`, `--metadata <json>`, `--ci`, `--parallel <n>` (1-20)
+  - Options: `--strategy <strategy>`, `--contextualization`, `--from-git <ref>`, `--dry-run`, `--yes/-y`, `--force`, `--metadata <json>`, `--parallel <n>` (1-20)
 
 ### Configuration
 
@@ -89,7 +89,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 - `mxbai config keys add <key> [name]` - Add a new API key
 - `mxbai config keys list` - List all API keys
 - `mxbai config keys remove <name>` - Remove an API key
-  - Options: `--force` (skip confirmation)
+  - Options: `--yes/-y` (skip confirmation)
 - `mxbai config keys set-default <name>` - Set the default API key
 - `mxbai completion install` - Install shell completion
   - Options: `--shell <shell>` (manually specify shell: bash, zsh, fish, pwsh)
@@ -210,8 +210,8 @@ mxbai vs sync "My Docs" "**/*.md" --strategy high_quality --contextualization
 # Dry run to preview changes
 mxbai vs sync "My Docs" "src/**" --dry-run
 
-# Force sync without confirmation in CI
-mxbai vs sync "My Docs" "**/*.pdf" --ci --force
+# Force re-upload all files without confirmation 
+mxbai vs sync "My Docs" "**/*.pdf" --yes --force
 ```
 
 ### Configuration Management
@@ -246,7 +246,7 @@ mxbai config keys set-default work
 mxbai config keys remove personal
 
 # Remove an API key without confirmation
-mxbai config keys remove personal --force
+mxbai config keys remove personal --yes
 
 # Create aliases for frequently used vector stores
 mxbai config set aliases.docs "My Documentation"
