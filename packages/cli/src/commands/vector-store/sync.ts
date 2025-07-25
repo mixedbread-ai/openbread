@@ -13,7 +13,7 @@ import {
   parseOptions,
 } from "../../utils/global-options";
 import { validateMetadata } from "../../utils/metadata";
-import { formatCountWithSuffix } from "../../utils/output";
+import { formatBytes, formatCountWithSuffix } from "../../utils/output";
 import {
   analyzeChanges,
   displaySyncResultsSummary,
@@ -34,9 +34,9 @@ const SyncVectorStoreSchema = extendGlobalOptions({
     .optional(),
   fromGit: z.string().optional(),
   dryRun: z.boolean().optional(),
+  yes: z.boolean().optional(),
   force: z.boolean().optional(),
   metadata: z.string().optional(),
-  ci: z.boolean().optional(),
   parallel: z.coerce
     .number({ message: '"parallel" must be a number' })
     .int({ message: '"parallel" must be an integer' })
@@ -51,9 +51,9 @@ interface SyncOptions extends GlobalOptions {
   contextualization?: boolean;
   fromGit?: string;
   dryRun?: boolean;
+  yes?: boolean;
   force?: boolean;
   metadata?: string;
-  ci?: boolean;
   parallel?: number;
 }
 
@@ -75,9 +75,9 @@ export function createSyncCommand(): Command {
         "Only sync files changed since git ref (default: last sync)"
       )
       .option("--dry-run", "Show what would change without making changes")
-      .option("--force", "Skip confirmation prompt")
+      .option("-y, --yes", "Skip confirmation prompt")
+      .option("--force", "Force re-upload all files, ignoring change detection")
       .option("--metadata <json>", "Additional metadata for files")
-      .option("--ci", "Non-interactive mode for CI/CD")
       .option("--parallel <n>", "Number of concurrent operations (1-20)")
   );
 
@@ -123,7 +123,13 @@ export function createSyncCommand(): Command {
 
         const fromGit = parsedOptions.fromGit;
 
-        if (fromGit && gitInfo.isRepo) {
+        if (parsedOptions.force) {
+          console.log(
+            chalk.green(
+              "✓ Force upload enabled - all files will be re-uploaded"
+            )
+          );
+        } else if (fromGit && gitInfo.isRepo) {
           console.log(
             chalk.green(
               `✓ Git-based detection enabled (from commit ${fromGit.substring(0, 7)})`
@@ -146,12 +152,13 @@ export function createSyncCommand(): Command {
         const analyzeSpinner = ora(
           "Scanning files and detecting changes..."
         ).start();
-        const analysis = await analyzeChanges(
+        const analysis = await analyzeChanges({
           patterns,
           syncedFiles,
           gitInfo,
-          fromGit
-        );
+          fromGit,
+          forceUpload: parsedOptions.force,
+        });
 
         analyzeSpinner.succeed("Change analysis complete");
 
@@ -170,7 +177,15 @@ export function createSyncCommand(): Command {
         }
 
         // Show summary
-        console.log(`${formatChangeSummary(analysis)}\n`);
+        if (parsedOptions.force) {
+          console.log(chalk.bold("\n--force enabled"));
+          console.log(
+            `All ${formatCountWithSuffix(analysis.totalFiles, "file")} will be re-uploaded to the vector store.`
+          );
+          console.log(`Upload size: ${formatBytes(analysis.totalSize)}\n`);
+        } else {
+          console.log(`${formatChangeSummary(analysis)}\n`);
+        }
 
         // Dry run mode - just show what would happen
         if (parsedOptions.dryRun) {
@@ -183,8 +198,8 @@ export function createSyncCommand(): Command {
           return;
         }
 
-        // Confirm changes unless in CI mode or force flag is set
-        if (!parsedOptions.ci && !parsedOptions.force) {
+        // Confirm changes unless yes flag is set
+        if (!parsedOptions.yes) {
           const { default: inquirer } = await import("inquirer");
           const { proceed } = await inquirer.prompt([
             {
@@ -199,10 +214,8 @@ export function createSyncCommand(): Command {
             console.log(chalk.yellow("Sync cancelled by user"));
             return;
           }
-        } else if (parsedOptions.ci) {
-          console.log(chalk.green("✓ Auto-proceeding in CI mode"));
-        } else if (parsedOptions.force) {
-          console.log(chalk.green("✓ Auto-proceeding with --force flag"));
+        } else if (parsedOptions.yes) {
+          console.log(chalk.green("✓ Auto-proceeding with --yes flag"));
         }
 
         // Execute changes

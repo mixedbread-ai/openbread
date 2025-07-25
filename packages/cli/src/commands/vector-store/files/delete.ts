@@ -16,7 +16,7 @@ import { resolveVectorStore } from "../../../utils/vector-store";
 const DeleteFileSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
   fileId: z.string().min(1, { message: '"file-id" is required' }),
-  force: z.boolean().optional(),
+  yes: z.boolean().optional(),
 });
 
 export function createDeleteCommand(): Command {
@@ -26,15 +26,11 @@ export function createDeleteCommand(): Command {
       .description("Delete a file from vector store")
       .argument("<name-or-id>", "Name or ID of the vector store")
       .argument("<file-id>", "ID of the file")
-      .option("--force", "Skip confirmation prompt", false)
+      .option("-y, --yes", "Skip confirmation prompt", false)
   );
 
   deleteCommand.action(
-    async (
-      nameOrId: string,
-      fileId: string,
-      options: GlobalOptions & { force?: boolean }
-    ) => {
+    async (nameOrId: string, fileId: string, options: GlobalOptions) => {
       let spinner: Ora;
       try {
         const mergedOptions = mergeCommandOptions(deleteCommand, options);
@@ -51,8 +47,8 @@ export function createDeleteCommand(): Command {
           parsedOptions.nameOrId
         );
 
-        // Confirmation prompt unless --force is used
-        if (!parsedOptions.force) {
+        // Confirmation prompt unless --yes is used
+        if (!parsedOptions.yes) {
           const { confirmed } = await inquirer.prompt([
             {
               type: "confirm",

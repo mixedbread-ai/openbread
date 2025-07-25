@@ -91,8 +91,8 @@ export function createKeysCommand(): Command {
   keysCommand
     .command("remove <name>")
     .description("Remove an API key")
-    .option("--force", "Skip confirmation prompt")
-    .action(async (name: string, options: { force?: boolean }) => {
+    .option("-y, --yes", "Skip confirmation prompt")
+    .action(async (name: string, options: { yes?: boolean }) => {
       const config = loadConfig();
 
       if (!config.api_keys?.[name]) {
@@ -107,8 +107,9 @@ export function createKeysCommand(): Command {
 
       const isDefault = config.defaults?.api_key === name;
 
-      // Confirm removal unless force flag is used
-      if (!options.force) {
+
+      // Confirm removal unless yes flag is used
+      if (!options.yes) {
         const response = await inquirer.prompt<{ confirm: boolean }>({
           type: "confirm",
           name: "confirm",
