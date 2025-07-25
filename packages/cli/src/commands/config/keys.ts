@@ -1,12 +1,18 @@
 import chalk from "chalk";
 import { Command } from "commander";
 import inquirer from "inquirer";
+import { z } from "zod";
 import {
   isMxbaiAPIKey,
   loadConfig,
   outputAvailableKeys,
   saveConfig,
 } from "../../utils/config";
+
+const RemoveKeySchema = z.object({
+  name: z.string().min(1, { message: '"name" is required' }),
+  yes: z.boolean().optional(),
+});
 
 export function createKeysCommand(): Command {
   const keysCommand = new Command("keys").description("Manage API keys");
@@ -93,10 +99,18 @@ export function createKeysCommand(): Command {
     .description("Remove an API key")
     .option("-y, --yes", "Skip confirmation prompt")
     .action(async (name: string, options: { yes?: boolean }) => {
+      const parsedOptions = RemoveKeySchema.parse({
+        name,
+        yes: options.yes,
+      });
+
       const config = loadConfig();
 
-      if (!config.api_keys?.[name]) {
-        console.error(chalk.red("✗"), `No API key found with name "${name}"`);
+      if (!config.api_keys?.[parsedOptions.name]) {
+        console.error(
+          chalk.red("✗"),
+          `No API key found with name "${parsedOptions.name}"`
+        );
 
         if (config.api_keys && Object.keys(config.api_keys).length > 0) {
           console.log("\nAvailable API keys:");
@@ -105,15 +119,14 @@ export function createKeysCommand(): Command {
         return;
       }
 
-      const isDefault = config.defaults?.api_key === name;
-
+      const isDefault = config.defaults?.api_key === parsedOptions.name;
 
       // Confirm removal unless yes flag is used
-      if (!options.yes) {
+      if (!parsedOptions.yes) {
         const response = await inquirer.prompt<{ confirm: boolean }>({
           type: "confirm",
           name: "confirm",
-          message: `Remove API key "${name}"${isDefault ? " (currently default)" : ""}?`,
+          message: `Remove API key "${parsedOptions.name}"${isDefault ? " (currently default)" : ""}?`,
           default: false,
         });
 
@@ -124,7 +137,7 @@ export function createKeysCommand(): Command {
       }
 
       // Remove the key
-      delete config.api_keys[name];
+      delete config.api_keys[parsedOptions.name];
 
       // If this was the default, clear it and warn
       if (isDefault) {
@@ -133,7 +146,10 @@ export function createKeysCommand(): Command {
         }
 
         saveConfig(config);
-        console.log(chalk.green("✓"), `API key "${name}" removed`);
+        console.log(
+          chalk.green("✓"),
+          `API key "${parsedOptions.name}" removed`
+        );
 
         console.log(
           chalk.yellow("⚠"),
@@ -148,7 +164,10 @@ export function createKeysCommand(): Command {
         }
       } else {
         saveConfig(config);
-        console.log(chalk.green("✓"), `API key "${name}" removed`);
+        console.log(
+          chalk.green("✓"),
+          `API key "${parsedOptions.name}" removed`
+        );
       }
     });
 
