@@ -76,7 +76,10 @@ export function createSyncCommand(): Command {
       )
       .option("--dry-run", "Show what would change without making changes")
       .option("-y, --yes", "Skip confirmation prompt")
-      .option("-f, --force", "Force re-upload all files, ignoring change detection")
+      .option(
+        "-f, --force",
+        "Force re-upload all files, ignoring change detection"
+      )
       .option("--metadata <json>", "Additional metadata for files")
       .option("--parallel <n>", "Number of concurrent operations (1-20)")
   );

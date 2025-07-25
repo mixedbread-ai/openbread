@@ -26,7 +26,7 @@ export function createDeleteCommand(): Command {
       .description("Delete a file from vector store")
       .argument("<name-or-id>", "Name or ID of the vector store")
       .argument("<file-id>", "ID of the file")
-      .option("-y, --yes", "Skip confirmation prompt", false)
+      .option("-y, --yes", "Skip confirmation prompt")
   );
 
   deleteCommand.action(
