@@ -4,23 +4,25 @@
 
 ### Minor Changes
 
-- 00c1641: - Update config object to store multiple api keys
-  - Add `--saved-key` global option
+- 00c1641:
+  - Updated config object to store multiple api keys
+  - Added `--saved-key` global option
 
 ## 0.4.0
 
 ### Minor Changes
 
 - ebb2703: Tab completion and other enhancements
-  - Add tab autocompletion
-  - Update sdk version to 0.16.0
-  - Skip empty files and show warnings
+  - Added tab autocompletion
+  - Updated sdk version to 0.16.0
+  - Skipped empty files and show warnings
 
 ## 0.3.0
 
 ### Minor Changes
 
-- 0d7a092: - Fixed sync command to keep processing other files if one fail
+- 0d7a092:
+  - Fixed sync command to keep processing other files if one fail
   - Cross-platform config path support
   - Added line breaks before error outputs
   - Unified file path display to use relative paths
@@ -33,19 +35,20 @@
 
 ### Patch Changes
 
-- 7d40e6e: Use the right vs file offset
+- 7d40e6e: Used the right vs file offset
 
 ## 0.2.2
 
 ### Patch Changes
 
-- b1e4866: Fix postinstall script error by including scripts directory in published package
+- b1e4866: Fixed postinstall script error by including scripts directory in published package
 
 ## 0.2.1
 
 ### Patch Changes
 
-- 051bd82: - Removed `--show-chunks` and add `--file-search`
+- 051bd82:
+  - Removed `--show-chunks` and add `--file-search`
   - Changed `rerank` default value to `false`
 
 ## 0.1.5
