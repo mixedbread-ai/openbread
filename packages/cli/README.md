@@ -80,7 +80,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 ### Advanced Features
 
 - `mxbai vs sync <name-or-id> <patterns...>` - Sync files with intelligent change detection
-  - Options: `--strategy <strategy>`, `--contextualization`, `--from-git <ref>`, `--dry-run`, `--yes/-y`, `--force`, `--metadata <json>`, `--parallel <n>` (1-20)
+  - Options: `--strategy <strategy>`, `--contextualization`, `--from-git <ref>`, `--dry-run`, `--yes/-y`, `--force/-f`, `--metadata <json>`, `--parallel <n>` (1-20)
 
 ### Configuration
 
@@ -212,6 +212,9 @@ mxbai vs sync "My Docs" "src/**" --dry-run
 
 # Force re-upload all files without confirmation 
 mxbai vs sync "My Docs" "**/*.pdf" --yes --force
+
+# Same as above using short flags
+mxbai vs sync "My Docs" "**/*.pdf" -y -f
 ```
 
 ### Configuration Management
