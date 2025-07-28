@@ -387,7 +387,7 @@ describe("Files Command", () => {
   });
 
   describe("Delete file subcommand", () => {
-    it("should delete file with force flag", async () => {
+    it("should delete file with yes flag", async () => {
       mockClient.vectorStores.files.delete.mockResolvedValue({
         id: "file_123",
       });
@@ -398,7 +398,7 @@ describe("Files Command", () => {
         "delete",
         "test-store",
         "file_123",
-        "--force",
+        "--yes",
       ]);
 
       expect(mockResolveVectorStore).toHaveBeenCalledWith(
@@ -429,7 +429,7 @@ describe("Files Command", () => {
         "delete",
         "test-store",
         "file_123",
-        "--force",
+        "--yes",
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
@@ -448,7 +448,7 @@ describe("Files Command", () => {
         "delete",
         "test-store",
         "file_123",
-        "--force",
+        "--yes",
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
@@ -487,7 +487,7 @@ describe("Files Command", () => {
         "delete",
         "test-store",
         "",
-        "--force",
+        "--yes",
       ]);
 
       expect(console.error).toHaveBeenCalledWith(

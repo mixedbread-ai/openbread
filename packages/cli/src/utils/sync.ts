@@ -27,6 +27,7 @@ interface SyncAnalysis {
   modified: FileChange[];
   deleted: FileChange[];
   unchanged: number;
+  totalFiles: number;
   totalSize: number;
 }
 
@@ -48,17 +49,25 @@ interface SyncResults {
   };
 }
 
+interface AnalyzeChangesParams {
+  patterns: string[];
+  syncedFiles: Map<string, { fileId: string; metadata: FileSyncMetadata }>;
+  gitInfo: { commit: string; branch: string; isRepo: boolean };
+  fromGit?: string;
+  forceUpload?: boolean;
+}
+
 export async function analyzeChanges(
-  patterns: string[],
-  syncedFiles: Map<string, { fileId: string; metadata: FileSyncMetadata }>,
-  gitInfo: { commit: string; branch: string; isRepo: boolean },
-  fromGit?: string
+  params: AnalyzeChangesParams
 ): Promise<SyncAnalysis> {
+  const { patterns, syncedFiles, gitInfo, fromGit, forceUpload } = params;
+
   const analysis: SyncAnalysis = {
     added: [],
     modified: [],
     deleted: [],
     unchanged: 0,
+    totalFiles: 0,
     totalSize: 0,
   };
 
@@ -82,6 +91,8 @@ export async function analyzeChanges(
   const filesToProcess = fromGit
     ? new Set(gitChanges?.keys() || [])
     : localFiles;
+
+  analysis.totalFiles = filesToProcess.size;
 
   // Process files
   for (const filePath of filesToProcess) {
@@ -111,7 +122,11 @@ export async function analyzeChanges(
       let isModified = false;
       let localHash: string | undefined;
 
-      if (fromGit && gitChanges && gitChanges.has(filePath)) {
+      if (forceUpload) {
+        // When --force-upload is set, treat all existing files as modified
+        isModified = true;
+        localHash = await calculateFileHash(filePath);
+      } else if (fromGit && gitChanges && gitChanges.has(filePath)) {
         // When using --from-git, trust git detection
         const gitStatus = gitChanges.get(filePath);
         isModified = gitStatus === "modified" || gitStatus === "added";
@@ -245,7 +260,7 @@ export async function executeSyncChanges(
     analysis.deleted.length;
   let completed = 0;
 
-  console.log(chalk.bold("Syncing changes..."));
+  console.log(chalk.bold("\nSyncing changes..."));
 
   const results: SyncResults = {
     deletions: { successful: [], failed: [] },
