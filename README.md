@@ -1,10 +1,9 @@
 # Openbread
 
 [![npm version](https://badge.fury.io/js/@mixedbread%2Fcli.svg)](https://www.npmjs.com/package/@mixedbread/cli)
-[![npm version](https://badge.fury.io/js/@mixedbread%2Fmcp.svg)](https://www.npmjs.com/package/@mixedbread/mcp)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-Openbread is an open-source toolkit that provides powerful interfaces for interacting with [Mixedbread](https://www.mixedbread.com/)'s vector store platform. It consists of two main packages that enable seamless vector store management, file processing, and intelligent search capabilities.
+Openbread is an open-source monorepo containing tools for interacting with [Mixedbread](https://www.mixedbread.com/)'s vector store platform. Currently, it houses the command-line interface (CLI) that enables seamless vector store management, file processing, and intelligent search capabilities.
 
 ## Packages
 
@@ -40,36 +39,6 @@ mxbai vs upload "My Documents" "**/*.md" --strategy high_quality --contextualiza
 mxbai vs search "My Documents" "how to get started"
 ```
 
-### 🔌 [@mixedbread/mcp](./packages/mcp)
-
-A Model Context Protocol (MCP) server that enables integration with Claude Desktop and other MCP-compatible clients.
-
-**Key Features:**
-- Seamless Claude Desktop integration
-- Vector store operations through MCP tools
-- File management and search capabilities
-- Real-time vector store interactions
-
-**Installation:**
-```bash
-npm install -g @mixedbread/mcp
-```
-
-**Claude Desktop Integration:**
-```json
-{
-  "mcpServers": {
-    "mixedbread": {
-      "command": "npx",
-      "args": ["-y", "@mixedbread/mcp"],
-      "env": {
-        "MXBAI_API_KEY": "your_api_key_here"
-      }
-    }
-  }
-}
-```
-
 ## Prerequisites
 
 - **Node.js**: Version 20 or higher
@@ -80,9 +49,10 @@ npm install -g @mixedbread/mcp
 
 1. **Get your API key** from [Mixedbread](https://www.platform.mixedbread.com/platform?next=/api-keys)
 
-2. **Choose your interface:**
-   - **Command Line**: Install `@mixedbread/cli` for terminal-based operations
-   - **Claude Desktop**: Install `@mixedbread/mcp` for AI assistant integration
+2. **Install the CLI:**
+   ```bash
+   npm install -g @mixedbread/cli
+   ```
 
 3. **Set up authentication:**
    ```bash
@@ -96,7 +66,7 @@ npm install -g @mixedbread/mcp
 
 ## Development
 
-This is a monorepo managed with [pnpm](https://pnpm.io/) and [Turbo](https://turbo.build/).
+Openbread is a monorepo managed with [pnpm](https://pnpm.io/) and [Turbo](https://turbo.build/), designed to host multiple tools for the Mixedbread ecosystem.
 
 ### Setup
 
@@ -134,8 +104,7 @@ pnpm check-types
 ```
 openbread/
 ├── packages/
-│   ├── cli/          # Command-line interface
-│   └── mcp/          # Model Context Protocol server
+│   └── cli/          # Command-line interface
 ├── package.json      # Root package configuration
 ├── turbo.json        # Turbo build configuration
 └── pnpm-workspace.yaml # pnpm workspace configuration
@@ -168,7 +137,6 @@ This project uses [Changesets](https://github.com/changesets/changesets) for ver
 ## Documentation
 
 - **CLI Documentation**: [mixedbread.com/cli](https://www.mixedbread.com/cli)
-- **MCP Documentation**: [mixedbread.com/mcp](https://www.mixedbread.com/mcp)
 - **Release Process**: [RELEASE.md](./RELEASE.md)
 - **Mixedbread Platform**: [platform.mixedbread.com](https://www.platform.mixedbread.com)
 

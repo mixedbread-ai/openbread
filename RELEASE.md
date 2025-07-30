@@ -1,6 +1,6 @@
 # Release Process
 
-This document describes the release process for all packages in the monorepo (`@mixedbread/cli`, `@mixedbread/mcp`).
+This document describes the release process for the `@mixedbread/cli` package.
 
 ## Prerequisites
 
