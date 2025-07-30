@@ -3,9 +3,11 @@
 [![npm version](https://badge.fury.io/js/@mixedbread%2Fcli.svg)](https://www.npmjs.com/package/@mixedbread/cli)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-Openbread is an open-source command-line interface for interacting with [Mixedbread](https://www.mixedbread.com/)'s vector store platform. It enables seamless vector store management, file processing, and intelligent search capabilities.
+Openbread is an open-source monorepo containing tools for interacting with [Mixedbread](https://www.mixedbread.com/)'s vector store platform. Currently, it houses the command-line interface (CLI) that enables seamless vector store management, file processing, and intelligent search capabilities.
 
-## 🛠️ @mixedbread/cli
+## Packages
+
+### 🛠️ [@mixedbread/cli](./packages/cli)
 
 A comprehensive command-line interface for managing Mixedbread vector stores.
 
@@ -64,7 +66,7 @@ mxbai vs search "My Documents" "how to get started"
 
 ## Development
 
-This is a monorepo managed with [pnpm](https://pnpm.io/) and [Turbo](https://turbo.build/).
+Openbread is a monorepo managed with [pnpm](https://pnpm.io/) and [Turbo](https://turbo.build/), designed to host multiple tools for the Mixedbread ecosystem.
 
 ### Setup
 
