@@ -76,6 +76,7 @@ pnpm release
 - Tests in `tests/` directories within each package
 - Mocks for external dependencies (chalk, ora, inquirer, glob, p-limit)
 - Run `pnpm test` from root or package directory
+- We don't need redundant tests in most cases. For example, I've removed handling edge cases like FILE.TS, my.test.ts, no file extension. Ask me follow-up questions if you're not sure if a test is redundant or not.
 
 ## Environment Setup
 
@@ -104,3 +105,4 @@ export MXBAI_API_KEY="your-api-key"
 - Git-based and hash-based sync capabilities
 - Manifest-based bulk uploads via YAML configuration
 - Support for aliases and configuration management
+```

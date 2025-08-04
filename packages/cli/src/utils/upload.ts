@@ -29,6 +29,37 @@ export interface UploadResults {
 }
 
 /**
+ * Fix MIME types for files that are commonly misidentified
+ */
+function fixMimeTypes(file: File): File {
+  const fileName = file.name.toLowerCase();
+  let correctedType = file.type;
+
+  // Fix .ts files that are detected as video/mp2t
+  if (fileName.endsWith(".ts") && file.type === "video/mp2t") {
+    correctedType = "text/typescript";
+  }
+  // Fix .py files that might be detected incorrectly
+  else if (fileName.endsWith(".py") && file.type !== "text/x-python") {
+    correctedType = "text/x-python";
+  }
+  // Fix .mdx files that are detected as text/x-markdown
+  else if (fileName.endsWith(".mdx") && file.type !== "text/mdx") {
+    correctedType = "text/mdx";
+  }
+
+  if (correctedType !== file.type) {
+    // Only create a new File object if we need to correct the type
+    return new File([file], file.name, {
+      type: correctedType,
+      lastModified: file.lastModified,
+    });
+  }
+
+  return file;
+}
+
+/**
  * Upload a single file to a vector store
  */
 export async function uploadFile(
@@ -43,7 +74,9 @@ export async function uploadFile(
   const fileContent = readFileSync(filePath);
   const fileName = basename(filePath);
   const mimeType = lookup(filePath) || "application/octet-stream";
-  const file = new File([fileContent], fileName, { type: mimeType });
+  const file = fixMimeTypes(
+    new File([fileContent], fileName, { type: mimeType })
+  );
 
   // Upload the file
   await client.vectorStores.files.upload(vectorStoreIdentifier, file, {
@@ -132,9 +165,11 @@ export async function uploadFilesInBatch(
         const fileContent = readFileSync(file.path);
         const fileName = basename(file.path);
         const mimeType = lookup(file.path) || "application/octet-stream";
-        const fileToUpload = new File([fileContent], fileName, {
-          type: mimeType,
-        });
+        const fileToUpload = fixMimeTypes(
+          new File([fileContent], fileName, {
+            type: mimeType,
+          })
+        );
 
         await client.vectorStores.files.upload(
           vectorStoreIdentifier,

@@ -122,6 +122,75 @@ describe("Upload Utils", () => {
       );
       expect(mockConsoleWarn).not.toHaveBeenCalled();
     });
+
+    it("should fix TypeScript files with incorrect video/mp2t mime type", async () => {
+      mockFs({
+        "test.ts": "const hello = 'world';",
+      });
+
+      mockClient.vectorStores.files.upload.mockResolvedValue({});
+
+      await uploadFile(
+        mockClient as unknown as Mixedbread,
+        "test-store",
+        "test.ts"
+      );
+
+      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+        "test-store",
+        expect.objectContaining({
+          name: "test.ts",
+          type: "text/typescript",
+        }),
+        expect.any(Object)
+      );
+    });
+
+    it("should fix Python files with incorrect mime type", async () => {
+      mockFs({
+        "script.py": "print('Hello, World!')",
+      });
+
+      mockClient.vectorStores.files.upload.mockResolvedValue({});
+
+      await uploadFile(
+        mockClient as unknown as Mixedbread,
+        "test-store",
+        "script.py"
+      );
+
+      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+        "test-store",
+        expect.objectContaining({
+          name: "script.py",
+          type: "text/x-python",
+        }),
+        expect.any(Object)
+      );
+    });
+
+    it("should fix MDX files with incorrect mime type", async () => {
+      mockFs({
+        "content.mdx": "# Hello MDX\n\n<Component />",
+      });
+
+      mockClient.vectorStores.files.upload.mockResolvedValue({});
+
+      await uploadFile(
+        mockClient as unknown as Mixedbread,
+        "test-store",
+        "content.mdx"
+      );
+
+      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+        "test-store",
+        expect.objectContaining({
+          name: "content.mdx",
+          type: "text/mdx",
+        }),
+        expect.any(Object)
+      );
+    });
   });
 
   describe("uploadFilesInBatch", () => {
@@ -325,6 +394,95 @@ describe("Upload Utils", () => {
         { vector_store_identifier: "test-store" }
       );
       expect(mockClient.vectorStores.files.upload).toHaveBeenCalledTimes(1);
+    });
+
+    it("should fix mime types for TypeScript, Python, and MDX files in batch", async () => {
+      mockFs({
+        "app.ts": "const app = 'TypeScript';",
+        "utils.py": "def hello(): pass",
+        "page.mdx": "# MDX Page\n\n<Hero />",
+        "readme.md": "# Regular Markdown",
+      });
+
+      mockClient.vectorStores.files.upload.mockResolvedValue({});
+
+      const files = [
+        {
+          path: "app.ts",
+          strategy: "fast" as const,
+          contextualization: false,
+          metadata: {},
+        },
+        {
+          path: "utils.py",
+          strategy: "fast" as const,
+          contextualization: false,
+          metadata: {},
+        },
+        {
+          path: "page.mdx",
+          strategy: "fast" as const,
+          contextualization: false,
+          metadata: {},
+        },
+        {
+          path: "readme.md",
+          strategy: "fast" as const,
+          contextualization: false,
+          metadata: {},
+        },
+      ];
+
+      await uploadFilesInBatch(
+        mockClient as unknown as Mixedbread,
+        "test-store",
+        files,
+        {
+          unique: false,
+          existingFiles: new Map(),
+          parallel: 4,
+        }
+      );
+
+      // Verify TypeScript file mime type was fixed
+      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+        "test-store",
+        expect.objectContaining({
+          name: "app.ts",
+          type: "text/typescript",
+        }),
+        expect.any(Object)
+      );
+
+      // Verify Python file mime type was fixed
+      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+        "test-store",
+        expect.objectContaining({
+          name: "utils.py",
+          type: "text/x-python",
+        }),
+        expect.any(Object)
+      );
+
+      // Verify MDX file mime type was fixed
+      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+        "test-store",
+        expect.objectContaining({
+          name: "page.mdx",
+          type: "text/mdx",
+        }),
+        expect.any(Object)
+      );
+
+      // Verify regular markdown file kept its original mime type
+      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+        "test-store",
+        expect.objectContaining({
+          name: "readme.md",
+          type: "text/markdown",
+        }),
+        expect.any(Object)
+      );
     });
   });
 
