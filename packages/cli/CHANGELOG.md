@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1
+
+### Patch Changes
+
+- d60b52d: Fix metadata types before uploading
+
 ## 1.0.0
 
 ### Major Changes
