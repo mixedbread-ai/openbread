@@ -8,6 +8,19 @@ import {
 } from "@pnpm/tabtab";
 import chalk from "chalk";
 import { Command } from "commander";
+import ora from "ora";
+import {
+  getCurrentKeyName,
+  getStoresForCompletion,
+  refreshAllCaches,
+} from "../utils/completion-cache";
+import {
+  addGlobalOptions,
+  BaseGlobalOptionsSchema,
+  type GlobalOptions,
+  mergeCommandOptions,
+  parseOptions,
+} from "../utils/global-options";
 
 const SUPPORTED_SHELLS = ["bash", "zsh", "fish", "pwsh"] as const;
 export type SupportedShell = (typeof SUPPORTED_SHELLS)[number];
@@ -128,7 +141,6 @@ export function createCompletionCommand(): Command {
         }
       } catch (error) {
         console.error(chalk.red("✗"), "Error installing completion:", error);
-        process.exit(1);
       }
     });
 
@@ -146,9 +158,34 @@ export function createCompletionCommand(): Command {
         );
       } catch (error) {
         console.error(chalk.red("✗"), "Error uninstalling completion:", error);
-        process.exit(1);
       }
     });
+
+  const refreshCommand = addGlobalOptions(
+    new Command("refresh").description(
+      "Refresh completion cache for all API keys"
+    )
+  );
+
+  refreshCommand.action(async (options: GlobalOptions) => {
+    const mergedOptions = mergeCommandOptions(refreshCommand, options);
+    const parsedOptions = parseOptions(BaseGlobalOptionsSchema, {
+      ...mergedOptions,
+    });
+    const spinner = ora("Refreshing completion cache...").start();
+
+    try {
+      await refreshAllCaches(parsedOptions);
+      spinner.succeed("Completion cache refreshed successfully");
+    } catch (error) {
+      spinner.fail("Failed to refresh completion cache");
+      if (error instanceof Error) {
+        console.error(chalk.red("✗"), error.message);
+      }
+    }
+  });
+
+  completionCommand.addCommand(refreshCommand);
 
   // Show help without error exit code when no subcommand provided
   completionCommand.action(() => {
@@ -182,8 +219,33 @@ export function createCompletionServerCommand(): Command {
         );
       }
 
+      // Vector store name completions
+      const STORE_NAME_COMMANDS = [
+        "get",
+        "delete",
+        "update",
+        "sync",
+        "upload",
+        "search",
+        "qa",
+      ];
+
+      if (STORE_NAME_COMMANDS.includes(env.prev)) {
+        const words = env.line.trim().split(/\s+/);
+        // Check if previous word is "vs"
+        if (words.length >= 3 && words[words.length - 2] === "vs") {
+          const keyName = getCurrentKeyName();
+          if (keyName) {
+            const stores = getStoresForCompletion(keyName);
+            if (stores.length > 0) {
+              return log(stores, shell, console.log);
+            }
+          }
+        }
+      }
+
       // Vector store completions
-      if (env.prev === "vs" || env.prev === "vector-store") {
+      if (env.prev === "vs") {
         return log(
           [
             "create",
@@ -206,11 +268,29 @@ export function createCompletionServerCommand(): Command {
       if (env.prev === "files") {
         // Check if we're in "mxbai vs files " context
         const words = env.line.trim().split(/\s+/);
-        if (
-          words.length >= 3 &&
-          (words[1] === "vs" || words[1] === "vector-store")
-        ) {
+        if (words.length >= 3 && words[1] === "vs") {
           return log(["list", "get", "delete"], shell, console.log);
+        }
+      }
+
+      // Vector store name completions for files subcommands
+      const FILES_SUBCOMMANDS = ["list", "get", "delete"];
+      if (FILES_SUBCOMMANDS.includes(env.prev)) {
+        const words = env.line.trim().split(/\s+/);
+        // Check for "mxbai vs files [subcommand] " context
+        if (
+          words.length >= 4 &&
+          words[1] === "vs" &&
+          words[2] === "files" &&
+          FILES_SUBCOMMANDS.includes(words[3])
+        ) {
+          const keyName = getCurrentKeyName();
+          if (keyName) {
+            const stores = getStoresForCompletion(keyName);
+            if (stores.length > 0) {
+              return log(stores, shell, console.log);
+            }
+          }
         }
       }
 
@@ -233,7 +313,7 @@ export function createCompletionServerCommand(): Command {
 
       // Completion completions
       if (env.prev === "completion") {
-        return log(["install", "uninstall"], shell, console.log);
+        return log(["install", "uninstall", "refresh"], shell, console.log);
       }
     });
 

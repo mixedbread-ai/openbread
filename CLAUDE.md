@@ -105,4 +105,3 @@ export MXBAI_API_KEY="your-api-key"
 - Git-based and hash-based sync capabilities
 - Manifest-based bulk uploads via YAML configuration
 - Support for aliases and configuration management
-```

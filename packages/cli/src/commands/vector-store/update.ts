@@ -5,6 +5,10 @@ import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
+  getCurrentKeyName,
+  updateCacheAfterUpdate,
+} from "../../utils/completion-cache";
+import {
   addGlobalOptions,
   extendGlobalOptions,
   type GlobalOptions,
@@ -118,6 +122,18 @@ export function createUpdateCommand(): Command {
         },
         parsedOptions.format
       );
+
+      // Update completion cache if the name was changed
+      if (vectorStore.name !== updatedVectorStore.name) {
+        const keyName = getCurrentKeyName();
+        if (keyName) {
+          updateCacheAfterUpdate(
+            keyName,
+            vectorStore.name,
+            updatedVectorStore.name
+          );
+        }
+      }
     } catch (error) {
       spinner?.fail("Failed to update vector store");
       if (error instanceof Error) {

@@ -66,7 +66,7 @@ export const CLIConfigSchema = z.object({
 
 export type CLIConfig = z.infer<typeof CLIConfigSchema>;
 
-function getConfigDir(): string {
+export function getConfigDir(): string {
   if (process.env.MXBAI_CONFIG_PATH) {
     return process.env.MXBAI_CONFIG_PATH;
   }

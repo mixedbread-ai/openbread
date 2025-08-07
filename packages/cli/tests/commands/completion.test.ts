@@ -35,9 +35,25 @@ jest.mock("chalk", () => ({
   },
 }));
 
+// Mock ora
+jest.mock("ora");
+
+// Mock completion-cache module
+jest.mock("../../src/utils/completion-cache", () => ({
+  getCurrentKeyName: jest.fn(() => "test-key"),
+  getStoresForCompletion: jest.fn(() => ["store1", "store2"]),
+  refreshAllCaches: jest.fn(() => Promise.resolve()),
+  refreshCacheForKey: jest.fn(() => Promise.resolve()),
+  updateCacheAfterCreate: jest.fn(),
+  updateCacheAfterUpdate: jest.fn(),
+  updateCacheAfterDelete: jest.fn(),
+  clearCacheForKey: jest.fn(),
+}));
+
 // Mock path module
 jest.mock("node:path", () => ({
   basename: jest.fn((path: string) => path.split("/").pop()),
+  join: jest.fn((...args: string[]) => args.join("/")),
 }));
 
 describe("Completion Commands", () => {
@@ -111,13 +127,14 @@ describe("Completion Commands", () => {
         expect(command.description()).toBe("Manage shell completion");
       });
 
-      it("should have install and uninstall subcommands", () => {
+      it("should have install, uninstall, and refresh subcommands", () => {
         const command = createCompletionCommand();
         const subcommands = command.commands;
 
-        expect(subcommands).toHaveLength(2);
+        expect(subcommands).toHaveLength(3);
         expect(subcommands.map((cmd) => cmd.name())).toContain("install");
         expect(subcommands.map((cmd) => cmd.name())).toContain("uninstall");
+        expect(subcommands.map((cmd) => cmd.name())).toContain("refresh");
       });
 
       it("should show help when no subcommand is provided", async () => {
@@ -450,28 +467,6 @@ describe("Completion Commands", () => {
           );
         });
 
-        it("should provide vector store completions for 'vector-store' command", async () => {
-          mockParseEnv.mockReturnValue({
-            complete: true,
-            words: 2,
-            point: 0,
-            line: "mxbai vector-store ",
-            partial: "",
-            last: "vector-store",
-            lastPartial: "",
-            prev: "vector-store",
-          });
-          mockGetShellFromEnv.mockReturnValue("fish");
-
-          const command = createCompletionServerCommand();
-          await parseCommand(command, []);
-
-          expect(mockLog).toHaveBeenCalledWith(
-            vectorStoreCommands,
-            "fish",
-            console.log
-          );
-        });
       });
 
       describe("files subcommand completions", () => {
@@ -500,30 +495,8 @@ describe("Completion Commands", () => {
           );
         });
 
-        it("should provide files completions for 'mxbai vector-store files' context", async () => {
-          mockParseEnv.mockReturnValue({
-            complete: true,
-            words: 3,
-            point: 0,
-            line: "mxbai vector-store files ",
-            partial: "",
-            last: "files",
-            lastPartial: "",
-            prev: "files",
-          });
-          mockGetShellFromEnv.mockReturnValue("bash");
 
-          const command = createCompletionServerCommand();
-          await parseCommand(command, []);
-
-          expect(mockLog).toHaveBeenCalledWith(
-            filesCommands,
-            "bash",
-            console.log
-          );
-        });
-
-        it("should not provide files completions for non-vector-store contexts", async () => {
+        it("should not provide files completions for non-vs contexts", async () => {
           mockParseEnv.mockReturnValue({
             complete: true,
             words: 2,
@@ -655,7 +628,7 @@ describe("Completion Commands", () => {
           await parseCommand(command, []);
 
           expect(mockLog).toHaveBeenCalledWith(
-            ["install", "uninstall"],
+            ["install", "uninstall", "refresh"],
             "bash",
             console.log
           );
@@ -763,7 +736,7 @@ describe("Completion Commands", () => {
       expect(serverCommand.name()).toBe("completion-server");
 
       // Both commands should be separate and independent
-      expect(completionCommand.commands.length).toBe(2); // install, uninstall
+      expect(completionCommand.commands.length).toBe(3); // install, uninstall, refresh
       expect(serverCommand.commands.length).toBe(0); // no subcommands
     });
   });

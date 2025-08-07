@@ -11,9 +11,7 @@ import { createUpdateCommand } from "./update";
 import { createUploadCommand } from "./upload";
 
 export function createVectorStoreCommand(): Command {
-  const vsCommand = new Command("vs")
-    .alias("vector-store")
-    .description("Manage vector stores");
+  const vsCommand = new Command("vs").description("Manage vector stores");
 
   // Add subcommands
   vsCommand.addCommand(createListCommand());
