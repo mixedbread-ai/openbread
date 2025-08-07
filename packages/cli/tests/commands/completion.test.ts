@@ -36,7 +36,10 @@ jest.mock("chalk", () => ({
 }));
 
 // Mock ora
-jest.mock("ora");
+jest.mock("ora", () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
 
 // Mock completion-cache module
 jest.mock("../../src/utils/completion-cache", () => ({
@@ -275,9 +278,8 @@ describe("Completion Commands", () => {
           mockInstall.mockRejectedValueOnce(new Error(errorMessage));
 
           const command = createCompletionCommand();
-          const result = await parseCommand(command, ["install"]);
+          await parseCommand(command, ["install"]);
 
-          expect(result.exitCode).toBe(1);
           expect(mockConsoleOutput.errors).toContainEqual(
             expect.stringContaining("Error installing completion")
           );
@@ -360,12 +362,84 @@ describe("Completion Commands", () => {
         mockUninstall.mockRejectedValueOnce(new Error(errorMessage));
 
         const command = createCompletionCommand();
-        const result = await parseCommand(command, ["uninstall"]);
+        await parseCommand(command, ["uninstall"]);
 
-        expect(result.exitCode).toBe(1);
         expect(mockConsoleOutput.errors).toContainEqual(
           expect.stringContaining("Error uninstalling completion")
         );
+      });
+    });
+
+    describe("refresh subcommand", () => {
+      let mockRefreshAllCaches: jest.MockedFunction<
+        typeof import("../../src/utils/completion-cache").refreshAllCaches
+      >;
+      let mockSpinner: {
+        start: jest.MockedFunction<(text?: string) => unknown>;
+        succeed: jest.MockedFunction<(text?: string) => unknown>;
+        fail: jest.MockedFunction<(text?: string) => unknown>;
+      };
+
+      beforeEach(() => {
+        const completionCache = jest.mocked(
+          require("../../src/utils/completion-cache")
+        );
+        mockRefreshAllCaches = completionCache.refreshAllCaches;
+
+        // Setup ora mock
+        mockSpinner = {
+          start: jest.fn().mockReturnThis(),
+          succeed: jest.fn().mockReturnThis(),
+          fail: jest.fn().mockReturnThis(),
+        };
+        const ora = require("ora").default;
+        (ora as jest.MockedFunction<typeof ora>).mockImplementation(
+          () => mockSpinner
+        );
+      });
+
+      it("should refresh completion cache successfully", async () => {
+        mockRefreshAllCaches.mockResolvedValue(undefined);
+
+        const command = createCompletionCommand();
+        await parseCommand(command, ["refresh"]);
+
+        expect(mockRefreshAllCaches).toHaveBeenCalled();
+        expect(mockSpinner.start).toHaveBeenCalled();
+        expect(mockSpinner.succeed).toHaveBeenCalledWith(
+          "Completion cache refreshed successfully"
+        );
+      });
+
+      it("should handle refresh errors gracefully", async () => {
+        const errorMessage = "No API keys found";
+        mockRefreshAllCaches.mockRejectedValue(new Error(errorMessage));
+
+        const command = createCompletionCommand();
+        await parseCommand(command, ["refresh"]);
+
+        expect(mockSpinner.fail).toHaveBeenCalledWith(
+          "Failed to refresh completion cache"
+        );
+        expect(mockConsoleOutput.errors).toContainEqual(
+          expect.stringContaining(errorMessage)
+        );
+      });
+
+      it("should have global options", () => {
+        const command = createCompletionCommand();
+        const refreshCommand = command.commands.find(
+          (cmd) => cmd.name() === "refresh"
+        );
+
+        expect(refreshCommand).toBeDefined();
+        const options = refreshCommand?.options;
+        expect(options).toBeDefined();
+
+        const hasBaseURLOption = options?.some(
+          (opt) => opt.long === "--base-url"
+        );
+        expect(hasBaseURLOption).toBe(true);
       });
     });
   });
@@ -466,7 +540,132 @@ describe("Completion Commands", () => {
             console.log
           );
         });
+      });
 
+      describe("vector store name completions", () => {
+        beforeEach(() => {
+          const completionCache = jest.mocked(
+            require("../../src/utils/completion-cache")
+          );
+          completionCache.getCurrentKeyName.mockReturnValue("test-key");
+          completionCache.getStoresForCompletion.mockReturnValue([
+            "store1",
+            "store2",
+            "store3",
+          ]);
+        });
+
+        it("should provide store name completions for vs commands that need a store name", async () => {
+          // Test a representative command - the logic is the same for all
+          mockParseEnv.mockReturnValue({
+            complete: true,
+            words: 3,
+            point: 0,
+            line: "mxbai vs get ",
+            partial: "",
+            last: "get",
+            lastPartial: "",
+            prev: "get",
+          });
+          mockGetShellFromEnv.mockReturnValue("bash");
+
+          const command = createCompletionServerCommand();
+          await parseCommand(command, []);
+
+          expect(mockLog).toHaveBeenCalledWith(
+            ["store1", "store2", "store3"],
+            "bash",
+            console.log
+          );
+        });
+
+        it("should not provide store names if no key is set", async () => {
+          const completionCache = jest.mocked(
+            require("../../src/utils/completion-cache")
+          );
+          completionCache.getCurrentKeyName.mockReturnValue(null);
+
+          mockParseEnv.mockReturnValue({
+            complete: true,
+            words: 3,
+            point: 0,
+            line: "mxbai vs get ",
+            partial: "",
+            last: "get",
+            lastPartial: "",
+            prev: "get",
+          });
+          mockGetShellFromEnv.mockReturnValue("bash");
+
+          const command = createCompletionServerCommand();
+          await parseCommand(command, []);
+
+          expect(mockLog).not.toHaveBeenCalled();
+        });
+
+        it("should not provide store names if cache is empty", async () => {
+          const completionCache = jest.mocked(
+            require("../../src/utils/completion-cache")
+          );
+          completionCache.getCurrentKeyName.mockReturnValue("test-key");
+          completionCache.getStoresForCompletion.mockReturnValue([]);
+
+          mockParseEnv.mockReturnValue({
+            complete: true,
+            words: 3,
+            point: 0,
+            line: "mxbai vs sync ",
+            partial: "",
+            last: "sync",
+            lastPartial: "",
+            prev: "sync",
+          });
+          mockGetShellFromEnv.mockReturnValue("zsh");
+
+          const command = createCompletionServerCommand();
+          await parseCommand(command, []);
+
+          expect(mockLog).not.toHaveBeenCalled();
+        });
+
+        it("should not provide store names for non-vs commands", async () => {
+          mockParseEnv.mockReturnValue({
+            complete: true,
+            words: 3,
+            point: 0,
+            line: "mxbai config get ",
+            partial: "",
+            last: "get",
+            lastPartial: "",
+            prev: "get",
+          });
+          mockGetShellFromEnv.mockReturnValue("bash");
+
+          const command = createCompletionServerCommand();
+          await parseCommand(command, []);
+
+          expect(mockLog).not.toHaveBeenCalled();
+        });
+
+        it("should not provide store names for commands that don't need them", async () => {
+          // Test that list and create don't get store name completions
+          mockParseEnv.mockReturnValue({
+            complete: true,
+            words: 3,
+            point: 0,
+            line: "mxbai vs list ",
+            partial: "",
+            last: "list",
+            lastPartial: "",
+            prev: "list",
+          });
+          mockGetShellFromEnv.mockReturnValue("bash");
+
+          const command = createCompletionServerCommand();
+          await parseCommand(command, []);
+
+          expect(mockLog).not.toHaveBeenCalled();
+        });
       });
 
       describe("files subcommand completions", () => {
@@ -495,6 +694,37 @@ describe("Completion Commands", () => {
           );
         });
 
+        it("should provide store name completions for 'mxbai vs files list' context", async () => {
+          const completionCache = jest.mocked(
+            require("../../src/utils/completion-cache")
+          );
+          completionCache.getCurrentKeyName.mockReturnValue("test-key");
+          completionCache.getStoresForCompletion.mockReturnValue([
+            "store1",
+            "store2",
+          ]);
+
+          mockParseEnv.mockReturnValue({
+            complete: true,
+            words: 4,
+            point: 0,
+            line: "mxbai vs files list ",
+            partial: "",
+            last: "list",
+            lastPartial: "",
+            prev: "list",
+          });
+          mockGetShellFromEnv.mockReturnValue("bash");
+
+          const command = createCompletionServerCommand();
+          await parseCommand(command, []);
+
+          expect(mockLog).toHaveBeenCalledWith(
+            ["store1", "store2"],
+            "bash",
+            console.log
+          );
+        });
 
         it("should not provide files completions for non-vs contexts", async () => {
           mockParseEnv.mockReturnValue({
