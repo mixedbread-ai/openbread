@@ -1,7 +1,7 @@
 import { exec } from "node:child_process";
 import path from "node:path";
 import { promisify } from "node:util";
-import minimatch from "minimatch";
+import { minimatch } from "minimatch";
 
 const execAsync = promisify(exec);
 
