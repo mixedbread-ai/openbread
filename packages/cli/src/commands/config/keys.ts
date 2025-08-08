@@ -100,7 +100,7 @@ export function createKeysCommand(): Command {
         apiKey: key,
         baseURL: parsedOptions.baseURL,
       });
-      await refreshCacheForKey(name, client);
+      refreshCacheForKey(name, client);
     });
 
   keysCommand
@@ -208,7 +208,7 @@ export function createKeysCommand(): Command {
       const parsedOptions = parseOptions(BaseGlobalOptionsSchema, {
         ...mergedOptions,
       });
-      
+
       const config = loadConfig();
 
       if (!config.api_keys?.[name]) {
@@ -228,13 +228,13 @@ export function createKeysCommand(): Command {
 
       saveConfig(config);
       console.log(chalk.green("✓"), `"${name}" set as default API key`);
-      
+
       // Refresh cache for the newly set default key
       const client = createClient({
         apiKey: config.api_keys[name],
         baseURL: parsedOptions.baseURL,
       });
-      await refreshCacheForKey(name, client);
+      refreshCacheForKey(name, client);
     });
 
   // Show help when no subcommand provided
