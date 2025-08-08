@@ -17,6 +17,9 @@ mxbai config keys add mxb_xxxxx work
 # Or use environment variable
 export MXBAI_API_KEY=mxb_xxxxx
 
+# Install shell completion for better experience (optional but recommended)
+mxbai completion install
+
 ## Check available commands and their options
 mxbai --help
 
@@ -94,6 +97,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 - `mxbai completion install` - Install shell completion
   - Options: `--shell <shell>` (manually specify shell: bash, zsh, fish, pwsh)
 - `mxbai completion uninstall` - Uninstall shell completion
+- `mxbai completion refresh` - Refresh completion cache for vector store names
 
 ## Features
 
@@ -301,7 +305,9 @@ mxbai config keys set-default personal
 
 ## Shell Completion
 
-The CLI supports tab completion for commands and subcommands. To set up completion:
+The CLI supports intelligent tab completion for commands, subcommands, and **vector store names**.
+
+### Installation
 
 ```bash
 # Install completion (auto-detects your shell)
@@ -324,6 +330,34 @@ After installation, restart your shell or reload your shell configuration:
 - **zsh**: `source ~/.zshrc` or restart terminal  
 - **fish**: Completion is ready to use (fish auto-loads completions)
 - **pwsh**: `. $PROFILE` or restart terminal
+
+### Dynamic Vector Store Name Completion
+
+The CLI provides intelligent tab completion for vector store names in commands:
+
+```bash
+# Tab completion shows your vector store names
+mxbai vs get [TAB]           # Shows: store1 store2 my-docs ...
+mxbai vs delete [TAB]        # Shows: store1 store2 my-docs ...
+mxbai vs sync [TAB]          # Shows: store1 store2 my-docs ...
+mxbai vs upload [TAB]        # Shows: store1 store2 my-docs ...
+
+# Also works with files subcommands
+mxbai vs files list [TAB]    # Shows: store1 store2 my-docs ...
+```
+
+**How it works:**
+- Vector store names are cached locally for instant completion (no API latency)
+- Cache updates automatically when you create, update, delete, or list vector stores
+- Supports multiple API keys - completions show stores for your current default key
+- Manual refresh available: `mxbai completion refresh`
+
+**Cache management:**
+- Caches up to 50 most recent vector store names per API key
+- Cache location follows your config directory:
+  - Linux/Unix: `~/.config/mixedbread/completion-cache.json`
+  - macOS: `~/Library/Application Support/mixedbread/completion-cache.json`
+  - Windows: `%APPDATA%\mixedbread\completion-cache.json`
 
 ## Global Options
 
@@ -450,6 +484,7 @@ src/
 │       └── index.ts
 ├── utils/                   # Shared utilities
 │   ├── client.ts           # API client setup
+│   ├── completion-cache.ts # Shell completion cache management
 │   ├── config.ts           # Configuration management
 │   ├── git.ts              # Git integration utilities
 │   ├── global-options.ts   # Common CLI options

@@ -4,6 +4,10 @@ import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
+  getCurrentKeyName,
+  refreshCacheForKey,
+} from "../../utils/completion-cache";
+import {
   addGlobalOptions,
   extendGlobalOptions,
   type GlobalOptions,
@@ -87,6 +91,12 @@ export function createListCommand(): Command {
         `Found ${formatCountWithSuffix(vectorStores.length, "vector store")}`
       );
       formatOutput(formattedData, parsedOptions.format);
+
+      // Update completion cache with the fetched stores
+      const keyName = getCurrentKeyName();
+      if (keyName) {
+        refreshCacheForKey(keyName, client);
+      }
     } catch (error) {
       spinner?.fail("Failed to load vector stores");
       if (error instanceof Error) {

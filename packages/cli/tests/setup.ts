@@ -17,12 +17,23 @@ beforeEach(() => {
 afterEach(() => {
   // Clean up after each test
   jest.clearAllMocks();
+  jest.restoreAllMocks();
+
+  // Clear all timers to prevent any pending operations
+  jest.clearAllTimers();
 });
 
-afterAll(() => {
+afterAll(async () => {
   // Restore original methods
   console.warn = originalConsoleWarn;
   console.error = originalConsoleError;
   console.log = originalConsoleLog;
   process.exit = originalProcessExit;
+
+  // Final cleanup
+  jest.restoreAllMocks();
+  jest.clearAllTimers();
+
+  // Small delay to allow any pending I/O operations to complete
+  await new Promise((resolve) => setTimeout(resolve, 100));
 });

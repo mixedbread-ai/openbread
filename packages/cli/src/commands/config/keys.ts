@@ -2,12 +2,24 @@ import chalk from "chalk";
 import { Command } from "commander";
 import inquirer from "inquirer";
 import { z } from "zod";
+import { createClient } from "../../utils/client";
+import {
+  clearCacheForKey,
+  refreshCacheForKey,
+} from "../../utils/completion-cache";
 import {
   isMxbaiAPIKey,
   loadConfig,
   outputAvailableKeys,
   saveConfig,
 } from "../../utils/config";
+import {
+  addGlobalOptions,
+  BaseGlobalOptionsSchema,
+  type GlobalOptions,
+  mergeCommandOptions,
+  parseOptions,
+} from "../../utils/global-options";
 
 const RemoveKeySchema = z.object({
   name: z.string().min(1, { message: '"name" is required' }),
@@ -15,12 +27,19 @@ const RemoveKeySchema = z.object({
 });
 
 export function createKeysCommand(): Command {
-  const keysCommand = new Command("keys").description("Manage API keys");
+  const keysCommand = addGlobalOptions(
+    new Command("keys").description("Manage API keys")
+  );
 
   keysCommand
     .command("add <key> [name]")
     .description("Add a new API key")
-    .action(async (key: string, name?: string) => {
+    .action(async (key: string, name?: string, options?: GlobalOptions) => {
+      const mergedOptions = mergeCommandOptions(keysCommand, options);
+      const parsedOptions = parseOptions(BaseGlobalOptionsSchema, {
+        ...mergedOptions,
+      });
+
       if (!isMxbaiAPIKey(key)) {
         console.error(chalk.red("✗"), 'API key must start with "mxb_"');
         return;
@@ -75,6 +94,13 @@ export function createKeysCommand(): Command {
         chalk.green("✓"),
         `API key "${name}" saved and set as default`
       );
+
+      // Populate completion cache for the new key
+      const client = createClient({
+        apiKey: key,
+        baseURL: parsedOptions.baseURL,
+      });
+      refreshCacheForKey(name, client);
     });
 
   keysCommand
@@ -139,6 +165,9 @@ export function createKeysCommand(): Command {
       // Remove the key
       delete config.api_keys[parsedOptions.name];
 
+      // Clear completion cache for the removed key
+      clearCacheForKey(parsedOptions.name);
+
       // If this was the default, clear it and warn
       if (isDefault) {
         if (config.defaults) {
@@ -174,7 +203,12 @@ export function createKeysCommand(): Command {
   keysCommand
     .command("set-default <name>")
     .description("Set the default API key")
-    .action((name: string) => {
+    .action(async (name: string, options: GlobalOptions) => {
+      const mergedOptions = mergeCommandOptions(keysCommand, options);
+      const parsedOptions = parseOptions(BaseGlobalOptionsSchema, {
+        ...mergedOptions,
+      });
+
       const config = loadConfig();
 
       if (!config.api_keys?.[name]) {
@@ -194,6 +228,13 @@ export function createKeysCommand(): Command {
 
       saveConfig(config);
       console.log(chalk.green("✓"), `"${name}" set as default API key`);
+
+      // Refresh cache for the newly set default key
+      const client = createClient({
+        apiKey: config.api_keys[name],
+        baseURL: parsedOptions.baseURL,
+      });
+      refreshCacheForKey(name, client);
     });
 
   // Show help when no subcommand provided

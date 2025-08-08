@@ -5,6 +5,10 @@ import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
+  getCurrentKeyName,
+  updateCacheAfterDelete,
+} from "../../utils/completion-cache";
+import {
   addGlobalOptions,
   extendGlobalOptions,
   type GlobalOptions,
@@ -72,6 +76,12 @@ export function createDeleteCommand(): Command {
       spinner.succeed(
         `Vector store "${vectorStore.name}" deleted successfully`
       );
+
+      // Update completion cache by removing the deleted store
+      const keyName = getCurrentKeyName();
+      if (keyName) {
+        updateCacheAfterDelete(keyName, vectorStore.name);
+      }
     } catch (error) {
       spinner?.fail("Failed to delete vector store");
       if (error instanceof Error) {

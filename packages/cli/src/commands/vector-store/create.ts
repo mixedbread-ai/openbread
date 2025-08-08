@@ -4,6 +4,10 @@ import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
+  getCurrentKeyName,
+  updateCacheAfterCreate,
+} from "../../utils/completion-cache";
+import {
   addGlobalOptions,
   extendGlobalOptions,
   type GlobalOptions,
@@ -83,6 +87,12 @@ export function createCreateCommand(): Command {
         },
         parsedOptions.format
       );
+
+      // Update completion cache with the new store
+      const keyName = getCurrentKeyName();
+      if (keyName) {
+        updateCacheAfterCreate(keyName, vectorStore.name);
+      }
     } catch (error) {
       spinner?.fail("Failed to create vector store");
       if (error instanceof Error) {
