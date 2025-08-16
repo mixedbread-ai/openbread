@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
+import { useEffect, useState } from "react";
 import { CustomSearchDialog } from "./search-dialog";
-import { Kbd } from "./ui/kbd";
 import { Button } from "./ui/button";
+import { Kbd } from "./ui/kbd";
 
 export function SearchTrigger() {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,10 +33,10 @@ export function SearchTrigger() {
       <Button
         onClick={() => setIsOpen(true)}
         variant="outline"
-        className="flex justify-between h-auto w-full max-w-sm px-3 py-2 text-muted-foreground"
+        className="flex h-auto w-full max-w-sm justify-between px-3 py-2 text-muted-foreground"
       >
         <div className="flex items-center gap-2">
-          <Search className="w-4 h-4" />
+          <Search className="h-4 w-4" />
           <span>Search...</span>
         </div>
         <Kbd variant="outline">{isMac ? "⌘K" : "Ctrl+K"}</Kbd>

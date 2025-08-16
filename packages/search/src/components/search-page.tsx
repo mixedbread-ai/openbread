@@ -1,16 +1,16 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { mockResults } from "@/lib/utils";
 import { useSearch } from "@/search/hooks/use-search";
 import {
-  SearchList,
-  SearchIndicatorIcon,
-  TagsList,
-  SearchInput,
   Search,
   SearchIf,
+  SearchIndicatorIcon,
+  SearchInput,
+  SearchList,
+  TagsList,
 } from "@/search/ui/search";
-import { useEffect, useRef } from "react";
 
 export function CustomSearchPage() {
   const { search, setSearch, results, isLoading } = useSearch();
@@ -33,11 +33,11 @@ export function CustomSearchPage() {
     >
       <div className="flex items-center justify-between">
         <div className="relative w-full">
-          <SearchIndicatorIcon className="absolute left-4 top-1/2 -translate-y-1/2" />
+          <SearchIndicatorIcon className="-translate-y-1/2 absolute top-1/2 left-4" />
           <SearchInput
             ref={inputRef}
             placeholder="Search..."
-            className="w-full border rounded-md text-sm pl-10"
+            className="w-full rounded-md border pl-10 text-sm"
           />
         </div>
       </div>
@@ -46,14 +46,14 @@ export function CustomSearchPage() {
         <div className="flex items-center justify-between">
           <TagsList allowClear={true} className="gap-2 px-0" />
 
-          <span className="text-xs hidden sm:block font-medium text-muted-foreground ml-auto bg-muted px-2 py-1 rounded-md">
+          <span className="ml-auto hidden rounded-md bg-muted px-2 py-1 font-medium text-muted-foreground text-xs sm:block">
             {mockedResults.length} Result{mockedResults.length !== 1 ? "s" : ""}
           </span>
         </div>
       )}
 
       <SearchIf hasQuery={false} hasResults={false}>
-        <div className="py-12 text-center text-sm text-muted-foreground">
+        <div className="py-12 text-center text-muted-foreground text-sm">
           Search for something to see the results.
         </div>
       </SearchIf>
