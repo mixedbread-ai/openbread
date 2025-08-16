@@ -1,14 +1,22 @@
 "use client";
 
+import { MessageSquareIcon } from "lucide-react";
+import { motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { mockResults } from "@/lib/utils";
+import { useChatDemo } from "@/search/hooks/use-chat-demo";
+import { useMeasure } from "@/search/hooks/use-measure";
 import { useSearch } from "@/search/hooks/use-search";
 import {
-  SearchIndicatorIcon,
-  SearchInput,
-  SearchList,
-  Search,
-} from "@/search/ui/search";
-import { MxbaiLogoIcon } from "./mxbai-logo-icon";
-import { useEffect, useRef, useState } from "react";
+  Composer,
+  ComposerFooter,
+  ComposerForm,
+  ComposerInput,
+  ComposerSubmit,
+  ComposerSuggestionItem,
+  ComposerSuggestions,
+} from "@/search/ui/composer";
 import {
   SearchDialog,
   SearchDialogContent,
@@ -16,28 +24,22 @@ import {
   SearchDialogHeader,
   SearchDialogOverlay,
 } from "@/search/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useChatDemo } from "@/search/hooks/use-chat-demo";
 import {
-  Composer,
-  ComposerInput,
-  ComposerFooter,
-  ComposerSubmit,
-  ComposerSuggestions,
-  ComposerSuggestionItem,
-  ComposerForm,
-} from "@/search/ui/composer";
+  Search,
+  SearchIndicatorIcon,
+  SearchInput,
+  SearchList,
+  SearchListItem,
+  SearchListItemTitle,
+} from "@/search/ui/search";
 import {
   Thread,
-  ThreadViewport,
+  ThreadIf,
   ThreadMessages,
   ThreadScrollToBottom,
-  ThreadIf,
+  ThreadViewport,
 } from "@/search/ui/thread";
-import { MessageSquareIcon } from "lucide-react";
-import { useMeasure } from "@/search/hooks/use-measure";
-import { motion } from "motion/react";
-import { mockResults } from "@/lib/utils";
+import { MxbaiLogoIcon } from "./mxbai-logo-icon";
 
 export function CustomSearchDialog(props: {
   open: boolean;
@@ -94,11 +96,11 @@ export function CustomSearchDialog(props: {
                       <SearchIndicatorIcon />
                       <SearchInput
                         ref={searchInputRef}
-                        className="focus-visible:outline-none py-3"
+                        className="py-3 focus-visible:outline-none"
                       />
                     </>
                   ) : (
-                    <div className="py-3 text-muted-foreground flex items-center gap-2">
+                    <div className="flex items-center gap-2 py-3 text-muted-foreground">
                       <MessageSquareIcon className="size-4" />
                       <span className="text-muted-foreground">Chat</span>
                     </div>
@@ -111,7 +113,15 @@ export function CustomSearchDialog(props: {
                 </SearchDialogHeader>
 
                 <TabsContent value="search">
-                  <SearchList items={mockedResults} className="max-h-[400px]" />
+                  <SearchList
+                    items={mockedResults}
+                    className="max-h-[400px]"
+                    Item={(props) => (
+                      <SearchListItem {...props} className="px-3">
+                        <SearchListItemTitle />
+                      </SearchListItem>
+                    )}
+                  />
                 </TabsContent>
               </Search>
 
@@ -166,7 +176,7 @@ export function CustomSearchDialog(props: {
                     </ThreadIf>
                   </ThreadViewport>
 
-                  <div className="border-t border-border/60 p-4">
+                  <div className="border-border/60 border-t p-4">
                     <Composer onSubmit={sendMessage}>
                       <ComposerForm>
                         <ComposerInput ref={chatInputRef} />
@@ -180,8 +190,8 @@ export function CustomSearchDialog(props: {
               </TabsContent>
             </Tabs>
 
-            <SearchDialogFooter className="justify-end flex">
-              <p className="text-xs text-muted-foreground flex items-center gap-2">
+            <SearchDialogFooter className="flex justify-end">
+              <p className="flex items-center gap-2 text-muted-foreground text-xs">
                 Powered by{" "}
                 <a
                   href="https://mixedbread.com"

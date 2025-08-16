@@ -1,7 +1,7 @@
 import { BadRequestError, InternalServerError } from "./errors";
 import { mxbai } from "./mxbai";
 import type { Result, SearchMetadata, TransformFunc } from "./types";
-import { SearchQuerySchema } from "./vaildations";
+import { SearchQuerySchema } from "./validations";
 
 export async function search(
   rawParams: Record<string, unknown>,
@@ -28,6 +28,7 @@ export async function search(
     top_k: topK,
     search_options: {
       return_metadata: true,
+      return_chunks: true,
     },
   });
 

@@ -1,6 +1,6 @@
 import type { FileSearchResponse } from "@mixedbread/sdk/resources/vector-stores.mjs";
 import type { z } from "zod";
-import type { SearchQuerySchema } from "./vaildations";
+import type { SearchQuerySchema } from "./validations";
 
 export interface SearchMetadata {
   title?: string;
