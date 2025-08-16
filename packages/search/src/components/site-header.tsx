@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { MxbaiLogoIcon } from './mxbai-logo-icon';
-import { ThemeToggle } from './theme-toggle';
+import Link from "next/link";
+import { MxbaiLogoIcon } from "./mxbai-logo-icon";
+import { ThemeToggle } from "./theme-toggle";
 
 export function SiteHeader() {
   return (

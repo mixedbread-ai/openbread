@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Search } from 'lucide-react';
-import { CustomSearchDialog } from './search-dialog';
-import { Kbd } from './ui/kbd';
-import { Button } from './ui/button';
+import { useEffect, useState } from "react";
+import { Search } from "lucide-react";
+import { CustomSearchDialog } from "./search-dialog";
+import { Kbd } from "./ui/kbd";
+import { Button } from "./ui/button";
 
 export function SearchTrigger() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,20 +12,20 @@ export function SearchTrigger() {
 
   // Detect if user is on Mac
   useEffect(() => {
-    setIsMac(navigator.platform.toUpperCase().indexOf('MAC') >= 0);
+    setIsMac(navigator.platform.toUpperCase().indexOf("MAC") >= 0);
   }, []);
 
   // Handle keyboard shortcut
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
         event.preventDefault();
         setIsOpen(true);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   return (
@@ -39,7 +39,7 @@ export function SearchTrigger() {
           <Search className="w-4 h-4" />
           <span>Search...</span>
         </div>
-        <Kbd variant="outline">{isMac ? '⌘K' : 'Ctrl+K'}</Kbd>
+        <Kbd variant="outline">{isMac ? "⌘K" : "Ctrl+K"}</Kbd>
       </Button>
 
       <CustomSearchDialog open={isOpen} onOpenChange={setIsOpen} />

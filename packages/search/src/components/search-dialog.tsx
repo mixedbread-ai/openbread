@@ -1,18 +1,23 @@
-'use client';
+"use client";
 
-import { useSearch } from '@/search/hooks/use-search';
-import { SearchIndicatorIcon, SearchInput, SearchList, Search } from '@/search/ui/search';
-import { MxbaiLogoIcon } from './mxbai-logo-icon';
-import { useEffect, useRef, useState } from 'react';
+import { useSearch } from "@/search/hooks/use-search";
+import {
+  SearchIndicatorIcon,
+  SearchInput,
+  SearchList,
+  Search,
+} from "@/search/ui/search";
+import { MxbaiLogoIcon } from "./mxbai-logo-icon";
+import { useEffect, useRef, useState } from "react";
 import {
   SearchDialog,
   SearchDialogContent,
   SearchDialogFooter,
   SearchDialogHeader,
   SearchDialogOverlay,
-} from '@/search/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useChatDemo } from '@/search/hooks/use-chat-demo';
+} from "@/search/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useChatDemo } from "@/search/hooks/use-chat-demo";
 import {
   Composer,
   ComposerInput,
@@ -21,17 +26,26 @@ import {
   ComposerSuggestions,
   ComposerSuggestionItem,
   ComposerForm,
-} from '@/search/ui/composer';
-import { Thread, ThreadViewport, ThreadMessages, ThreadScrollToBottom, ThreadIf } from '@/search/ui/thread';
-import { MessageSquareIcon } from 'lucide-react';
-import { useMeasure } from '@/search/hooks/use-measure';
-import { motion } from 'motion/react';
-import { mockResults } from '@/lib/utils';
+} from "@/search/ui/composer";
+import {
+  Thread,
+  ThreadViewport,
+  ThreadMessages,
+  ThreadScrollToBottom,
+  ThreadIf,
+} from "@/search/ui/thread";
+import { MessageSquareIcon } from "lucide-react";
+import { useMeasure } from "@/search/hooks/use-measure";
+import { motion } from "motion/react";
+import { mockResults } from "@/lib/utils";
 
-export function CustomSearchDialog(props: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function CustomSearchDialog(props: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const { search, setSearch, results, isLoading } = useSearch();
   const { thread, sendMessage, isLoading: isChatLoading } = useChatDemo();
-  const [activeTab, setActiveTab] = useState('search');
+  const [activeTab, setActiveTab] = useState("search");
 
   const [ref, dimensions] = useMeasure<HTMLDivElement>();
 
@@ -42,7 +56,7 @@ export function CustomSearchDialog(props: { open: boolean; onOpenChange: (open: 
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (activeTab === 'search') {
+      if (activeTab === "search") {
         searchInputRef.current?.focus();
       } else {
         chatInputRef.current?.focus();
@@ -63,19 +77,32 @@ export function CustomSearchDialog(props: { open: boolean; onOpenChange: (open: 
           className="overflow-clip"
         >
           <div ref={ref}>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full gap-0">
-              <Search search={search} onSearchChange={setSearch} results={results} isLoading={isLoading}>
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full gap-0"
+            >
+              <Search
+                search={search}
+                onSearchChange={setSearch}
+                results={results}
+                isLoading={isLoading}
+              >
                 <SearchDialogHeader>
-                  {activeTab === 'search' ?
+                  {activeTab === "search" ? (
                     <>
                       <SearchIndicatorIcon />
-                      <SearchInput ref={searchInputRef} className="focus-visible:outline-none py-3" />
+                      <SearchInput
+                        ref={searchInputRef}
+                        className="focus-visible:outline-none py-3"
+                      />
                     </>
-                  : <div className="py-3 text-muted-foreground flex items-center gap-2">
+                  ) : (
+                    <div className="py-3 text-muted-foreground flex items-center gap-2">
                       <MessageSquareIcon className="size-4" />
                       <span className="text-muted-foreground">Chat</span>
                     </div>
-                  }
+                  )}
 
                   <TabsList className="absolute right-4">
                     <TabsTrigger value="search">Search</TabsTrigger>
@@ -89,7 +116,11 @@ export function CustomSearchDialog(props: { open: boolean; onOpenChange: (open: 
               </Search>
 
               <TabsContent value="chat" className="mt-0">
-                <Thread thread={thread} isLoading={isChatLoading} sendMessage={sendMessage}>
+                <Thread
+                  thread={thread}
+                  isLoading={isChatLoading}
+                  sendMessage={sendMessage}
+                >
                   <ThreadViewport className="h-[400px]">
                     <ThreadMessages />
                     <ThreadScrollToBottom />
@@ -100,25 +131,36 @@ export function CustomSearchDialog(props: { open: boolean; onOpenChange: (open: 
                           value="How do I implement semantic search?"
                           className="bg-background/10"
                         >
-                          <span className="line-clamp-1">How do I implement semantic search?</span>
+                          <span className="line-clamp-1">
+                            How do I implement semantic search?
+                          </span>
                         </ComposerSuggestionItem>
 
                         <ComposerSuggestionItem
                           value="What are the benefits of vector databases?"
                           className="bg-background/10"
                         >
-                          <span className="line-clamp-1">What are the benefits of vector databases?</span>
+                          <span className="line-clamp-1">
+                            What are the benefits of vector databases?
+                          </span>
                         </ComposerSuggestionItem>
 
                         <ComposerSuggestionItem
                           value="Explain RAG architecture patterns"
                           className="bg-background/10"
                         >
-                          <span className="line-clamp-1">Explain RAG architecture patterns</span>
+                          <span className="line-clamp-1">
+                            Explain RAG architecture patterns
+                          </span>
                         </ComposerSuggestionItem>
 
-                        <ComposerSuggestionItem value="Show me code examples" className="bg-background/10">
-                          <span className="line-clamp-1">Show me code examples</span>
+                        <ComposerSuggestionItem
+                          value="Show me code examples"
+                          className="bg-background/10"
+                        >
+                          <span className="line-clamp-1">
+                            Show me code examples
+                          </span>
                         </ComposerSuggestionItem>
                       </ComposerSuggestions>
                     </ThreadIf>
@@ -140,7 +182,7 @@ export function CustomSearchDialog(props: { open: boolean; onOpenChange: (open: 
 
             <SearchDialogFooter className="justify-end flex">
               <p className="text-xs text-muted-foreground flex items-center gap-2">
-                Powered by{' '}
+                Powered by{" "}
                 <a
                   href="https://mixedbread.com"
                   target="_blank"
