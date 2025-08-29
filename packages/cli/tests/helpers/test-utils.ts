@@ -175,7 +175,7 @@ export function createTestConfig(overrides: Record<string, unknown> = {}) {
       upload: {
         strategy: "fast",
         contextualization: false,
-        parallel: 5,
+        parallel: 100,
       },
       search: {
         top_k: 10,

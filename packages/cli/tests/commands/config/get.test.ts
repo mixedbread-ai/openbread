@@ -37,7 +37,7 @@ describe("Config Get Command", () => {
         defaults: {
           upload: {
             strategy: "fast",
-            parallel: 5,
+            parallel: 100,
           },
           api_key: "work",
         },

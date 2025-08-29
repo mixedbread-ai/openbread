@@ -66,7 +66,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 ### File Management
 
 - `mxbai vs upload <name-or-id> <patterns...>` - Upload files to vector store
-  - Options: `--strategy fast|high_quality`, `--contextualization`, `--metadata <json>`, `--dry-run`, `--parallel <n>` (1-20), `--unique`, `--manifest <file>`
+  - Options: `--strategy fast|high_quality`, `--contextualization`, `--metadata <json>`, `--dry-run`, `--parallel <n>` (1-200), `--unique`, `--manifest <file>`
 - `mxbai vs files list <name-or-id>` - List files in vector store (alias: `ls`)
   - Options: `--status <status>` (pending|in_progress|cancelled|completed|failed), `--limit <n>`
 - `mxbai vs files get <name-or-id> <file-id>` - Get file details
@@ -83,7 +83,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 ### Advanced Features
 
 - `mxbai vs sync <name-or-id> <patterns...>` - Sync files with intelligent change detection
-  - Options: `--strategy <strategy>`, `--contextualization`, `--from-git <ref>`, `--dry-run`, `--yes/-y`, `--force/-f`, `--metadata <json>`, `--parallel <n>` (1-20)
+  - Options: `--strategy <strategy>`, `--contextualization`, `--from-git <ref>`, `--dry-run`, `--yes/-y`, `--force/-f`, `--metadata <json>`, `--parallel <n>` (1-200)
 
 ### Configuration
 
@@ -229,7 +229,7 @@ Set defaults for common options:
 # Upload defaults (apply to both upload and sync commands)
 mxbai config set defaults.upload.strategy high_quality  # or 'fast' (default: fast)
 mxbai config set defaults.upload.contextualization true  # Enable context preservation (default: false)
-mxbai config set defaults.upload.parallel 10             # Concurrent operations (1-20, default: 5)
+mxbai config set defaults.upload.parallel 10             # Concurrent operations (1-200, default: 100)
 
 # Search defaults
 mxbai config set defaults.search.top_k 20                # Number of results (default: 10)

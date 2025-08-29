@@ -24,6 +24,7 @@ export const UploadDefaultsSchema = z.object({
     .number({ message: "Must be a number" })
     .int({ message: "Must be an integer" })
     .positive({ message: "Must be a positive number" })
+    .max(200, { message: "Must be less than or equal to 200" })
     .optional(),
 });
 
@@ -103,7 +104,7 @@ const DEFAULT_CONFIG: CLIConfig = {
     upload: {
       strategy: "fast",
       contextualization: false,
-      parallel: 5,
+      parallel: 100,
     },
     search: {
       top_k: 10,

@@ -206,7 +206,7 @@ export async function uploadFromManifest(
     await uploadFilesInBatch(client, vectorStoreIdentifier, uniqueFiles, {
       unique: options.unique || false,
       existingFiles,
-      parallel: options.parallel ?? config.defaults.upload.parallel ?? 5,
+      parallel: options.parallel ?? config.defaults.upload.parallel ?? 100,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
