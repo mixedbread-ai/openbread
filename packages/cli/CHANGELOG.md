@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+### Minor Changes
+
+- 37cf096: - Change max parallel upload/deletion to 200
+  - Change default parallel and `parallel` in config to 100
+
 ## 1.1.0
 
 ### Minor Changes
