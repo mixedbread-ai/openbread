@@ -252,7 +252,7 @@ export async function executeSyncChanges(
     parallel?: number;
   }
 ): Promise<SyncResults> {
-  const parallel = options.parallel ?? 5;
+  const parallel = options.parallel ?? 100;
   const limit = pLimit(parallel);
   const totalOperations =
     analysis.added.length +

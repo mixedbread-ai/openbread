@@ -40,7 +40,7 @@ const UploadVectorStoreSchema = extendGlobalOptions({
     .number({ message: '"parallel" must be a number' })
     .int({ message: '"parallel" must be an integer' })
     .min(1, { message: '"parallel" must be at least 1' })
-    .max(20, { message: '"parallel" must be less than or equal to 20' })
+    .max(200, { message: '"parallel" must be less than or equal to 200' })
     .optional(),
   unique: z.boolean().optional(),
   manifest: z.string().optional(),
@@ -69,7 +69,7 @@ export function createUploadCommand(): Command {
       .option("--contextualization", "Enable context preservation")
       .option("--metadata <json>", "Additional metadata as JSON string")
       .option("--dry-run", "Preview what would be uploaded", false)
-      .option("--parallel <n>", "Number of concurrent uploads (1-20)")
+      .option("--parallel <n>", "Number of concurrent uploads (1-200)")
       .option(
         "--unique",
         "Update existing files instead of creating duplicates",
@@ -125,7 +125,7 @@ export function createUploadCommand(): Command {
           config.defaults?.upload?.contextualization ??
           false;
         const parallel =
-          parsedOptions.parallel ?? config.defaults?.upload?.parallel ?? 5;
+          parsedOptions.parallel ?? config.defaults?.upload?.parallel ?? 100;
 
         const metadata = validateMetadata(parsedOptions.metadata);
 

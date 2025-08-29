@@ -124,7 +124,7 @@ describe("Config Set Command", () => {
           defaults: {
             upload: {
               strategy: "fast",
-              parallel: 5,
+              parallel: 100,
             },
           },
         }),
@@ -139,7 +139,7 @@ describe("Config Set Command", () => {
 
       const config = loadConfig();
       expect(config.defaults?.upload?.strategy).toBe("fast");
-      expect(config.defaults?.upload?.parallel).toBe(5);
+      expect(config.defaults?.upload?.parallel).toBe(100);
       expect(config.defaults?.upload?.contextualization).toBe(true);
     });
   });

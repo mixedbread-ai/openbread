@@ -41,9 +41,9 @@ const SyncVectorStoreSchema = extendGlobalOptions({
     .number({ message: '"parallel" must be a number' })
     .int({ message: '"parallel" must be an integer' })
     .min(1, { message: '"parallel" must be at least 1' })
-    .max(20, { message: '"parallel" must be less than or equal to 20' })
+    .max(200, { message: '"parallel" must be less than or equal to 200' })
     .optional()
-    .default(5),
+    .default(100),
 });
 
 interface SyncOptions extends GlobalOptions {
@@ -81,7 +81,7 @@ export function createSyncCommand(): Command {
         "Force re-upload all files, ignoring change detection"
       )
       .option("--metadata <json>", "Additional metadata for files")
-      .option("--parallel <n>", "Number of concurrent operations (1-20)")
+      .option("--parallel <n>", "Number of concurrent operations (1-200)")
   );
 
   command.action(

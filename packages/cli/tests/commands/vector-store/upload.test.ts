@@ -299,12 +299,12 @@ describe("Vector Store Upload Command", () => {
         "test-store",
         "test.md",
         "--parallel",
-        "25",
+        "201",
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining('"parallel" must be less than or equal to 20')
+        expect.stringContaining('"parallel" must be less than or equal to 200')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

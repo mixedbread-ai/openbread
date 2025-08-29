@@ -24,7 +24,7 @@ export async function search(
 
   const res = await mxbai.vectorStores.files.search({
     query,
-    vector_store_ids: [process.env.VECTOR_STORE_ID],
+    vector_store_identifiers: [process.env.VECTOR_STORE_ID],
     top_k: topK,
     search_options: {
       return_metadata: true,
