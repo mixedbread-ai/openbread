@@ -7,11 +7,8 @@ import {
   jest,
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
-import type { CursorResponse } from "@mixedbread/sdk/core/pagination";
-import type {
-  VectorStoreFile,
-  VectorStoreFilesCursor,
-} from "@mixedbread/sdk/resources/vector-stores";
+import type { VectorStoreFile } from "@mixedbread/sdk/resources/vector-stores";
+import type { FileListResponse } from "@mixedbread/sdk/resources/vector-stores/files";
 import type { Command } from "commander";
 import { createFilesCommand } from "../../../src/commands/vector-store/files";
 import * as clientUtils from "../../../src/utils/client";
@@ -38,17 +35,14 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
 
-// Helper to create a properly typed mock cursor
-// Since the Cursor class has private fields, we need to use type assertion
-// but we avoid 'any' by being specific about what we're mocking
 const createMockCursor = (
   data: VectorStoreFile[],
-  pagination: CursorResponse.Pagination
-): VectorStoreFilesCursor => {
+  pagination: FileListResponse.Pagination
+): FileListResponse => {
   return {
     data,
     pagination,
-  } as unknown as VectorStoreFilesCursor;
+  };
 };
 
 describe("Files Command", () => {
@@ -209,8 +203,8 @@ describe("Files Command", () => {
     it("should handle empty results", async () => {
       mockClient.vectorStores.files.list.mockResolvedValue(
         createMockCursor([], {
-          first_cursor: undefined,
-          last_cursor: undefined,
+          first_cursor: null,
+          last_cursor: null,
           has_more: false,
         })
       );
