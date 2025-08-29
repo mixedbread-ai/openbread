@@ -24,8 +24,8 @@ importers:
   packages/cli:
     dependencies:
       '@mixedbread/sdk':
-        specifier: ^0.19.0
-        version: 0.19.2
+        specifier: ^0.26.0
+        version: 0.26.0
       '@pnpm/tabtab':
         specifier: ^0.5.4
         version: 0.5.4
@@ -109,8 +109,8 @@ importers:
   packages/search:
     dependencies:
       '@mixedbread/sdk':
-        specifier: ^0.24.0
-        version: 0.24.0
+        specifier: ^0.26.0
+        version: 0.26.0
       '@radix-ui/react-dialog':
         specifier: ^1.1.14
         version: 1.1.15(@types/react-dom@19.1.7(@types/react@19.1.10))(@types/react@19.1.10)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -778,12 +778,8 @@ packages:
   '@manypkg/get-packages@1.1.3':
     resolution: {integrity: sha512-fo+QhuU3qE/2TQMQmbVMqaQ6EWbMhi4ABWP+O4AM1NqPBuy0OrApV5LO6BrrgnhtAHS2NH6RrVk9OL181tTi8A==}
 
-  '@mixedbread/sdk@0.19.2':
-    resolution: {integrity: sha512-X/jKfpqAnRcFmTfq2eB0TfIlD1rIN6fGtudk4qX+m3Y34HLDsDCdl457ZKv++bvY8TPKlDHvNKf7bRFUSHGtIA==}
-    hasBin: true
-
-  '@mixedbread/sdk@0.24.0':
-    resolution: {integrity: sha512-UV9V5vwF1W3mGUaXQUvo/QcKr/r0i+HgspQevYiqhfUa9UsmpuiBSLj2wG5gVONDwVVk6+R+3MEwPFMF1/CLwQ==}
+  '@mixedbread/sdk@0.26.0':
+    resolution: {integrity: sha512-B0Un0thpz4UKN69QVmgdVsCIgiz+jR4V+nxuCOgdm/P0Iie1NctqY092VQ/iobY/FSMzhHJofXij086y/9E5rg==}
     hasBin: true
 
   '@next/env@15.3.3':
@@ -4262,9 +4258,7 @@ snapshots:
       globby: 11.1.0
       read-yaml-file: 1.1.0
 
-  '@mixedbread/sdk@0.19.2': {}
-
-  '@mixedbread/sdk@0.24.0': {}
+  '@mixedbread/sdk@0.26.0': {}
 
   '@next/env@15.3.3': {}
 
