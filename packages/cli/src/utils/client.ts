@@ -3,7 +3,7 @@ import { getApiKey, getBaseURL } from "./config";
 
 export function createClient(options?: {
   apiKey?: string;
-  baseURL?: string;
+  baseUrl?: string;
 }): Mixedbread {
   const apiKey = getApiKey(options);
   const baseURL = getBaseURL(options);

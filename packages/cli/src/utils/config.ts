@@ -262,9 +262,9 @@ export function isMxbaiAPIKey(key: string): boolean {
   return key.startsWith("mxb_");
 }
 
-export function getBaseURL(options?: { baseURL?: string }): string {
+export function getBaseURL(options?: { baseUrl?: string }): string {
   return (
-    options?.baseURL || process.env.MXBAI_BASE_URL || loadConfig().base_url
+    options?.baseUrl || process.env.MXBAI_BASE_URL || loadConfig().base_url
   );
 }
 

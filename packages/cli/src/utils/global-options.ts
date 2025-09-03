@@ -6,14 +6,14 @@ export interface GlobalOptions {
   apiKey?: string;
   savedKey?: string;
   format?: "table" | "json" | "csv";
-  baseURL?: string;
+  baseUrl?: string;
   debug?: boolean;
 }
 
 const BaseGlobalOptionsSchema = z.object({
   apiKey: z.string().optional(),
   savedKey: z.string().optional(),
-  baseURL: z.string().url('"base-url" must be a valid URL').optional(),
+  baseUrl: z.string().url('"base-url" must be a valid URL').optional(),
   format: z
     .enum(["table", "json", "csv"], {
       message: '"format" must be either "table", "json", or "csv"',

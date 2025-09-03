@@ -109,7 +109,7 @@ export async function refreshCacheForKey(
 }
 
 export async function refreshAllCaches(options: {
-  baseURL?: string;
+  baseUrl?: string;
 }): Promise<void> {
   const config = loadConfig();
 
@@ -120,7 +120,7 @@ export async function refreshAllCaches(options: {
   for (const keyName of Object.keys(config.api_keys)) {
     const client = createClient({
       apiKey: config.api_keys[keyName],
-      baseURL: options.baseURL,
+      baseUrl: options.baseUrl,
     });
 
     await refreshCacheForKey(keyName, client);
