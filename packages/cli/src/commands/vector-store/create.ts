@@ -18,12 +18,12 @@ import { validateMetadata } from "../../utils/metadata";
 import { formatOutput } from "../../utils/output";
 
 const CreateVectorStoreSchema = extendGlobalOptions({
-  name: z.string().min(1, { message: '"name" is required' }),
+  name: z.string().min(1, { error: '"name" is required' }),
   description: z.string().optional(),
   expiresAfter: z.coerce
-    .number({ message: '"expires-after" must be a number' })
-    .int({ message: '"expires-after" must be an integer' })
-    .positive({ message: '"expires-after" must be positive' })
+    .number({ error: '"expires-after" must be a number' })
+    .int({ error: '"expires-after" must be an integer' })
+    .positive({ error: '"expires-after" must be positive' })
     .optional(),
   metadata: z.string().optional(),
 });

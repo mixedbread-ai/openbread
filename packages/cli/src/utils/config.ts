@@ -7,7 +7,7 @@ import { z } from "zod";
 export const UploadDefaultsSchema = z.object({
   strategy: z
     .enum(["fast", "high_quality"], {
-      message: 'Must be "fast" or "high_quality"',
+      error: 'Must be "fast" or "high_quality"',
     })
     .optional(),
   contextualization: z
@@ -17,22 +17,22 @@ export const UploadDefaultsSchema = z.object({
         if (val === "false" || val === false) return false;
         throw new Error('Must be "true" or "false"');
       },
-      z.boolean({ message: 'Must be "true" or "false"' })
+      z.boolean({ error: 'Must be "true" or "false"' })
     )
     .optional(),
   parallel: z.coerce
-    .number({ message: "Must be a number" })
-    .int({ message: "Must be an integer" })
-    .positive({ message: "Must be a positive number" })
-    .max(200, { message: "Must be less than or equal to 200" })
+    .number({ error: "Must be a number" })
+    .int({ error: "Must be an integer" })
+    .positive({ error: "Must be a positive number" })
+    .max(200, { error: "Must be less than or equal to 200" })
     .optional(),
 });
 
 export const SearchDefaultsSchema = z.object({
   top_k: z.coerce
-    .number({ message: "Must be a number" })
-    .int({ message: "Must be an integer" })
-    .positive({ message: "Must be a positive number" })
+    .number({ error: "Must be a number" })
+    .int({ error: "Must be an integer" })
+    .positive({ error: "Must be a positive number" })
     .optional(),
   rerank: z
     .preprocess(
@@ -41,7 +41,7 @@ export const SearchDefaultsSchema = z.object({
         if (val === "false" || val === false) return false;
         throw new Error('Must be "true" or "false"');
       },
-      z.boolean({ message: 'Must be "true" or "false"' })
+      z.boolean({ error: 'Must be "true" or "false"' })
     )
     .optional(),
 });
@@ -60,7 +60,7 @@ export const CLIConfigSchema = z.object({
       z.string().startsWith("mxb_", 'API key must start with "mxb_"')
     )
     .optional(),
-  base_url: z.string().url("Base URL must be a valid URL").optional(),
+  base_url: z.url("Base URL must be a valid URL").optional(),
   defaults: DefaultsSchema.optional(),
   aliases: z.record(z.string(), z.string()).optional(),
 });
@@ -275,9 +275,9 @@ export function resolveVectorStoreName(nameOrAlias: string): string {
 
 // Helper to resolve nested schema paths
 function resolveSchemaPath(
-  schema: z.ZodSchema,
+  schema: z.ZodType,
   path: string[]
-): z.ZodSchema | null {
+): z.ZodType | null {
   if (path.length === 0) return schema;
 
   const [head, ...tail] = path;
@@ -292,12 +292,12 @@ function resolveSchemaPath(
 
   // Handle ZodRecord (for dynamic keys like aliases)
   if (schema instanceof z.ZodRecord) {
-    return resolveSchemaPath(schema._def.valueType, tail);
+    return resolveSchemaPath(schema._zod.def.valueType as z.ZodType, tail);
   }
 
   // Handle ZodOptional
   if (schema instanceof z.ZodOptional) {
-    return resolveSchemaPath(schema._def.innerType, path);
+    return resolveSchemaPath(schema._zod.def.innerType as z.ZodType, path);
   }
 
   return null;

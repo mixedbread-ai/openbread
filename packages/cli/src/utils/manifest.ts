@@ -14,10 +14,10 @@ import { getVectorStoreFiles } from "./vector-store";
 
 // Manifest file schema
 const ManifestFileEntrySchema = z.object({
-  path: z.string().min(1, { message: "File path is required" }),
+  path: z.string().min(1, { error: "File path is required" }),
   strategy: z.enum(["fast", "high_quality"]).optional(),
   contextualization: z.boolean().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 const ManifestSchema = z.object({
@@ -26,12 +26,12 @@ const ManifestSchema = z.object({
     .object({
       strategy: z.enum(["fast", "high_quality"]).optional(),
       contextualization: z.boolean().optional(),
-      metadata: z.record(z.unknown()).optional(),
+      metadata: z.record(z.string(), z.unknown()).optional(),
     })
     .optional(),
   files: z
     .array(ManifestFileEntrySchema)
-    .min(1, { message: "At least one file entry is required" }),
+    .min(1, { error: "At least one file entry is required" }),
 });
 
 type ManifestFile = z.infer<typeof ManifestSchema>;
@@ -211,7 +211,7 @@ export async function uploadFromManifest(
   } catch (error) {
     if (error instanceof z.ZodError) {
       console.error(chalk.red("✗"), "Invalid manifest file format:");
-      error.errors.forEach((err) => {
+      error.issues.forEach((err) => {
         console.error(chalk.red(`  - ${err.path.join(".")}: ${err.message}`));
       });
     } else if (error instanceof Error) {

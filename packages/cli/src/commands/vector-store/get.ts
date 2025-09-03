@@ -14,7 +14,7 @@ import { formatBytes, formatOutput } from "../../utils/output";
 import { resolveVectorStore } from "../../utils/vector-store";
 
 const GetVectorStoreSchema = extendGlobalOptions({
-  nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
+  nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
 });
 
 interface GetOptions extends GlobalOptions {}

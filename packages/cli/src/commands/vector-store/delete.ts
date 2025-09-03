@@ -18,7 +18,7 @@ import {
 import { resolveVectorStore } from "../../utils/vector-store";
 
 const DeleteVectorStoreSchema = extendGlobalOptions({
-  nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
+  nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
   yes: z.boolean().optional(),
 });
 

@@ -19,17 +19,17 @@ import { resolveVectorStore } from "../../../utils/vector-store";
 import type { FilesOptions } from ".";
 
 const ListFilesSchema = extendGlobalOptions({
-  nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
+  nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
   status: z
     .enum(["all", "completed", "in_progress", "failed"], {
-      message: '"status" must be one of: all, completed, in_progress, failed',
+      error: '"status" must be one of: all, completed, in_progress, failed',
     })
     .optional(),
   limit: z.coerce
-    .number({ message: '"limit" must be a number' })
-    .int({ message: '"limit" must be an integer' })
-    .positive({ message: '"limit" must be positive' })
-    .max(100, { message: '"limit" must be less than or equal to 100' })
+    .number({ error: '"limit" must be a number' })
+    .int({ error: '"limit" must be an integer' })
+    .positive({ error: '"limit" must be positive' })
+    .max(100, { error: '"limit" must be less than or equal to 100' })
     .optional(),
 });
 

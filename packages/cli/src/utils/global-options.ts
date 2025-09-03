@@ -13,29 +13,29 @@ export interface GlobalOptions {
 const BaseGlobalOptionsSchema = z.object({
   apiKey: z.string().optional(),
   savedKey: z.string().optional(),
-  baseUrl: z.string().url('"base-url" must be a valid URL').optional(),
+  baseUrl: z.url('"base-url" must be a valid URL').optional(),
   format: z
     .enum(["table", "json", "csv"], {
-      message: '"format" must be either "table", "json", or "csv"',
+      error: '"format" must be either "table", "json", or "csv"',
     })
     .optional(),
-  debug: z.boolean({ message: '"debug" must be "true" or "false"' }).optional(),
+  debug: z.boolean({ error: '"debug" must be "true" or "false"' }).optional(),
 });
 
 export const GlobalOptionsSchema = BaseGlobalOptionsSchema.refine(
   (data) => !(data.apiKey && data.savedKey),
   {
-    message: "Cannot specify both --api-key and --saved-key options",
+    error: "Cannot specify both --api-key and --saved-key options",
     path: ["apiKey"],
   }
 );
 
 // Helper function to extend global options while preserving mutual exclusivity validation
 export const extendGlobalOptions = <T extends z.ZodRawShape>(extension: T) => {
-  return BaseGlobalOptionsSchema.extend(extension).refine(
+  return BaseGlobalOptionsSchema.and(z.object(extension)).refine(
     (data) => !(data.apiKey && data.savedKey),
     {
-      message: "Cannot specify both --api-key and --saved-key options",
+      error: "Cannot specify both --api-key and --saved-key options",
       path: ["apiKey"],
     }
   );

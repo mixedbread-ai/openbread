@@ -20,13 +20,13 @@ import { formatOutput } from "../../utils/output";
 import { resolveVectorStore } from "../../utils/vector-store";
 
 const UpdateVectorStoreSchema = extendGlobalOptions({
-  nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
+  nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
   name: z.string().optional(),
   description: z.string().optional(),
   expiresAfter: z.coerce
-    .number({ message: '"expires-after" must be a number' })
-    .int({ message: '"expires-after" must be an integer' })
-    .positive({ message: '"expires-after" must be positive' })
+    .number({ error: '"expires-after" must be a number' })
+    .int({ error: '"expires-after" must be an integer' })
+    .positive({ error: '"expires-after" must be positive' })
     .optional(),
   metadata: z.string().optional(),
 });

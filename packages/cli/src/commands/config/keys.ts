@@ -22,7 +22,7 @@ import {
 } from "../../utils/global-options";
 
 const RemoveKeySchema = z.object({
-  name: z.string().min(1, { message: '"name" is required' }),
+  name: z.string().min(1, { error: '"name" is required' }),
   yes: z.boolean().optional(),
 });
 

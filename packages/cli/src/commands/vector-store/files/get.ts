@@ -14,8 +14,8 @@ import { formatBytes, formatOutput } from "../../../utils/output";
 import { resolveVectorStore } from "../../../utils/vector-store";
 
 const GetFileSchema = extendGlobalOptions({
-  nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
-  fileId: z.string().min(1, { message: '"file-id" is required' }),
+  nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
+  fileId: z.string().min(1, { error: '"file-id" is required' }),
 });
 
 export function createGetCommand(): Command {
