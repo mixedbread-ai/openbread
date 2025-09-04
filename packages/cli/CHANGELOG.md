@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1
+
+### Patch Changes
+
+- 4f647be: - Fixed `--base-url` global option not working
+  - Migrated to zod v4
+
 ## 1.2.0
 
 ### Minor Changes
