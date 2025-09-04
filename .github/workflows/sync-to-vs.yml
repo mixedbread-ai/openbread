@@ -26,7 +26,7 @@ jobs:
         env:
           MXBAI_API_KEY: ${{ secrets.MXBAI_API_KEY }}
         run: |
-          mxbai vs sync "deployment-test" \
+          mxbai vs sync "openbread" \
             "**/*.ts" \
             "**/*.js" \
             "**/*.md" \
