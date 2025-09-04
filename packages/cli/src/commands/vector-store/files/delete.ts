@@ -14,8 +14,8 @@ import {
 import { resolveVectorStore } from "../../../utils/vector-store";
 
 const DeleteFileSchema = extendGlobalOptions({
-  nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
-  fileId: z.string().min(1, { message: '"file-id" is required' }),
+  nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
+  fileId: z.string().min(1, { error: '"file-id" is required' }),
   yes: z.boolean().optional(),
 });
 

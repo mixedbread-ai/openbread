@@ -4,14 +4,14 @@
 
 ### Minor Changes
 
-- 37cf096: - Change max parallel upload/deletion to 200
-  - Change default parallel and `parallel` in config to 100
+- 37cf096: - Changed max parallel upload/deletion to 200
+  - Changed default parallel and `parallel` in config to 100
 
 ## 1.1.0
 
 ### Minor Changes
 
-- 384880d: Add intelligent shell completion for vector store names
+- 384880d: Added intelligent shell completion for vector store names
 
   - **Dynamic completions**: Tab completion now suggests vector store names in commands like `mxbai vs sync [TAB]`, `mxbai vs upload [TAB]`, etc.
   - **Multi-key support**: Completions work seamlessly with multiple API keys, showing stores for the current default key
@@ -25,13 +25,13 @@
 
 ### Patch Changes
 
-- d60b52d: Fix metadata types before uploading
+- d60b52d: Fixed metadata types before uploading
 
 ## 1.0.0
 
 ### Major Changes
 
-- 617f988: Add force upload option and standardize CLI flags (breaking changes)
+- 617f988: Added force upload option and standardize CLI flags (breaking changes)
 
   ## Breaking Changes
 

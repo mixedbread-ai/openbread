@@ -5,6 +5,7 @@ import mockFs from "mock-fs";
 import {
   type CLIConfig,
   getApiKey,
+  getBaseURL,
   loadConfig,
   parseConfigValue,
   resolveVectorStoreName,
@@ -331,6 +332,78 @@ describe("Config Utils", () => {
         "No API key found.\n"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe("getBaseURL", () => {
+    afterEach(() => {
+      delete process.env.MXBAI_BASE_URL;
+    });
+
+    it("should prioritize options over environment and config", () => {
+      process.env.MXBAI_BASE_URL = "https://env-api.example.com";
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          base_url: "https://config-api.example.com",
+        }),
+      });
+
+      const baseUrl = getBaseURL({
+        baseUrl: "https://options-api.example.com",
+      });
+
+      expect(baseUrl).toBe("https://options-api.example.com");
+    });
+
+    it("should use environment variable when no options provided", () => {
+      process.env.MXBAI_BASE_URL = "https://env-api.example.com";
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          base_url: "https://config-api.example.com",
+        }),
+      });
+
+      const baseUrl = getBaseURL();
+
+      expect(baseUrl).toBe("https://env-api.example.com");
+    });
+
+    it("should use config value when no options or env provided", () => {
+      delete process.env.MXBAI_BASE_URL;
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+          base_url: "https://config-api.example.com",
+        }),
+      });
+
+      const baseUrl = getBaseURL();
+
+      expect(baseUrl).toBe("https://config-api.example.com");
+    });
+
+    it("should return undefined when no base URL is set anywhere", () => {
+      delete process.env.MXBAI_BASE_URL;
+      mockFs({
+        [configFile]: JSON.stringify({
+          version: "1.0",
+        }),
+      });
+
+      const baseUrl = getBaseURL();
+
+      expect(baseUrl).toBeUndefined();
+    });
+
+    it("should handle missing config file", () => {
+      delete process.env.MXBAI_BASE_URL;
+      mockFs({});
+
+      const baseUrl = getBaseURL();
+
+      expect(baseUrl).toBeUndefined();
     });
   });
 

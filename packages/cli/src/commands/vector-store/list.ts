@@ -23,10 +23,10 @@ import {
 const ListVectorStoreSchema = extendGlobalOptions({
   filter: z.string().optional(),
   limit: z.coerce
-    .number({ message: '"limit" must be a number' })
-    .int({ message: '"limit" must be an integer' })
-    .positive({ message: '"limit" must be positive' })
-    .max(100, { message: '"limit" must be less than or equal to 100' })
+    .number({ error: '"limit" must be a number' })
+    .int({ error: '"limit" must be an integer' })
+    .positive({ error: '"limit" must be positive' })
+    .max(100, { error: '"limit" must be less than or equal to 100' })
     .optional(),
 });
 

@@ -22,7 +22,7 @@ import {
 } from "../../utils/global-options";
 
 const RemoveKeySchema = z.object({
-  name: z.string().min(1, { message: '"name" is required' }),
+  name: z.string().min(1, { error: '"name" is required' }),
   yes: z.boolean().optional(),
 });
 
@@ -98,7 +98,7 @@ export function createKeysCommand(): Command {
       // Populate completion cache for the new key
       const client = createClient({
         apiKey: key,
-        baseURL: parsedOptions.baseURL,
+        baseUrl: parsedOptions.baseUrl,
       });
       refreshCacheForKey(name, client);
     });
@@ -232,7 +232,7 @@ export function createKeysCommand(): Command {
       // Refresh cache for the newly set default key
       const client = createClient({
         apiKey: config.api_keys[name],
-        baseURL: parsedOptions.baseURL,
+        baseUrl: parsedOptions.baseUrl,
       });
       refreshCacheForKey(name, client);
     });

@@ -161,10 +161,11 @@ files:
 When using the CLI, configuration values are resolved in the following order (highest to lowest priority):
 
 1. **Command-line flags** - Direct CLI options (e.g., `--strategy high_quality`)
-2. **Manifest entry** - File-specific settings in manifest files
-3. **Manifest defaults** - Default settings in manifest files
-4. **Config file** - User configuration file settings
-5. **Built-in defaults** - CLI default values
+2. **Environment variables** - System environment settings (e.g., `MXBAI_API_KEY`, `MXBAI_BASE_URL`, `MXBAI_CONFIG_PATH`, `MXBAI_DEBUG`)
+3. **Manifest entry** - File-specific settings in manifest files
+4. **Manifest defaults** - Default settings in manifest files
+5. **Config file** - User configuration file settings
+6. **Built-in defaults** - CLI default values
 
 This allows flexible configuration while maintaining predictable behavior.
 

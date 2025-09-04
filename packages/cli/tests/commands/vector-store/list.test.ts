@@ -357,6 +357,117 @@ describe("Vector Store List Command", () => {
     });
   });
 
+  describe("Base URL handling", () => {
+    it("should pass base URL from command line to createClient", async () => {
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor([], {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: false,
+          total: 0,
+        })
+      );
+
+      await command.parseAsync([
+        "node",
+        "list",
+        "--base-url",
+        "https://custom-api.example.com",
+      ]);
+
+      expect(mockCreateClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          baseUrl: "https://custom-api.example.com",
+        })
+      );
+    });
+
+    it("should validate base URL is a valid URL", async () => {
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor([], {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: false,
+          total: 0,
+        })
+      );
+
+      await command.parseAsync([
+        "node",
+        "list",
+        "--base-url",
+        "not-a-valid-url",
+      ]);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining('"base-url" must be a valid URL')
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should work with base URL and API key together", async () => {
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor([], {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: false,
+          total: 0,
+        })
+      );
+
+      await command.parseAsync([
+        "node",
+        "list",
+        "--base-url",
+        "https://custom-api.example.com",
+        "--api-key",
+        "mxb_test123",
+      ]);
+
+      expect(mockCreateClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          baseUrl: "https://custom-api.example.com",
+          apiKey: "mxb_test123",
+        })
+      );
+    });
+
+    it("should prioritize CLI base URL over environment variable", async () => {
+      const originalEnv = process.env.MXBAI_BASE_URL;
+      process.env.MXBAI_BASE_URL = "https://env-api.example.com";
+
+      mockClient.vectorStores.list.mockResolvedValue(
+        createMockCursor([], {
+          first_cursor: "123",
+          last_cursor: "456",
+          has_more: false,
+          total: 0,
+        })
+      );
+
+      await command.parseAsync([
+        "node",
+        "list",
+        "--base-url",
+        "https://cli-api.example.com",
+      ]);
+
+      expect(mockCreateClient).toHaveBeenCalledWith(
+        expect.objectContaining({
+          baseUrl: "https://cli-api.example.com",
+        })
+      );
+
+      // Cleanup
+      if (originalEnv) {
+        process.env.MXBAI_BASE_URL = originalEnv;
+      } else {
+        delete process.env.MXBAI_BASE_URL;
+      }
+    });
+  });
+
   describe("Edge cases", () => {
     it("should handle vector stores with missing fields", async () => {
       const mockData = [

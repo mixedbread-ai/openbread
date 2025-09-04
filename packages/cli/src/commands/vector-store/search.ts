@@ -16,18 +16,18 @@ import { formatCountWithSuffix, formatOutput } from "../../utils/output";
 import { resolveVectorStore } from "../../utils/vector-store";
 
 const SearchVectorStoreSchema = extendGlobalOptions({
-  nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
-  query: z.string().min(1, { message: '"query" is required' }),
+  nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
+  query: z.string().min(1, { error: '"query" is required' }),
   topK: z.coerce
-    .number({ message: '"top-k" must be a number' })
-    .int({ message: '"top-k" must be an integer' })
-    .positive({ message: '"top-k" must be positive' })
-    .max(100, { message: '"top-k" must be less than or equal to 100' })
+    .number({ error: '"top-k" must be a number' })
+    .int({ error: '"top-k" must be an integer' })
+    .positive({ error: '"top-k" must be positive' })
+    .max(100, { error: '"top-k" must be less than or equal to 100' })
     .optional(),
   threshold: z.coerce
-    .number({ message: '"threshold" must be a number' })
-    .min(0, { message: '"threshold" must be greater than or equal to 0' })
-    .max(1, { message: '"threshold" must be less than or equal to 1' })
+    .number({ error: '"threshold" must be a number' })
+    .min(0, { error: '"threshold" must be greater than or equal to 0' })
+    .max(1, { error: '"threshold" must be less than or equal to 1' })
     .optional(),
   returnMetadata: z.boolean().optional(),
   rerank: z.boolean().optional(),

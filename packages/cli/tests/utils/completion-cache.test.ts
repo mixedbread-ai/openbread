@@ -319,7 +319,7 @@ describe("Completion Cache", () => {
 
       mockCreateClient.mockReturnValue(mockClient);
 
-      await refreshAllCaches({ baseURL: "https://api.example.com" });
+      await refreshAllCaches({ baseUrl: "https://api.example.com" });
 
       const cacheContent = JSON.parse(readFileSync(cacheFile, "utf-8"));
       expect(cacheContent.stores.work).toEqual(["work-store"]);

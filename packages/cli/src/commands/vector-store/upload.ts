@@ -24,23 +24,23 @@ import {
 } from "../../utils/vector-store";
 
 const UploadVectorStoreSchema = extendGlobalOptions({
-  nameOrId: z.string().min(1, { message: '"name-or-id" is required' }),
+  nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
   patterns: z.array(z.string()).optional(),
   strategy: z
     .enum(["fast", "high_quality"], {
-      message: '"strategy" must be either "fast" or "high_quality"',
+      error: '"strategy" must be either "fast" or "high_quality"',
     })
     .optional(),
   contextualization: z
-    .boolean({ message: '"contextualization" must be a boolean' })
+    .boolean({ error: '"contextualization" must be a boolean' })
     .optional(),
   metadata: z.string().optional(),
   dryRun: z.boolean().optional(),
   parallel: z.coerce
-    .number({ message: '"parallel" must be a number' })
-    .int({ message: '"parallel" must be an integer' })
-    .min(1, { message: '"parallel" must be at least 1' })
-    .max(200, { message: '"parallel" must be less than or equal to 200' })
+    .number({ error: '"parallel" must be a number' })
+    .int({ error: '"parallel" must be an integer' })
+    .min(1, { error: '"parallel" must be at least 1' })
+    .max(200, { error: '"parallel" must be less than or equal to 200' })
     .optional(),
   unique: z.boolean().optional(),
   manifest: z.string().optional(),
