@@ -213,13 +213,13 @@ export function createCompletionServerCommand(): Command {
       // Root level completions - "mxbai " (when no previous command)
       if (env.words === 1) {
         return log(
-          ["config", "vs", "completion", "--help", "--version"],
+          ["config", "store", "completion", "--help", "--version"],
           shell,
           console.log
         );
       }
 
-      // Vector store name completions
+      // Store name completions
       const STORE_NAME_COMMANDS = [
         "get",
         "delete",
@@ -232,8 +232,8 @@ export function createCompletionServerCommand(): Command {
 
       if (STORE_NAME_COMMANDS.includes(env.prev)) {
         const words = env.line.trim().split(/\s+/);
-        // Check if previous word is "vs"
-        if (words.length >= 3 && words[words.length - 2] === "vs") {
+        // Check if previous word is "store"
+        if (words.length >= 3 && words[words.length - 2] === "store") {
           const keyName = getCurrentKeyName();
           if (keyName) {
             const stores = getStoresForCompletion(keyName);
@@ -244,8 +244,8 @@ export function createCompletionServerCommand(): Command {
         }
       }
 
-      // Vector store completions
-      if (env.prev === "vs") {
+      // Store completions
+      if (env.prev === "store") {
         return log(
           [
             "create",
@@ -264,23 +264,23 @@ export function createCompletionServerCommand(): Command {
         );
       }
 
-      // Vector store files completions
+      // Store files completions
       if (env.prev === "files") {
-        // Check if we're in "mxbai vs files " context
+        // Check if we're in "mxbai store files " context
         const words = env.line.trim().split(/\s+/);
-        if (words.length >= 3 && words[1] === "vs") {
+        if (words.length >= 3 && words[1] === "store") {
           return log(["list", "get", "delete"], shell, console.log);
         }
       }
 
-      // Vector store name completions for files subcommands
+      // Store name completions for files subcommands
       const FILES_SUBCOMMANDS = ["list", "get", "delete"];
       if (FILES_SUBCOMMANDS.includes(env.prev)) {
         const words = env.line.trim().split(/\s+/);
-        // Check for "mxbai vs files [subcommand] " context
+        // Check for "mxbai store files [subcommand] " context
         if (
           words.length >= 4 &&
-          words[1] === "vs" &&
+          words[1] === "store" &&
           words[2] === "files" &&
           FILES_SUBCOMMANDS.includes(words[3])
         ) {

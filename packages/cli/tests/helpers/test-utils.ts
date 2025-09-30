@@ -225,7 +225,7 @@ export const createMockConsole = () => {
   };
 };
 
-// Helper to create mock vector store data with required fields
+// Helper to create mock store data with required fields
 export const createMockVectorStore = (overrides: Record<string, any> = {}) => ({
   id: "550e8400-e29b-41d4-a716-446655440000",
   name: "test-store",

@@ -37,8 +37,8 @@ export function createListCommand(): Command {
   const listCommand = addGlobalOptions(
     new Command("list")
       .alias("ls")
-      .description("List files in a vector store")
-      .argument("<name-or-id>", "Name or ID of the vector store")
+      .description("List files in a store")
+      .argument("<name-or-id>", "Name or ID of the store")
       .option(
         "--status <status>",
         "Filter by status (pending|in_progress|cancelled|completed|failed)",

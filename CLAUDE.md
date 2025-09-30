@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-Openbread is an open-source toolkit for Mixedbread's vector store platform. This monorepo contains:
-- `@mixedbread/cli` - Command-line interface for managing vector stores
+Openbread is an open-source toolkit for Mixedbread's store platform. This monorepo contains:
+- `@mixedbread/cli` - Command-line interface for managing stores
 
 ## Development Commands
 
@@ -99,8 +99,8 @@ export MXBAI_API_KEY="your-api-key"
 3. Add tests in `packages/cli/tests/commands/`
 4. Register command in appropriate index file
 
-### Working with Vector Stores
-- CLI provides full CRUD operations for vector stores
+### Working with Stores
+- CLI provides full CRUD operations for stores
 - File upload with processing strategies (high_quality, fast, auto)
 - Git-based and hash-based sync capabilities
 - Manifest-based bulk uploads via YAML configuration

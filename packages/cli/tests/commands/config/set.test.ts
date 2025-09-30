@@ -96,10 +96,10 @@ describe("Config Set Command", () => {
         [configFile]: JSON.stringify({ version: "1.0" }),
       });
 
-      command.parse(["node", "set", "aliases.docs", "vs_abc123"]);
+      command.parse(["node", "set", "aliases.docs", "store_abc123"]);
 
       const config = loadConfig();
-      expect(config.aliases?.docs).toBe("vs_abc123");
+      expect(config.aliases?.docs).toBe("store_abc123");
     });
   });
 

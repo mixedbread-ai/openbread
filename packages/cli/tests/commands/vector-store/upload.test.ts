@@ -50,7 +50,7 @@ const mockUploadFilesInBatch =
     typeof uploadUtils.uploadFilesInBatch
   >;
 
-describe("Vector Store Upload Command", () => {
+describe("Store Upload Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
@@ -487,16 +487,14 @@ describe("Vector Store Upload Command", () => {
       expect(mockUploadFilesInBatch).toHaveBeenCalled();
     });
 
-    it("should handle vector store resolution errors", async () => {
-      mockResolveVectorStore.mockRejectedValue(
-        new Error("Vector store not found")
-      );
+    it("should handle store resolution errors", async () => {
+      mockResolveVectorStore.mockRejectedValue(new Error("Store not found"));
 
       await command.parseAsync(["node", "upload", "invalid-store", "*.md"]);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        "Vector store not found"
+        "Store not found"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

@@ -60,10 +60,8 @@ interface SyncOptions extends GlobalOptions {
 export function createSyncCommand(): Command {
   const command = addGlobalOptions(
     new Command("sync")
-      .description(
-        "Sync files with vector store (intelligent change detection)"
-      )
-      .argument("<name-or-id>", "Name or ID of the vector store")
+      .description("Sync files with store (intelligent change detection)")
+      .argument("<name-or-id>", "Name or ID of the store")
       .argument(
         "<patterns...>",
         "File patterns, folders, or paths to sync (supports ./** and folder names)"
@@ -96,17 +94,17 @@ export function createSyncCommand(): Command {
 
         const client = createClient(parsedOptions);
 
-        console.log(chalk.bold.blue("🔄 Starting Vector Store Sync\n"));
+        console.log(chalk.bold.blue("🔄 Starting Store Sync\n"));
 
-        // Step 0: Resolve vector store
+        // Step 0: Resolve store
         const resolveSpinner = ora(
-          `Looking up vector store "${parsedOptions.nameOrId}"...`
+          `Looking up store "${parsedOptions.nameOrId}"...`
         ).start();
         const vectorStore = await resolveVectorStore(
           client,
           parsedOptions.nameOrId
         );
-        resolveSpinner.succeed(`Found vector store: ${vectorStore.name}`);
+        resolveSpinner.succeed(`Found store: ${vectorStore.name}`);
 
         // Parse metadata if provided
         const additionalMetadata = validateMetadata(parsedOptions.metadata);
@@ -114,14 +112,12 @@ export function createSyncCommand(): Command {
         // Get git info
         const gitInfo = await getGitInfo();
 
-        const spinner = ora(
-          "Loading existing files from vector store..."
-        ).start();
+        const spinner = ora("Loading existing files from store...").start();
 
         const syncedFiles = await getSyncedFiles(client, vectorStore.id);
 
         spinner.succeed(
-          `Found ${formatCountWithSuffix(syncedFiles.size, "existing file")} in vector store`
+          `Found ${formatCountWithSuffix(syncedFiles.size, "existing file")} in store`
         );
 
         const fromGit = parsedOptions.fromGit;
@@ -172,9 +168,7 @@ export function createSyncCommand(): Command {
 
         if (totalChanges === 0) {
           console.log(
-            chalk.green(
-              "✓ Vector store is already in sync - no changes needed!"
-            )
+            chalk.green("✓ Store is already in sync - no changes needed!")
           );
           return;
         }
@@ -183,7 +177,7 @@ export function createSyncCommand(): Command {
         if (parsedOptions.force) {
           console.log(chalk.bold("\n--force enabled"));
           console.log(
-            `All ${formatCountWithSuffix(analysis.totalFiles, "file")} will be re-uploaded to the vector store.`
+            `All ${formatCountWithSuffix(analysis.totalFiles, "file")} will be re-uploaded to the store.`
           );
           console.log(`Upload size: ${formatBytes(analysis.totalSize)}\n`);
         } else {
@@ -208,7 +202,7 @@ export function createSyncCommand(): Command {
             {
               type: "confirm",
               name: "proceed",
-              message: "Apply these changes to the vector store?",
+              message: "Apply these changes to the store?",
               default: false,
             },
           ]);
@@ -244,7 +238,7 @@ export function createSyncCommand(): Command {
         if (error instanceof Error) {
           console.error(chalk.red("\n✗"), error.message);
         } else {
-          console.error(chalk.red("\n✗"), "Failed to sync vector store");
+          console.error(chalk.red("\n✗"), "Failed to sync store");
         }
         process.exit(1);
       }

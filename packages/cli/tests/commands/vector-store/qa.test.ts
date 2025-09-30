@@ -512,15 +512,15 @@ describe("QA Command", () => {
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it("should handle vector store resolution errors", async () => {
-      const error = new Error("Vector store not found");
+    it("should handle store resolution errors", async () => {
+      const error = new Error("Store not found");
       mockResolveVectorStore.mockRejectedValue(error);
 
       await command.parseAsync(["node", "qa", "nonexistent-store", "question"]);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        "Vector store not found"
+        "Store not found"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

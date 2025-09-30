@@ -47,7 +47,7 @@ describe("Output Utils", () => {
         MockTable.mockReturnValue(mockTableInstance as any);
 
         const data = {
-          id: "vs_123",
+          id: "store_123",
           name: "test-store",
           description: "A test store",
         };
@@ -58,7 +58,9 @@ describe("Output Utils", () => {
           style: { head: [], border: [] },
         });
 
-        expect(mockTableInstance.push).toHaveBeenCalledWith({ id: "vs_123" });
+        expect(mockTableInstance.push).toHaveBeenCalledWith({
+          id: "store_123",
+        });
         expect(mockTableInstance.push).toHaveBeenCalledWith({
           name: "test-store",
         });
@@ -76,14 +78,16 @@ describe("Output Utils", () => {
         MockTable.mockReturnValue(mockTableInstance as any);
 
         const data = {
-          id: "vs_123",
+          id: "store_123",
           description: null,
           metadata: undefined,
         };
 
         formatOutput(data, "table");
 
-        expect(mockTableInstance.push).toHaveBeenCalledWith({ id: "vs_123" });
+        expect(mockTableInstance.push).toHaveBeenCalledWith({
+          id: "store_123",
+        });
         expect(mockTableInstance.push).toHaveBeenCalledWith({
           description: "",
         });
@@ -98,14 +102,16 @@ describe("Output Utils", () => {
         MockTable.mockReturnValue(mockTableInstance as any);
 
         const data = {
-          id: "vs_123",
+          id: "store_123",
           metadata: { key: "value", nested: { deep: true } },
           tags: ["tag1", "tag2"],
         };
 
         formatOutput(data, "table");
 
-        expect(mockTableInstance.push).toHaveBeenCalledWith({ id: "vs_123" });
+        expect(mockTableInstance.push).toHaveBeenCalledWith({
+          id: "store_123",
+        });
         expect(mockTableInstance.push).toHaveBeenCalledWith({
           metadata: JSON.stringify({ key: "value", nested: { deep: true } }),
         });
@@ -122,8 +128,8 @@ describe("Output Utils", () => {
         MockTable.mockReturnValue(mockTableInstance as any);
 
         const data = [
-          { id: "vs_1", name: "store1", size: 100 },
-          { id: "vs_2", name: "store2", size: 200 },
+          { id: "store_1", name: "store1", size: 100 },
+          { id: "store_2", name: "store2", size: 200 },
         ];
 
         formatOutput(data, "table");
@@ -134,12 +140,12 @@ describe("Output Utils", () => {
         });
 
         expect(mockTableInstance.push).toHaveBeenCalledWith([
-          "vs_1",
+          "store_1",
           "store1",
           "100",
         ]);
         expect(mockTableInstance.push).toHaveBeenCalledWith([
-          "vs_2",
+          "store_2",
           "store2",
           "200",
         ]);
@@ -159,8 +165,8 @@ describe("Output Utils", () => {
         MockTable.mockReturnValue(mockTableInstance as any);
 
         const data = [
-          { id: "vs_1", name: "store1" },
-          { id: "vs_2", description: "desc2" },
+          { id: "store_1", name: "store1" },
+          { id: "store_2", description: "desc2" },
           { name: "store3", size: 300 },
         ];
 
@@ -172,8 +178,11 @@ describe("Output Utils", () => {
         });
 
         // The implementation uses headers from the first object
-        expect(mockTableInstance.push).toHaveBeenCalledWith(["vs_1", "store1"]);
-        expect(mockTableInstance.push).toHaveBeenCalledWith(["vs_2", ""]);
+        expect(mockTableInstance.push).toHaveBeenCalledWith([
+          "store_1",
+          "store1",
+        ]);
+        expect(mockTableInstance.push).toHaveBeenCalledWith(["store_2", ""]);
         expect(mockTableInstance.push).toHaveBeenCalledWith(["", "store3"]);
       });
     });
@@ -181,7 +190,7 @@ describe("Output Utils", () => {
     describe("json format", () => {
       it("should format as JSON", () => {
         const data = {
-          id: "vs_123",
+          id: "store_123",
           name: "test-store",
           metadata: { key: "value" },
         };
@@ -193,8 +202,8 @@ describe("Output Utils", () => {
 
       it("should handle arrays", () => {
         const data = [
-          { id: "vs_1", name: "store1" },
-          { id: "vs_2", name: "store2" },
+          { id: "store_1", name: "store1" },
+          { id: "store_2", name: "store2" },
         ];
 
         formatOutput(data, "json");
@@ -206,7 +215,7 @@ describe("Output Utils", () => {
     describe("csv format", () => {
       it("should format object as CSV", () => {
         const data = {
-          id: "vs_123",
+          id: "store_123",
           name: "test-store",
           size: 1024,
         };
@@ -214,14 +223,14 @@ describe("Output Utils", () => {
         formatOutput(data, "csv");
 
         expect(console.log).toHaveBeenCalledWith("key,value");
-        expect(console.log).toHaveBeenCalledWith("id,vs_123");
+        expect(console.log).toHaveBeenCalledWith("id,store_123");
         expect(console.log).toHaveBeenCalledWith("name,test-store");
         expect(console.log).toHaveBeenCalledWith("size,1024");
       });
 
       it("should escape CSV values with commas", () => {
         const data = {
-          id: "vs_123",
+          id: "store_123",
           name: "test, store",
           description: 'A "quoted" value',
         };
@@ -229,7 +238,7 @@ describe("Output Utils", () => {
         formatOutput(data, "csv");
 
         expect(console.log).toHaveBeenCalledWith("key,value");
-        expect(console.log).toHaveBeenCalledWith("id,vs_123");
+        expect(console.log).toHaveBeenCalledWith("id,store_123");
         expect(console.log).toHaveBeenCalledWith('name,"test, store"');
         expect(console.log).toHaveBeenCalledWith(
           'description,"A ""quoted"" value"'
@@ -238,20 +247,20 @@ describe("Output Utils", () => {
 
       it("should format array as CSV", () => {
         const data = [
-          { id: "vs_1", name: "store1", size: 100 },
-          { id: "vs_2", name: "store2", size: 200 },
+          { id: "store_1", name: "store1", size: 100 },
+          { id: "store_2", name: "store2", size: 200 },
         ];
 
         formatOutput(data, "csv");
 
         expect(console.log).toHaveBeenCalledWith("id,name,size");
-        expect(console.log).toHaveBeenCalledWith("vs_1,store1,100");
-        expect(console.log).toHaveBeenCalledWith("vs_2,store2,200");
+        expect(console.log).toHaveBeenCalledWith("store_1,store1,100");
+        expect(console.log).toHaveBeenCalledWith("store_2,store2,200");
       });
 
       it("should handle null and undefined in CSV", () => {
         const data = {
-          id: "vs_123",
+          id: "store_123",
           name: null,
           description: undefined,
         };
@@ -259,21 +268,21 @@ describe("Output Utils", () => {
         formatOutput(data, "csv");
 
         expect(console.log).toHaveBeenCalledWith("key,value");
-        expect(console.log).toHaveBeenCalledWith("id,vs_123");
+        expect(console.log).toHaveBeenCalledWith("id,store_123");
         expect(console.log).toHaveBeenCalledWith("name,");
         expect(console.log).toHaveBeenCalledWith("description,");
       });
 
       it("should stringify complex values in CSV", () => {
         const data = {
-          id: "vs_123",
+          id: "store_123",
           metadata: { key: "value" },
         };
 
         formatOutput(data, "csv");
 
         expect(console.log).toHaveBeenCalledWith("key,value");
-        expect(console.log).toHaveBeenCalledWith("id,vs_123");
+        expect(console.log).toHaveBeenCalledWith("id,store_123");
         expect(console.log).toHaveBeenCalledWith(
           'metadata,"{""key"":""value""}"'
         );
@@ -288,7 +297,7 @@ describe("Output Utils", () => {
         };
         MockTable.mockReturnValue(mockTableInstance as any);
 
-        const data = { id: "vs_123" };
+        const data = { id: "store_123" };
 
         formatOutput(data);
 

@@ -498,13 +498,13 @@ describe("Completion Commands", () => {
         await parseCommand(command, []);
 
         expect(mockLog).toHaveBeenCalledWith(
-          ["config", "vs", "completion", "--help", "--version"],
+          ["config", "store", "completion", "--help", "--version"],
           "bash",
           console.log
         );
       });
 
-      describe("vector store completions", () => {
+      describe("store completions", () => {
         const vectorStoreCommands = [
           "create",
           "delete",
@@ -518,16 +518,16 @@ describe("Completion Commands", () => {
           "files",
         ];
 
-        it("should provide vector store completions for 'vs' command", async () => {
+        it("should provide store completions for 'store' command", async () => {
           mockParseEnv.mockReturnValue({
             complete: true,
             words: 2,
             point: 0,
-            line: "mxbai vs ",
+            line: "mxbai store ",
             partial: "",
-            last: "vs",
+            last: "store",
             lastPartial: "",
-            prev: "vs",
+            prev: "store",
           });
           mockGetShellFromEnv.mockReturnValue("zsh");
 
@@ -542,7 +542,7 @@ describe("Completion Commands", () => {
         });
       });
 
-      describe("vector store name completions", () => {
+      describe("store name completions", () => {
         beforeEach(() => {
           const completionCache = jest.mocked(
             require("../../src/utils/completion-cache")
@@ -555,13 +555,13 @@ describe("Completion Commands", () => {
           ]);
         });
 
-        it("should provide store name completions for vs commands that need a store name", async () => {
+        it("should provide store name completions for store commands that need a store name", async () => {
           // Test a representative command - the logic is the same for all
           mockParseEnv.mockReturnValue({
             complete: true,
             words: 3,
             point: 0,
-            line: "mxbai vs get ",
+            line: "mxbai store get ",
             partial: "",
             last: "get",
             lastPartial: "",
@@ -589,7 +589,7 @@ describe("Completion Commands", () => {
             complete: true,
             words: 3,
             point: 0,
-            line: "mxbai vs get ",
+            line: "mxbai store get ",
             partial: "",
             last: "get",
             lastPartial: "",
@@ -614,7 +614,7 @@ describe("Completion Commands", () => {
             complete: true,
             words: 3,
             point: 0,
-            line: "mxbai vs sync ",
+            line: "mxbai store sync ",
             partial: "",
             last: "sync",
             lastPartial: "",
@@ -628,7 +628,7 @@ describe("Completion Commands", () => {
           expect(mockLog).not.toHaveBeenCalled();
         });
 
-        it("should not provide store names for non-vs commands", async () => {
+        it("should not provide store names for non-store commands", async () => {
           mockParseEnv.mockReturnValue({
             complete: true,
             words: 3,
@@ -653,7 +653,7 @@ describe("Completion Commands", () => {
             complete: true,
             words: 3,
             point: 0,
-            line: "mxbai vs list ",
+            line: "mxbai store list ",
             partial: "",
             last: "list",
             lastPartial: "",
@@ -671,12 +671,12 @@ describe("Completion Commands", () => {
       describe("files subcommand completions", () => {
         const filesCommands = ["list", "get", "delete"];
 
-        it("should provide files completions for 'mxbai vs files' context", async () => {
+        it("should provide files completions for 'mxbai store files' context", async () => {
           mockParseEnv.mockReturnValue({
             complete: true,
             words: 3,
             point: 0,
-            line: "mxbai vs files ",
+            line: "mxbai store files ",
             partial: "",
             last: "files",
             lastPartial: "",
@@ -694,7 +694,7 @@ describe("Completion Commands", () => {
           );
         });
 
-        it("should provide store name completions for 'mxbai vs files list' context", async () => {
+        it("should provide store name completions for 'mxbai store files list' context", async () => {
           const completionCache = jest.mocked(
             require("../../src/utils/completion-cache")
           );
@@ -708,7 +708,7 @@ describe("Completion Commands", () => {
             complete: true,
             words: 4,
             point: 0,
-            line: "mxbai vs files list ",
+            line: "mxbai store files list ",
             partial: "",
             last: "list",
             lastPartial: "",
@@ -726,7 +726,7 @@ describe("Completion Commands", () => {
           );
         });
 
-        it("should not provide files completions for non-vs contexts", async () => {
+        it("should not provide files completions for non-store contexts", async () => {
           mockParseEnv.mockReturnValue({
             complete: true,
             words: 2,
@@ -802,7 +802,7 @@ describe("Completion Commands", () => {
             complete: true,
             words: 2,
             point: 0,
-            line: "mxbai vs keys ",
+            line: "mxbai store keys ",
             partial: "",
             last: "keys",
             lastPartial: "",
@@ -948,7 +948,7 @@ describe("Completion Commands", () => {
           await parseCommand(command, []);
 
           expect(mockLog).toHaveBeenCalledWith(
-            ["config", "vs", "completion", "--help", "--version"],
+            ["config", "store", "completion", "--help", "--version"],
             shell as "bash" | "zsh" | "fish" | "pwsh",
             console.log
           );

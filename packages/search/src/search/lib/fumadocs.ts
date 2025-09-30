@@ -4,7 +4,7 @@ import type { SearchMetadata } from "./types";
 
 export interface MixedbreadOptions {
   /**
-   * The ID of the vector store to search in
+   * The ID of the store to search in
    */
   vectorStoreId: string;
 

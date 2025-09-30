@@ -22,7 +22,7 @@ export function createGetCommand(): Command {
   const getCommand = addGlobalOptions(
     new Command("get")
       .description("Get file details")
-      .argument("<name-or-id>", "Name or ID of the vector store")
+      .argument("<name-or-id>", "Name or ID of the store")
       .argument("<file-id>", "ID of the file")
   );
 

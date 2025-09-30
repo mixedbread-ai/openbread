@@ -81,8 +81,8 @@ interface SearchOptions extends GlobalOptions {
 export function createSearchCommand(): Command {
   const command = addGlobalOptions(
     new Command("search")
-      .description("Search within a vector store")
-      .argument("<name-or-id>", "Name or ID of the vector store")
+      .description("Search within a store")
+      .argument("<name-or-id>", "Name or ID of the store")
       .argument("<query>", "Search query")
       .option("--top-k <n>", "Number of results to return")
       .option("--threshold <score>", "Minimum score threshold")
@@ -104,7 +104,7 @@ export function createSearchCommand(): Command {
         });
 
         const client = createClient(parsedOptions);
-        spinner = ora("Searching vector store...").start();
+        spinner = ora("Searching store...").start();
         const vectorStore = await resolveVectorStore(
           client,
           parsedOptions.nameOrId
@@ -168,7 +168,7 @@ export function createSearchCommand(): Command {
         if (error instanceof Error) {
           console.error(chalk.red("\n✗"), error.message);
         } else {
-          console.error(chalk.red("\n✗"), "Failed to search vector store");
+          console.error(chalk.red("\n✗"), "Failed to search store");
         }
         process.exit(1);
       }

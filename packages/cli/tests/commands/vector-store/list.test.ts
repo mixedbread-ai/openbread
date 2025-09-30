@@ -42,7 +42,7 @@ const createMockCursor = (
   } as unknown as CursorResponse<VectorStore>;
 };
 
-describe("Vector Store List Command", () => {
+describe("Store List Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
@@ -72,7 +72,7 @@ describe("Vector Store List Command", () => {
   });
 
   describe("Basic listing", () => {
-    it("should list vector stores with default options", async () => {
+    it("should list stores with default options", async () => {
       const mockData = [
         {
           id: "550e8400-e29b-41d4-a716-446655440021",
@@ -185,7 +185,7 @@ describe("Vector Store List Command", () => {
 
       await command.parseAsync(["node", "list"]);
 
-      expect(console.log).toHaveBeenCalledWith("No vector stores found.");
+      expect(console.log).toHaveBeenCalledWith("No stores found.");
       expect(mockFormatOutput).not.toHaveBeenCalled();
     });
   });
@@ -315,7 +315,7 @@ describe("Vector Store List Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        "Failed to list vector stores"
+        "Failed to list stores"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -469,7 +469,7 @@ describe("Vector Store List Command", () => {
   });
 
   describe("Edge cases", () => {
-    it("should handle vector stores with missing fields", async () => {
+    it("should handle stores with missing fields", async () => {
       const mockData = [
         {
           id: "550e8400-e29b-41d4-a716-446655440021",

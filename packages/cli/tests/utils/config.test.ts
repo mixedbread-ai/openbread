@@ -60,7 +60,7 @@ describe("Config Utils", () => {
           api_key: "work",
         },
         aliases: {
-          docs: "vs_abc123",
+          docs: "store_abc123",
         },
       };
 
@@ -74,7 +74,7 @@ describe("Config Utils", () => {
       expect(config.api_keys?.personal).toBe("mxb_personal123");
       expect(config.defaults?.api_key).toBe("work");
       expect(config.defaults?.upload?.strategy).toBe("high_quality");
-      expect(config.aliases?.docs).toBe("vs_abc123");
+      expect(config.aliases?.docs).toBe("store_abc123");
     });
 
     it("should return default config for invalid JSON", () => {
@@ -412,26 +412,26 @@ describe("Config Utils", () => {
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
-          aliases: { docs: "vs_abc123" },
+          aliases: { docs: "store_abc123" },
         }),
       });
 
       const resolved = resolveVectorStoreName("docs");
 
-      expect(resolved).toBe("vs_abc123");
+      expect(resolved).toBe("store_abc123");
     });
 
     it("should return original name if no alias exists", () => {
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
-          aliases: { other: "vs_xyz789" },
+          aliases: { other: "store_xyz789" },
         }),
       });
 
-      const resolved = resolveVectorStoreName("vs_direct123");
+      const resolved = resolveVectorStoreName("store_direct123");
 
-      expect(resolved).toBe("vs_direct123");
+      expect(resolved).toBe("store_direct123");
     });
 
     it("should handle missing aliases object", () => {
@@ -471,7 +471,9 @@ describe("Config Utils", () => {
       expect(parseConfigValue("base_url", "https://api.example.com")).toBe(
         "https://api.example.com"
       );
-      expect(parseConfigValue("aliases.docs", "vs_abc123")).toBe("vs_abc123");
+      expect(parseConfigValue("aliases.docs", "store_abc123")).toBe(
+        "store_abc123"
+      );
     });
 
     it("should validate URL format", () => {

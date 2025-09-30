@@ -178,8 +178,8 @@ async function main() {
   if (isInstalled || install?.toLowerCase() === "y") {
     console.log("Get started with the mxbai CLI:");
     console.log("  mxbai --help              # Show all commands");
-    console.log("  mxbai vs list             # List your vector stores");
-    console.log('  mxbai vs create "My Docs" # Create a new vector store');
+    console.log("  mxbai store list             # List your stores");
+    console.log('  mxbai store create "My Docs" # Create a new store');
     console.log("  mxbai config get          # View configuration");
 
     console.log("\nUseful resources:");

@@ -98,7 +98,7 @@ export async function refreshCacheForKey(
       limit: MAX_STORES,
     });
 
-    const storeNames = response.data.map((vs) => vs.name);
+    const storeNames = response.data.map((store) => store.name);
 
     const cache = loadCache();
     cache.stores[keyName] = storeNames;

@@ -11,7 +11,7 @@ export interface FileSyncMetadata {
 }
 
 /**
- * Get all synced files from vector store
+ * Get all synced files from store
  */
 export async function getSyncedFiles(
   client: Mixedbread,

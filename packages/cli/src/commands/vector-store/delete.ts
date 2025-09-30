@@ -30,8 +30,8 @@ export function createDeleteCommand(): Command {
   const command = addGlobalOptions(
     new Command("delete")
       .alias("rm")
-      .description("Delete a vector store")
-      .argument("<name-or-id>", "Name or ID of the vector store")
+      .description("Delete a store")
+      .argument("<name-or-id>", "Name or ID of the store")
       .option("-y, --yes", "Skip confirmation prompt")
   );
 
@@ -58,7 +58,7 @@ export function createDeleteCommand(): Command {
           {
             type: "confirm",
             name: "confirmed",
-            message: `Are you sure you want to delete vector store "${vectorStore.name}" (${vectorStore.id})? This action cannot be undone.`,
+            message: `Are you sure you want to delete store "${vectorStore.name}" (${vectorStore.id})? This action cannot be undone.`,
             default: false,
           },
         ]);
@@ -69,13 +69,11 @@ export function createDeleteCommand(): Command {
         }
       }
 
-      spinner = ora("Deleting vector store...").start();
+      spinner = ora("Deleting store...").start();
 
       await client.vectorStores.delete(vectorStore.id);
 
-      spinner.succeed(
-        `Vector store "${vectorStore.name}" deleted successfully`
-      );
+      spinner.succeed(`Store "${vectorStore.name}" deleted successfully`);
 
       // Update completion cache by removing the deleted store
       const keyName = getCurrentKeyName();
@@ -83,11 +81,11 @@ export function createDeleteCommand(): Command {
         updateCacheAfterDelete(keyName, vectorStore.name);
       }
     } catch (error) {
-      spinner?.fail("Failed to delete vector store");
+      spinner?.fail("Failed to delete store");
       if (error instanceof Error) {
         console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(chalk.red("\n✗"), "Failed to delete vector store");
+        console.error(chalk.red("\n✗"), "Failed to delete store");
       }
       process.exit(1);
     }

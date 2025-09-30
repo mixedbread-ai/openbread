@@ -42,7 +42,7 @@ describe("Config Get Command", () => {
           api_key: "work",
         },
         aliases: {
-          docs: "vs_abc123",
+          docs: "store_abc123",
         },
       };
 
@@ -103,8 +103,8 @@ describe("Config Get Command", () => {
             api_key: "work",
           },
           aliases: {
-            docs: "vs_abc123",
-            images: "vs_xyz789",
+            docs: "store_abc123",
+            images: "store_xyz789",
           },
         }),
       });
@@ -163,7 +163,10 @@ describe("Config Get Command", () => {
     it("should get aliases", () => {
       command.parse(["node", "get", "aliases.docs"]);
 
-      expect(console.log).toHaveBeenCalledWith("aliases.docs:", '"vs_abc123"');
+      expect(console.log).toHaveBeenCalledWith(
+        "aliases.docs:",
+        '"store_abc123"'
+      );
     });
 
     it("should get all aliases", () => {
@@ -173,8 +176,8 @@ describe("Config Get Command", () => {
         "aliases:",
         JSON.stringify(
           {
-            docs: "vs_abc123",
-            images: "vs_xyz789",
+            docs: "store_abc123",
+            images: "store_xyz789",
           },
           null,
           2

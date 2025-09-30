@@ -24,7 +24,7 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
 
-describe("Vector Store Create Command", () => {
+describe("Store Create Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
@@ -52,7 +52,7 @@ describe("Vector Store Create Command", () => {
   });
 
   describe("Basic creation", () => {
-    it("should create vector store with name only", async () => {
+    it("should create store with name only", async () => {
       const mockResponse = {
         id: "550e8400-e29b-41d4-a716-446655440010",
         name: "test-store",
@@ -76,9 +76,7 @@ describe("Vector Store Create Command", () => {
 
       expect(console.log).toHaveBeenCalledWith(
         expect.stringContaining("✓"),
-        expect.stringContaining(
-          'Vector store "test-store" created successfully'
-        )
+        expect.stringContaining('Store "test-store" created successfully')
       );
 
       expect(mockFormatOutput).toHaveBeenCalledWith(
@@ -93,7 +91,7 @@ describe("Vector Store Create Command", () => {
       );
     });
 
-    it("should create vector store with description", async () => {
+    it("should create store with description", async () => {
       const mockResponse = {
         id: "550e8400-e29b-41d4-a716-446655440010",
         name: "test-store",
@@ -122,7 +120,7 @@ describe("Vector Store Create Command", () => {
       });
     });
 
-    it("should create vector store with expiration", async () => {
+    it("should create store with expiration", async () => {
       const mockResponse = {
         id: "550e8400-e29b-41d4-a716-446655440010",
         name: "temp-store",
@@ -159,7 +157,7 @@ describe("Vector Store Create Command", () => {
   });
 
   describe("Metadata handling", () => {
-    it("should create vector store with metadata", async () => {
+    it("should create store with metadata", async () => {
       const mockResponse = {
         id: "550e8400-e29b-41d4-a716-446655440010",
         name: "test-store",
@@ -333,7 +331,7 @@ describe("Vector Store Create Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        "Failed to create vector store"
+        "Failed to create store"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

@@ -3,16 +3,16 @@
 [![npm version](https://badge.fury.io/js/@mixedbread%2Fcli.svg)](https://www.npmjs.com/package/@mixedbread/cli)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-Openbread is an open-source monorepo containing tools for interacting with [Mixedbread](https://www.mixedbread.com/)'s vector store platform. Currently, it houses the command-line interface (CLI) that enables seamless vector store management, file processing, and intelligent search capabilities.
+Openbread is an open-source monorepo containing tools for interacting with [Mixedbread](https://www.mixedbread.com/)'s store platform. Currently, it houses the command-line interface (CLI) that enables seamless store management, file processing, and intelligent search capabilities.
 
 ## Packages
 
 ### 🛠️ [@mixedbread/cli](./packages/cli)
 
-A comprehensive command-line interface for managing Mixedbread vector stores.
+A comprehensive command-line interface for managing Mixedbread stores.
 
 **Key Features:**
-- Vector store management (create, update, delete, list)
+- Store management (create, update, delete, list)
 - Intelligent file upload with processing strategies
 - Advanced sync with git-based and hash-based change detections 
 - Vector search and Q&A capabilities
@@ -29,14 +29,14 @@ npm install -g @mixedbread/cli
 # Set your API key
 export MXBAI_API_KEY=mxb_xxxxx
 
-# Create a vector store
-mxbai vs create "My Documents"
+# Create a store
+mxbai store create "My Documents"
 
 # Upload files with high-quality processing
-mxbai vs upload "My Documents" "**/*.md" --strategy high_quality --contextualization
+mxbai store upload "My Documents" "**/*.md" --strategy high_quality --contextualization
 
 # Search your content
-mxbai vs search "My Documents" "how to get started"
+mxbai store search "My Documents" "how to get started"
 ```
 
 ## Prerequisites
@@ -60,7 +60,7 @@ mxbai vs search "My Documents" "how to get started"
    ```
 
 4. **Start building:**
-   - Create vector stores for your documents
+   - Create stores for your documents
    - Upload and process files with different strategies
    - Search and interact with your content
 

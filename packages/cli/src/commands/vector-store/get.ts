@@ -22,8 +22,8 @@ interface GetOptions extends GlobalOptions {}
 export function createGetCommand(): Command {
   const command = addGlobalOptions(
     new Command("get")
-      .description("Get vector store details")
-      .argument("<name-or-id>", "Name or ID of the vector store")
+      .description("Get store details")
+      .argument("<name-or-id>", "Name or ID of the store")
   );
 
   command.action(async (nameOrId: string, options: GetOptions) => {
@@ -38,13 +38,13 @@ export function createGetCommand(): Command {
       });
 
       const client = createClient(parsedOptions);
-      spinner = ora("Loading vector store details...").start();
+      spinner = ora("Loading store details...").start();
       const vectorStore = await resolveVectorStore(
         client,
         parsedOptions.nameOrId
       );
 
-      spinner.succeed("Vector store details loaded");
+      spinner.succeed("Store details loaded");
 
       const formattedData = {
         name: vectorStore.name,
@@ -72,11 +72,11 @@ export function createGetCommand(): Command {
 
       formatOutput(formattedData, parsedOptions.format);
     } catch (error) {
-      spinner?.fail("Failed to load vector store details");
+      spinner?.fail("Failed to load store details");
       if (error instanceof Error) {
         console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(chalk.red("\n✗"), "Failed to get vector store details");
+        console.error(chalk.red("\n✗"), "Failed to get store details");
       }
       process.exit(1);
     }

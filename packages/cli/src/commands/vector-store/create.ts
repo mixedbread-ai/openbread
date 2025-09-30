@@ -37,9 +37,9 @@ interface CreateOptions extends GlobalOptions {
 export function createCreateCommand(): Command {
   const command = addGlobalOptions(
     new Command("create")
-      .description("Create a new vector store")
-      .argument("<name>", "Name of the vector store")
-      .option("--description <desc>", "Description of the vector store")
+      .description("Create a new store")
+      .argument("<name>", "Name of the store")
+      .option("--description <desc>", "Description of the store")
       .option("--expires-after <days>", "Expire after number of days")
       .option("--metadata <json>", "Additional metadata as JSON string")
   );
@@ -58,7 +58,7 @@ export function createCreateCommand(): Command {
 
       const metadata = validateMetadata(parsedOptions.metadata);
 
-      spinner = ora("Creating vector store...").start();
+      spinner = ora("Creating store...").start();
 
       const vectorStore = await client.vectorStores.create({
         name: parsedOptions.name,
@@ -72,7 +72,7 @@ export function createCreateCommand(): Command {
         metadata,
       });
 
-      spinner.succeed(`Vector store "${name}" created successfully`);
+      spinner.succeed(`Store "${name}" created successfully`);
 
       formatOutput(
         {
@@ -94,11 +94,11 @@ export function createCreateCommand(): Command {
         updateCacheAfterCreate(keyName, vectorStore.name);
       }
     } catch (error) {
-      spinner?.fail("Failed to create vector store");
+      spinner?.fail("Failed to create store");
       if (error instanceof Error) {
         console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(chalk.red("\n✗"), "Failed to create vector store");
+        console.error(chalk.red("\n✗"), "Failed to create store");
       }
       process.exit(1);
     }

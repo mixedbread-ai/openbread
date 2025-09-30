@@ -41,10 +41,10 @@ interface UpdateOptions extends GlobalOptions {
 export function createUpdateCommand(): Command {
   const command = addGlobalOptions(
     new Command("update")
-      .description("Update a vector store")
-      .argument("<name-or-id>", "Name or ID of the vector store")
-      .option("--name <name>", "New name for the vector store")
-      .option("--description <desc>", "New description for the vector store")
+      .description("Update a store")
+      .argument("<name-or-id>", "Name or ID of the store")
+      .option("--name <name>", "New name for the store")
+      .option("--description <desc>", "New description for the store")
       .option("--expires-after <days>", "Expire after number of days")
       .option(
         "--metadata <json>",
@@ -91,16 +91,14 @@ export function createUpdateCommand(): Command {
         process.exit(1);
       }
 
-      spinner = ora("Updating vector store...").start();
+      spinner = ora("Updating store...").start();
 
       const updatedVectorStore = await client.vectorStores.update(
         vectorStore.id,
         updateData
       );
 
-      spinner.succeed(
-        `Vector store "${vectorStore.name}" updated successfully`
-      );
+      spinner.succeed(`Store "${vectorStore.name}" updated successfully`);
 
       formatOutput(
         {
@@ -135,11 +133,11 @@ export function createUpdateCommand(): Command {
         }
       }
     } catch (error) {
-      spinner?.fail("Failed to update vector store");
+      spinner?.fail("Failed to update store");
       if (error instanceof Error) {
         console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(chalk.red("\n✗"), "Failed to update vector store");
+        console.error(chalk.red("\n✗"), "Failed to update store");
       }
       process.exit(1);
     }
