@@ -1,4 +1,4 @@
-import type { FileCreateParams } from "@mixedbread/sdk/resources/vector-stores";
+import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { Command } from "commander";
 import ora from "ora";
@@ -21,9 +21,9 @@ import {
   formatChangeSummary,
 } from "../../utils/sync";
 import { getSyncedFiles } from "../../utils/sync-state";
-import { resolveVectorStore } from "../../utils/vector-store";
+import { resolveStore } from "../../utils/vector-store";
 
-const SyncVectorStoreSchema = extendGlobalOptions({
+const SyncStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
   patterns: z
     .array(z.string())
@@ -86,7 +86,7 @@ export function createSyncCommand(): Command {
     async (nameOrId: string, patterns: string[], options: SyncOptions) => {
       try {
         const mergedOptions = mergeCommandOptions(command, options);
-        const parsedOptions = parseOptions(SyncVectorStoreSchema, {
+        const parsedOptions = parseOptions(SyncStoreSchema, {
           ...mergedOptions,
           nameOrId,
           patterns,
@@ -100,11 +100,8 @@ export function createSyncCommand(): Command {
         const resolveSpinner = ora(
           `Looking up store "${parsedOptions.nameOrId}"...`
         ).start();
-        const vectorStore = await resolveVectorStore(
-          client,
-          parsedOptions.nameOrId
-        );
-        resolveSpinner.succeed(`Found store: ${vectorStore.name}`);
+        const store = await resolveStore(client, parsedOptions.nameOrId);
+        resolveSpinner.succeed(`Found store: ${store.name}`);
 
         // Parse metadata if provided
         const additionalMetadata = validateMetadata(parsedOptions.metadata);
@@ -114,7 +111,7 @@ export function createSyncCommand(): Command {
 
         const spinner = ora("Loading existing files from store...").start();
 
-        const syncedFiles = await getSyncedFiles(client, vectorStore.id);
+        const syncedFiles = await getSyncedFiles(client, store.id);
 
         spinner.succeed(
           `Found ${formatCountWithSuffix(syncedFiles.size, "existing file")} in store`
@@ -218,7 +215,7 @@ export function createSyncCommand(): Command {
         // Execute changes
         const syncResults = await executeSyncChanges(
           client,
-          vectorStore.id,
+          store.id,
           analysis,
           {
             strategy: parsedOptions.strategy,

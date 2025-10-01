@@ -9,15 +9,15 @@ import {
 } from "@jest/globals";
 import type { Mixedbread } from "@mixedbread/sdk";
 import * as configUtils from "../../src/utils/config";
-import { resolveVectorStore } from "../../src/utils/vector-store";
+import { resolveStore } from "../../src/utils/vector-store";
 
 // Mock config utils
 jest.mock("../../src/utils/config");
 
 describe("Store Utils", () => {
-  describe("resolveVectorStore", () => {
+  describe("resolveStore", () => {
     let mockClient: {
-      vectorStores: {
+      stores: {
         list: jest.MockedFunction<() => Promise<{ data: unknown[] }>>;
         retrieve: jest.MockedFunction<(id: string) => Promise<unknown>>;
       };
@@ -25,15 +25,15 @@ describe("Store Utils", () => {
 
     beforeEach(() => {
       mockClient = {
-        vectorStores: {
+        stores: {
           list: jest.fn(),
           retrieve: jest.fn(),
         },
       };
 
       (
-        configUtils.resolveVectorStoreName as jest.MockedFunction<
-          typeof configUtils.resolveVectorStoreName
+        configUtils.resolveStoreName as jest.MockedFunction<
+          typeof configUtils.resolveStoreName
         >
       ).mockImplementation((name) => name);
     });
@@ -43,80 +43,78 @@ describe("Store Utils", () => {
     });
 
     it("should resolve store ID directly", async () => {
-      const mockVectorStore = {
+      const mockStore = {
         id: "550e8400-e29b-41d4-a716-446655440010",
         name: "test-store",
       };
 
-      mockClient.vectorStores.retrieve.mockResolvedValue(mockVectorStore);
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] });
+      mockClient.stores.retrieve.mockResolvedValue(mockStore);
+      mockClient.stores.list.mockResolvedValue({ data: [] });
 
-      const result = await resolveVectorStore(
+      const result = await resolveStore(
         mockClient as unknown as Mixedbread,
         "550e8400-e29b-41d4-a716-446655440010"
       );
 
-      expect(result).toEqual(mockVectorStore);
-      expect(mockClient.vectorStores.retrieve).toHaveBeenCalledWith(
+      expect(result).toEqual(mockStore);
+      expect(mockClient.stores.retrieve).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440010"
       );
-      expect(mockClient.vectorStores.list).not.toHaveBeenCalled();
+      expect(mockClient.stores.list).not.toHaveBeenCalled();
     });
 
     it("should resolve store by name", async () => {
-      const mockVectorStore = {
+      const mockStore = {
         id: "550e8400-e29b-41d4-a716-446655440011",
         name: "my-store",
       };
 
       // Names are valid identifiers, so retrieve should succeed
-      mockClient.vectorStores.retrieve.mockResolvedValue(mockVectorStore);
+      mockClient.stores.retrieve.mockResolvedValue(mockStore);
 
-      const result = await resolveVectorStore(
+      const result = await resolveStore(
         mockClient as unknown as Mixedbread,
         "my-store"
       );
 
-      expect(result).toEqual(mockVectorStore);
-      expect(mockClient.vectorStores.retrieve).toHaveBeenCalledWith("my-store");
-      expect(mockClient.vectorStores.list).not.toHaveBeenCalled();
+      expect(result).toEqual(mockStore);
+      expect(mockClient.stores.retrieve).toHaveBeenCalledWith("my-store");
+      expect(mockClient.stores.list).not.toHaveBeenCalled();
     });
 
     it("should resolve using alias", async () => {
-      const mockVectorStore = {
+      const mockStore = {
         id: "550e8400-e29b-41d4-a716-446655440001",
         name: "aliased-store",
       };
 
       (
-        configUtils.resolveVectorStoreName as jest.MockedFunction<
-          typeof configUtils.resolveVectorStoreName
+        configUtils.resolveStoreName as jest.MockedFunction<
+          typeof configUtils.resolveStoreName
         >
       ).mockReturnValue("550e8400-e29b-41d4-a716-446655440001");
-      mockClient.vectorStores.retrieve.mockResolvedValue(mockVectorStore);
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] });
+      mockClient.stores.retrieve.mockResolvedValue(mockStore);
+      mockClient.stores.list.mockResolvedValue({ data: [] });
 
-      const result = await resolveVectorStore(
+      const result = await resolveStore(
         mockClient as unknown as Mixedbread,
         "myalias"
       );
 
-      expect(configUtils.resolveVectorStoreName).toHaveBeenCalledWith(
-        "myalias"
-      );
-      expect(result).toEqual(mockVectorStore);
-      expect(mockClient.vectorStores.retrieve).toHaveBeenCalledWith(
+      expect(configUtils.resolveStoreName).toHaveBeenCalledWith("myalias");
+      expect(result).toEqual(mockStore);
+      expect(mockClient.stores.retrieve).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440001"
       );
     });
 
     it("should handle store not found by ID", async () => {
-      mockClient.vectorStores.retrieve.mockRejectedValue(
+      mockClient.stores.retrieve.mockRejectedValue(
         new Error("Store not found")
       );
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] });
+      mockClient.stores.list.mockResolvedValue({ data: [] });
 
-      await resolveVectorStore(
+      await resolveStore(
         mockClient as unknown as Mixedbread,
         "550e8400-e29b-41d4-a716-446655440002"
       );
@@ -132,18 +130,16 @@ describe("Store Utils", () => {
 
     it("should handle store not found by name", async () => {
       // Mock retrieve to fail first
-      mockClient.vectorStores.retrieve.mockRejectedValue(
-        new Error("Not found")
-      );
+      mockClient.stores.retrieve.mockRejectedValue(new Error("Not found"));
 
-      mockClient.vectorStores.list.mockResolvedValue({
+      mockClient.stores.list.mockResolvedValue({
         data: [
           { id: "550e8400-e29b-41d4-a716-446655440014", name: "other-store" },
           { id: "550e8400-e29b-41d4-a716-446655440015", name: "another-store" },
         ],
       });
 
-      await resolveVectorStore(
+      await resolveStore(
         mockClient as unknown as Mixedbread,
         "nonexistent-store"
       );
@@ -156,16 +152,11 @@ describe("Store Utils", () => {
 
     it("should handle empty store list", async () => {
       // Mock retrieve to fail first
-      mockClient.vectorStores.retrieve.mockRejectedValue(
-        new Error("Not found")
-      );
+      mockClient.stores.retrieve.mockRejectedValue(new Error("Not found"));
 
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] });
+      mockClient.stores.list.mockResolvedValue({ data: [] });
 
-      await resolveVectorStore(
-        mockClient as unknown as Mixedbread,
-        "any-store"
-      );
+      await resolveStore(mockClient as unknown as Mixedbread, "any-store");
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
@@ -175,93 +166,87 @@ describe("Store Utils", () => {
 
     it("should handle API errors when listing", async () => {
       // Mock retrieve to fail first
-      mockClient.vectorStores.retrieve.mockRejectedValue(
-        new Error("Not found")
-      );
-      mockClient.vectorStores.list.mockRejectedValue(
+      mockClient.stores.retrieve.mockRejectedValue(new Error("Not found"));
+      mockClient.stores.list.mockRejectedValue(
         new Error("API Error: Unauthorized")
       );
 
       await expect(
-        resolveVectorStore(mockClient as unknown as Mixedbread, "some-store")
+        resolveStore(mockClient as unknown as Mixedbread, "some-store")
       ).rejects.toThrow("API Error: Unauthorized");
     });
 
     it("should handle case-sensitive name matching", async () => {
-      const mockVectorStore = {
+      const mockStore = {
         id: "550e8400-e29b-41d4-a716-446655440017",
         name: "mystore",
       };
 
       // Names are valid identifiers, so retrieve should succeed
-      mockClient.vectorStores.retrieve.mockResolvedValue(mockVectorStore);
+      mockClient.stores.retrieve.mockResolvedValue(mockStore);
 
-      const result = await resolveVectorStore(
+      const result = await resolveStore(
         mockClient as unknown as Mixedbread,
         "mystore"
       );
 
-      expect(result).toEqual(mockVectorStore);
-      expect(mockClient.vectorStores.retrieve).toHaveBeenCalledWith("mystore");
-      expect(mockClient.vectorStores.list).not.toHaveBeenCalled();
+      expect(result).toEqual(mockStore);
+      expect(mockClient.stores.retrieve).toHaveBeenCalledWith("mystore");
+      expect(mockClient.stores.list).not.toHaveBeenCalled();
     });
 
     it("should handle special characters in names", async () => {
-      const mockVectorStore = {
+      const mockStore = {
         id: "550e8400-e29b-41d4-a716-446655440018",
         name: "my-store_v2.0",
       };
 
       // Names with special characters are still valid identifiers
-      mockClient.vectorStores.retrieve.mockResolvedValue(mockVectorStore);
+      mockClient.stores.retrieve.mockResolvedValue(mockStore);
 
-      const result = await resolveVectorStore(
+      const result = await resolveStore(
         mockClient as unknown as Mixedbread,
         "my-store_v2.0"
       );
 
-      expect(result).toEqual(mockVectorStore);
-      expect(mockClient.vectorStores.retrieve).toHaveBeenCalledWith(
-        "my-store_v2.0"
-      );
-      expect(mockClient.vectorStores.list).not.toHaveBeenCalled();
+      expect(result).toEqual(mockStore);
+      expect(mockClient.stores.retrieve).toHaveBeenCalledWith("my-store_v2.0");
+      expect(mockClient.stores.list).not.toHaveBeenCalled();
     });
 
     it("should check if input looks like UUID before searching by name", async () => {
       // Input that looks like UUID should try retrieve first, then fall through to name search
-      mockClient.vectorStores.retrieve.mockRejectedValue(
-        new Error("Not found")
-      );
-      mockClient.vectorStores.list.mockResolvedValue({ data: [] });
+      mockClient.stores.retrieve.mockRejectedValue(new Error("Not found"));
+      mockClient.stores.list.mockResolvedValue({ data: [] });
 
-      await resolveVectorStore(
+      await resolveStore(
         mockClient as unknown as Mixedbread,
         "550e8400-e29b-41d4-a716-446655440003"
       );
 
-      expect(mockClient.vectorStores.retrieve).toHaveBeenCalledWith(
+      expect(mockClient.stores.retrieve).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440003"
       );
-      expect(mockClient.vectorStores.list).toHaveBeenCalled();
+      expect(mockClient.stores.list).toHaveBeenCalled();
     });
 
     it("should search by name for non-ID inputs", async () => {
-      const mockVectorStore = {
+      const mockStore = {
         id: "550e8400-e29b-41d4-a716-446655440004",
         name: "test",
       };
 
       // Names are valid identifiers, so retrieve should succeed
-      mockClient.vectorStores.retrieve.mockResolvedValue(mockVectorStore);
+      mockClient.stores.retrieve.mockResolvedValue(mockStore);
 
-      const result = await resolveVectorStore(
+      const result = await resolveStore(
         mockClient as unknown as Mixedbread,
         "test"
       );
 
-      expect(result).toEqual(mockVectorStore);
-      expect(mockClient.vectorStores.retrieve).toHaveBeenCalledWith("test");
-      expect(mockClient.vectorStores.list).not.toHaveBeenCalled();
+      expect(result).toEqual(mockStore);
+      expect(mockClient.stores.retrieve).toHaveBeenCalledWith("test");
+      expect(mockClient.stores.list).not.toHaveBeenCalled();
     });
   });
 });

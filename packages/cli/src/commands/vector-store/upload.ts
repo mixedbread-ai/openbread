@@ -1,5 +1,5 @@
 import { statSync } from "node:fs";
-import type { FileCreateParams } from "@mixedbread/sdk/resources/vector-stores";
+import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { Command } from "commander";
 import { glob } from "glob";
@@ -18,12 +18,9 @@ import { uploadFromManifest } from "../../utils/manifest";
 import { validateMetadata } from "../../utils/metadata";
 import { formatBytes, formatCountWithSuffix } from "../../utils/output";
 import { type FileToUpload, uploadFilesInBatch } from "../../utils/upload";
-import {
-  getVectorStoreFiles,
-  resolveVectorStore,
-} from "../../utils/vector-store";
+import { getStoreFiles, resolveStore } from "../../utils/vector-store";
 
-const UploadVectorStoreSchema = extendGlobalOptions({
+const UploadStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
   patterns: z.array(z.string()).optional(),
   strategy: z
@@ -83,7 +80,7 @@ export function createUploadCommand(): Command {
       try {
         const mergedOptions = mergeCommandOptions(command, options);
 
-        const parsedOptions = parseOptions(UploadVectorStoreSchema, {
+        const parsedOptions = parseOptions(UploadStoreSchema, {
           ...mergedOptions,
           nameOrId,
           patterns,
@@ -91,10 +88,7 @@ export function createUploadCommand(): Command {
 
         const client = createClient(parsedOptions);
         const spinner = ora("Initializing upload...").start();
-        const vectorStore = await resolveVectorStore(
-          client,
-          parsedOptions.nameOrId
-        );
+        const store = await resolveStore(client, parsedOptions.nameOrId);
         const config = loadConfig();
 
         spinner.succeed("Upload initialized");
@@ -103,7 +97,7 @@ export function createUploadCommand(): Command {
         if (parsedOptions.manifest) {
           return await uploadFromManifest(
             client,
-            vectorStore.id,
+            store.id,
             parsedOptions.manifest,
             parsedOptions
           );
@@ -186,12 +180,9 @@ export function createUploadCommand(): Command {
         if (parsedOptions.unique) {
           const spinner = ora("Checking for existing files...").start();
           try {
-            const vectorStoreFiles = await getVectorStoreFiles(
-              client,
-              vectorStore.id
-            );
+            const storeFiles = await getStoreFiles(client, store.id);
             existingFiles = new Map(
-              vectorStoreFiles
+              storeFiles
                 .filter((f) => {
                   const filePath =
                     typeof f.metadata === "object" &&
@@ -224,7 +215,7 @@ export function createUploadCommand(): Command {
         }));
 
         // Upload files with progress tracking
-        await uploadFilesInBatch(client, vectorStore.id, filesToUpload, {
+        await uploadFilesInBatch(client, store.id, filesToUpload, {
           unique: parsedOptions.unique || false,
           existingFiles,
           parallel,

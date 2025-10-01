@@ -94,7 +94,7 @@ export async function refreshCacheForKey(
   client: Mixedbread
 ): Promise<void> {
   try {
-    const response = await client.vectorStores.list({
+    const response = await client.stores.list({
       limit: MAX_STORES,
     });
 

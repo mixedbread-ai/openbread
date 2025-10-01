@@ -27,8 +27,8 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
 describe("Store Create Command", () => {
   let command: Command;
   let mockClient: {
-    vectorStores: {
-      create: jest.MockedFunction<Mixedbread["vectorStores"]["create"]>;
+    stores: {
+      create: jest.MockedFunction<Mixedbread["stores"]["create"]>;
     };
   };
 
@@ -37,7 +37,7 @@ describe("Store Create Command", () => {
 
     // Setup mock client
     mockClient = {
-      vectorStores: {
+      stores: {
         create: jest.fn(),
       },
     };
@@ -63,11 +63,11 @@ describe("Store Create Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.create.mockResolvedValue(mockResponse);
+      mockClient.stores.create.mockResolvedValue(mockResponse);
 
       await command.parseAsync(["node", "create", "test-store"]);
 
-      expect(mockClient.vectorStores.create).toHaveBeenCalledWith({
+      expect(mockClient.stores.create).toHaveBeenCalledWith({
         name: "test-store",
         description: undefined,
         expires_after: undefined,
@@ -102,7 +102,7 @@ describe("Store Create Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.create.mockResolvedValue(mockResponse);
+      mockClient.stores.create.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -112,7 +112,7 @@ describe("Store Create Command", () => {
         "Test description",
       ]);
 
-      expect(mockClient.vectorStores.create).toHaveBeenCalledWith({
+      expect(mockClient.stores.create).toHaveBeenCalledWith({
         name: "test-store",
         description: "Test description",
         expires_after: undefined,
@@ -134,7 +134,7 @@ describe("Store Create Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.create.mockResolvedValue(mockResponse);
+      mockClient.stores.create.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -144,7 +144,7 @@ describe("Store Create Command", () => {
         "30",
       ]);
 
-      expect(mockClient.vectorStores.create).toHaveBeenCalledWith({
+      expect(mockClient.stores.create).toHaveBeenCalledWith({
         name: "temp-store",
         description: undefined,
         expires_after: {
@@ -171,7 +171,7 @@ describe("Store Create Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.create.mockResolvedValue(mockResponse);
+      mockClient.stores.create.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -181,7 +181,7 @@ describe("Store Create Command", () => {
         '{"project":"website","team":"engineering"}',
       ]);
 
-      expect(mockClient.vectorStores.create).toHaveBeenCalledWith({
+      expect(mockClient.stores.create).toHaveBeenCalledWith({
         name: "test-store",
         description: undefined,
         expires_after: undefined,
@@ -228,7 +228,7 @@ describe("Store Create Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.create.mockResolvedValue(mockResponse);
+      mockClient.stores.create.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -238,7 +238,7 @@ describe("Store Create Command", () => {
         JSON.stringify(complexMetadata),
       ]);
 
-      expect(mockClient.vectorStores.create).toHaveBeenCalledWith({
+      expect(mockClient.stores.create).toHaveBeenCalledWith({
         name: "test-store",
         description: undefined,
         expires_after: undefined,
@@ -259,7 +259,7 @@ describe("Store Create Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.create.mockResolvedValue(mockResponse);
+      mockClient.stores.create.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -283,7 +283,7 @@ describe("Store Create Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.create.mockResolvedValue(mockResponse);
+      mockClient.stores.create.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -300,7 +300,7 @@ describe("Store Create Command", () => {
   describe("Error handling", () => {
     it("should handle API errors", async () => {
       const error = new Error("API Error: Unauthorized");
-      mockClient.vectorStores.create.mockRejectedValue(error);
+      mockClient.stores.create.mockRejectedValue(error);
 
       await command.parseAsync(["node", "create", "test-store"]);
 
@@ -313,7 +313,7 @@ describe("Store Create Command", () => {
 
     it("should handle network errors", async () => {
       const error = new Error("Network error");
-      mockClient.vectorStores.create.mockRejectedValue(error);
+      mockClient.stores.create.mockRejectedValue(error);
 
       await command.parseAsync(["node", "create", "test-store"]);
 
@@ -325,7 +325,7 @@ describe("Store Create Command", () => {
     });
 
     it("should handle non-Error rejections", async () => {
-      mockClient.vectorStores.create.mockRejectedValue("Unknown error");
+      mockClient.stores.create.mockRejectedValue("Unknown error");
 
       await command.parseAsync(["node", "create", "test-store"]);
 

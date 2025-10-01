@@ -13,9 +13,9 @@ import {
   parseOptions,
 } from "../../utils/global-options";
 import { formatCountWithSuffix, formatOutput } from "../../utils/output";
-import { resolveVectorStore } from "../../utils/vector-store";
+import { resolveStore } from "../../utils/vector-store";
 
-const SearchVectorStoreSchema = extendGlobalOptions({
+const SearchStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
   query: z.string().min(1, { error: '"query" is required' }),
   topK: z.coerce
@@ -34,17 +34,17 @@ const SearchVectorStoreSchema = extendGlobalOptions({
   fileSearch: z.boolean().optional(),
 });
 
-type ParsedSearchOptions = z.infer<typeof SearchVectorStoreSchema> & {
-  vectorStoreIdentifier: string;
+type ParsedSearchOptions = z.infer<typeof SearchStoreSchema> & {
+  storeIdentifier: string;
 };
 
-async function searchVectorStoreFiles(
+async function searchStoreFiles(
   client: Mixedbread,
   parsedOptions: ParsedSearchOptions
 ) {
-  return await client.vectorStores.files.search({
+  return await client.stores.files.search({
     query: parsedOptions.query,
-    vector_store_identifiers: [parsedOptions.vectorStoreIdentifier],
+    store_identifiers: [parsedOptions.storeIdentifier],
     top_k: parsedOptions.topK,
     search_options: {
       return_metadata: parsedOptions.returnMetadata,
@@ -54,13 +54,13 @@ async function searchVectorStoreFiles(
   });
 }
 
-async function searchVectorStoreChunks(
+async function searchStoreChunks(
   client: Mixedbread,
   parsedOptions: ParsedSearchOptions
 ) {
-  return await client.vectorStores.search({
+  return await client.stores.search({
     query: parsedOptions.query,
-    vector_store_identifiers: [parsedOptions.vectorStoreIdentifier],
+    store_identifiers: [parsedOptions.storeIdentifier],
     top_k: parsedOptions.topK,
     search_options: {
       return_metadata: parsedOptions.returnMetadata,
@@ -97,7 +97,7 @@ export function createSearchCommand(): Command {
 
       try {
         const mergedOptions = mergeCommandOptions(command, options);
-        const parsedOptions = parseOptions(SearchVectorStoreSchema, {
+        const parsedOptions = parseOptions(SearchStoreSchema, {
           ...mergedOptions,
           nameOrId,
           query,
@@ -105,10 +105,7 @@ export function createSearchCommand(): Command {
 
         const client = createClient(parsedOptions);
         spinner = ora("Searching store...").start();
-        const vectorStore = await resolveVectorStore(
-          client,
-          parsedOptions.nameOrId
-        );
+        const store = await resolveStore(client, parsedOptions.nameOrId);
         const config = loadConfig();
 
         // Get default values from config
@@ -117,15 +114,15 @@ export function createSearchCommand(): Command {
           parsedOptions.rerank ?? config.defaults?.search?.rerank ?? false;
 
         const results = parsedOptions.fileSearch
-          ? await searchVectorStoreFiles(client, {
+          ? await searchStoreFiles(client, {
               ...parsedOptions,
-              vectorStoreIdentifier: vectorStore.id,
+              storeIdentifier: store.id,
               topK,
               rerank,
             })
-          : await searchVectorStoreChunks(client, {
+          : await searchStoreChunks(client, {
               ...parsedOptions,
-              vectorStoreIdentifier: vectorStore.id,
+              storeIdentifier: store.id,
               topK,
               rerank,
             });
@@ -148,7 +145,7 @@ export function createSearchCommand(): Command {
           const output: Record<string, unknown> = {
             filename: result.filename,
             score: result.score.toFixed(2),
-            vector_store_id: result.vector_store_id,
+            store_id: result.store_id,
           };
 
           if (!parsedOptions.fileSearch) {

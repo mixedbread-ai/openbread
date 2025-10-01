@@ -18,7 +18,7 @@ const originalConsoleWarn = console.warn;
 
 describe("Upload Utils", () => {
   let mockClient: {
-    vectorStores: {
+    stores: {
       files: {
         upload: FlexibleMock;
         delete: FlexibleMock;
@@ -45,7 +45,7 @@ describe("Upload Utils", () => {
         "test.txt": "Hello world",
       });
 
-      mockClient.vectorStores.files.upload.mockResolvedValue({});
+      mockClient.stores.files.upload.mockResolvedValue({});
 
       await uploadFile(
         mockClient as unknown as Mixedbread,
@@ -53,7 +53,7 @@ describe("Upload Utils", () => {
         "test.txt"
       );
 
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
         "test-store",
         expect.any(File),
         expect.objectContaining({
@@ -78,7 +78,7 @@ describe("Upload Utils", () => {
       );
 
       // uploadFile doesn't have empty file checking, so it will upload
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
         "test-store",
         expect.any(File),
         expect.objectContaining({
@@ -96,7 +96,7 @@ describe("Upload Utils", () => {
         "test.md": "# Test Document",
       });
 
-      mockClient.vectorStores.files.upload.mockResolvedValue({});
+      mockClient.stores.files.upload.mockResolvedValue({});
 
       await uploadFile(
         mockClient as unknown as Mixedbread,
@@ -109,7 +109,7 @@ describe("Upload Utils", () => {
         }
       );
 
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
         "test-store",
         expect.any(File),
         expect.objectContaining({
@@ -128,7 +128,7 @@ describe("Upload Utils", () => {
         "test.ts": "const hello = 'world';",
       });
 
-      mockClient.vectorStores.files.upload.mockResolvedValue({});
+      mockClient.stores.files.upload.mockResolvedValue({});
 
       await uploadFile(
         mockClient as unknown as Mixedbread,
@@ -136,7 +136,7 @@ describe("Upload Utils", () => {
         "test.ts"
       );
 
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
         "test-store",
         expect.objectContaining({
           name: "test.ts",
@@ -151,7 +151,7 @@ describe("Upload Utils", () => {
         "script.py": "print('Hello, World!')",
       });
 
-      mockClient.vectorStores.files.upload.mockResolvedValue({});
+      mockClient.stores.files.upload.mockResolvedValue({});
 
       await uploadFile(
         mockClient as unknown as Mixedbread,
@@ -159,7 +159,7 @@ describe("Upload Utils", () => {
         "script.py"
       );
 
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
         "test-store",
         expect.objectContaining({
           name: "script.py",
@@ -174,7 +174,7 @@ describe("Upload Utils", () => {
         "content.mdx": "# Hello MDX\n\n<Component />",
       });
 
-      mockClient.vectorStores.files.upload.mockResolvedValue({});
+      mockClient.stores.files.upload.mockResolvedValue({});
 
       await uploadFile(
         mockClient as unknown as Mixedbread,
@@ -182,7 +182,7 @@ describe("Upload Utils", () => {
         "content.mdx"
       );
 
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
         "test-store",
         expect.objectContaining({
           name: "content.mdx",
@@ -200,7 +200,7 @@ describe("Upload Utils", () => {
         "file2.txt": "Content 2",
       });
 
-      mockClient.vectorStores.files.upload.mockResolvedValue({});
+      mockClient.stores.files.upload.mockResolvedValue({});
 
       const files = [
         {
@@ -235,7 +235,7 @@ describe("Upload Utils", () => {
         failed: 0,
         successfulSize: 18, // "Content 1" + "Content 2" = 9 + 9 = 18
       });
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledTimes(2);
+      expect(mockClient.stores.files.upload).toHaveBeenCalledTimes(2);
       expect(mockConsoleWarn).not.toHaveBeenCalled();
     });
 
@@ -246,7 +246,7 @@ describe("Upload Utils", () => {
         "empty2.txt": "",
       });
 
-      mockClient.vectorStores.files.upload.mockResolvedValue({});
+      mockClient.stores.files.upload.mockResolvedValue({});
 
       const files = [
         {
@@ -287,7 +287,7 @@ describe("Upload Utils", () => {
         failed: 0,
         successfulSize: 12, // Only "Real content" = 12 bytes
       });
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledTimes(1);
+      expect(mockClient.stores.files.upload).toHaveBeenCalledTimes(1);
       expect(mockConsoleWarn).not.toHaveBeenCalled(); // Warning is shown via spinner.warn
     });
 
@@ -299,7 +299,7 @@ describe("Upload Utils", () => {
       });
 
       // Mock upload to fail for failure.txt
-      mockClient.vectorStores.files.upload
+      mockClient.stores.files.upload
         .mockResolvedValueOnce({}) // success.txt
         .mockRejectedValueOnce(new Error("Upload failed")); // failure.txt
 
@@ -342,7 +342,7 @@ describe("Upload Utils", () => {
         failed: 1,
         successfulSize: 15, // Only "Success content" = 15 bytes
       });
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledTimes(2);
+      expect(mockClient.stores.files.upload).toHaveBeenCalledTimes(2);
     });
 
     it("should handle unique flag with empty files", async () => {
@@ -351,8 +351,8 @@ describe("Upload Utils", () => {
         "empty.txt": "",
       });
 
-      mockClient.vectorStores.files.upload.mockResolvedValue({});
-      mockClient.vectorStores.files.delete.mockResolvedValue({});
+      mockClient.stores.files.upload.mockResolvedValue({});
+      mockClient.stores.files.delete.mockResolvedValue({});
 
       const existingFiles = new Map([["existing.txt", "existing-file-id"]]);
 
@@ -389,11 +389,11 @@ describe("Upload Utils", () => {
         failed: 0,
         successfulSize: 16, // "Existing content" = 16 bytes
       });
-      expect(mockClient.vectorStores.files.delete).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.delete).toHaveBeenCalledWith(
         "existing-file-id",
-        { vector_store_identifier: "test-store" }
+        { store_identifier: "test-store" }
       );
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledTimes(1);
+      expect(mockClient.stores.files.upload).toHaveBeenCalledTimes(1);
     });
 
     it("should fix mime types for TypeScript, Python, and MDX files in batch", async () => {
@@ -404,7 +404,7 @@ describe("Upload Utils", () => {
         "readme.md": "# Regular Markdown",
       });
 
-      mockClient.vectorStores.files.upload.mockResolvedValue({});
+      mockClient.stores.files.upload.mockResolvedValue({});
 
       const files = [
         {
@@ -445,7 +445,7 @@ describe("Upload Utils", () => {
       );
 
       // Verify TypeScript file mime type was fixed
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
         "test-store",
         expect.objectContaining({
           name: "app.ts",
@@ -455,7 +455,7 @@ describe("Upload Utils", () => {
       );
 
       // Verify Python file mime type was fixed
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
         "test-store",
         expect.objectContaining({
           name: "utils.py",
@@ -465,7 +465,7 @@ describe("Upload Utils", () => {
       );
 
       // Verify MDX file mime type was fixed
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
         "test-store",
         expect.objectContaining({
           name: "page.mdx",
@@ -475,7 +475,7 @@ describe("Upload Utils", () => {
       );
 
       // Verify regular markdown file kept its original mime type
-      expect(mockClient.vectorStores.files.upload).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
         "test-store",
         expect.objectContaining({
           name: "readme.md",

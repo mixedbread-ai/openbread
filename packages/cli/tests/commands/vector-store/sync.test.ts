@@ -13,7 +13,7 @@ import { createSyncCommand } from "../../../src/commands/vector-store/sync";
 import * as clientUtils from "../../../src/utils/client";
 import * as syncUtils from "../../../src/utils/sync";
 import * as syncStateUtils from "../../../src/utils/sync-state";
-import * as vectorStoreUtils from "../../../src/utils/vector-store";
+import * as storeUtils from "../../../src/utils/vector-store";
 
 // Mock dependencies
 jest.mock("../../../src/utils/client");
@@ -35,16 +35,15 @@ const mockExecuteSyncChanges =
 const mockGetSyncedFiles = syncStateUtils.getSyncedFiles as jest.MockedFunction<
   typeof syncStateUtils.getSyncedFiles
 >;
-const mockResolveVectorStore =
-  vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
-    typeof vectorStoreUtils.resolveVectorStore
-  >;
+const mockResolveStore = storeUtils.resolveStore as jest.MockedFunction<
+  typeof storeUtils.resolveStore
+>;
 
 describe("Store Sync Command", () => {
   let command: Command;
   let mockClient: {
-    vectorStores: {
-      create: jest.MockedFunction<Mixedbread["vectorStores"]["create"]>;
+    stores: {
+      create: jest.MockedFunction<Mixedbread["stores"]["create"]>;
     };
   };
 
@@ -53,14 +52,14 @@ describe("Store Sync Command", () => {
 
     // Setup mock client
     mockClient = {
-      vectorStores: {
+      stores: {
         create: jest.fn(),
       },
     };
 
     // Setup default mocks
     mockCreateClient.mockReturnValue(mockClient as unknown as Mixedbread);
-    mockResolveVectorStore.mockResolvedValue({
+    mockResolveStore.mockResolvedValue({
       id: "550e8400-e29b-41d4-a716-446655440040",
       name: "test-store",
       created_at: "2021-01-01",

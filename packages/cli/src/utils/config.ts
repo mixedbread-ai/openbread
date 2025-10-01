@@ -268,7 +268,7 @@ export function getBaseURL(options?: { baseUrl?: string }): string {
   );
 }
 
-export function resolveVectorStoreName(nameOrAlias: string): string {
+export function resolveStoreName(nameOrAlias: string): string {
   const config = loadConfig();
   return config.aliases?.[nameOrAlias] || nameOrAlias;
 }

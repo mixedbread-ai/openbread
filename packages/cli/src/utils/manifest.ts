@@ -10,7 +10,7 @@ import { loadConfig } from "./config";
 import { validateMetadata } from "./metadata";
 import { formatBytes, formatCountWithSuffix } from "./output";
 import { type FileToUpload, uploadFilesInBatch } from "./upload";
-import { getVectorStoreFiles } from "./vector-store";
+import { getStoreFiles } from "./vector-store";
 
 // Manifest file schema
 const ManifestFileEntrySchema = z.object({
@@ -38,7 +38,7 @@ type ManifestFile = z.infer<typeof ManifestSchema>;
 
 export async function uploadFromManifest(
   client: Mixedbread,
-  vectorStoreIdentifier: string,
+  storeIdentifier: string,
   manifestPath: string,
   options: UploadOptions
 ) {
@@ -174,12 +174,9 @@ export async function uploadFromManifest(
     if (options.unique) {
       const spinner = ora("Checking for existing files...").start();
       try {
-        const vectorStoreFiles = await getVectorStoreFiles(
-          client,
-          vectorStoreIdentifier
-        );
+        const storeFiles = await getStoreFiles(client, storeIdentifier);
         existingFiles = new Map(
-          vectorStoreFiles
+          storeFiles
             .filter((f) =>
               uniqueFiles.some((file) => {
                 const filePath =
@@ -203,7 +200,7 @@ export async function uploadFromManifest(
     }
 
     // Upload files
-    await uploadFilesInBatch(client, vectorStoreIdentifier, uniqueFiles, {
+    await uploadFilesInBatch(client, storeIdentifier, uniqueFiles, {
       unique: options.unique || false,
       existingFiles,
       parallel: options.parallel ?? config.defaults.upload.parallel ?? 100,

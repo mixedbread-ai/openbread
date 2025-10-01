@@ -8,7 +8,7 @@ import {
   getBaseURL,
   loadConfig,
   parseConfigValue,
-  resolveVectorStoreName,
+  resolveStoreName,
   saveConfig,
 } from "../../src/utils/config";
 import { getTestConfigDir } from "../helpers/test-utils";
@@ -407,7 +407,7 @@ describe("Config Utils", () => {
     });
   });
 
-  describe("resolveVectorStoreName", () => {
+  describe("resolveStoreName", () => {
     it("should return alias value if exists", () => {
       mockFs({
         [configFile]: JSON.stringify({
@@ -416,7 +416,7 @@ describe("Config Utils", () => {
         }),
       });
 
-      const resolved = resolveVectorStoreName("docs");
+      const resolved = resolveStoreName("docs");
 
       expect(resolved).toBe("store_abc123");
     });
@@ -429,7 +429,7 @@ describe("Config Utils", () => {
         }),
       });
 
-      const resolved = resolveVectorStoreName("store_direct123");
+      const resolved = resolveStoreName("store_direct123");
 
       expect(resolved).toBe("store_direct123");
     });
@@ -439,7 +439,7 @@ describe("Config Utils", () => {
         [configFile]: JSON.stringify({ version: "1.0" }),
       });
 
-      const resolved = resolveVectorStoreName("test");
+      const resolved = resolveStoreName("test");
 
       expect(resolved).toBe("test");
     });

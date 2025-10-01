@@ -531,8 +531,8 @@ tests/
    ```typescript
    import { createMyCommand } from './my-command';
 
-   // Add to vectorStoreCommand
-   vectorStoreCommand.addCommand(createMyCommand());
+   // Add to storeCommand
+   storeCommand.addCommand(createMyCommand());
    ```
 
 3. **Add tests** in `tests/commands/vector-store/my-command.test.ts`:

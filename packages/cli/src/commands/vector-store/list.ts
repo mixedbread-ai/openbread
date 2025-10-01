@@ -20,7 +20,7 @@ import {
   formatOutput,
 } from "../../utils/output";
 
-const ListVectorStoreSchema = extendGlobalOptions({
+const ListStoreSchema = extendGlobalOptions({
   filter: z.string().optional(),
   limit: z.coerce
     .number({ error: '"limit" must be a number' })
@@ -49,33 +49,33 @@ export function createListCommand(): Command {
     try {
       const mergedOptions = mergeCommandOptions(command, options);
       const parsedOptions = parseOptions(
-        ListVectorStoreSchema,
+        ListStoreSchema,
         mergedOptions as Record<string, unknown>
       );
 
       const client = createClient(parsedOptions);
       spinner = ora("Loading stores...").start();
-      const response = await client.vectorStores.list({
+      const response = await client.stores.list({
         limit: parsedOptions.limit || 10,
       });
 
-      let vectorStores = response.data;
+      let stores = response.data;
 
       // Apply filter if provided
       if (parsedOptions.filter) {
         const filterPattern = parsedOptions.filter.toLowerCase();
-        vectorStores = vectorStores.filter((store) =>
+        stores = stores.filter((store) =>
           store.name.toLowerCase().includes(filterPattern)
         );
       }
 
-      if (vectorStores.length === 0) {
+      if (stores.length === 0) {
         spinner.info("No stores found.");
         return;
       }
 
       // Format data for output
-      const formattedData = vectorStores.map((store) => ({
+      const formattedData = stores.map((store) => ({
         name: store.name,
         id: store.id,
         status:
@@ -87,9 +87,7 @@ export function createListCommand(): Command {
         created: new Date(store.created_at).toLocaleDateString(),
       }));
 
-      spinner.succeed(
-        `Found ${formatCountWithSuffix(vectorStores.length, "store")}`
-      );
+      spinner.succeed(`Found ${formatCountWithSuffix(stores.length, "store")}`);
       formatOutput(formattedData, parsedOptions.format);
 
       // Update completion cache with the fetched stores

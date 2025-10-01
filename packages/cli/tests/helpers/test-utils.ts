@@ -78,7 +78,7 @@ export function mockConsole() {
  */
 export function createMockClient() {
   return {
-    vectorStores: {
+    stores: {
       create: jest.fn(),
       retrieve: jest.fn(),
       update: jest.fn(),
@@ -226,7 +226,7 @@ export const createMockConsole = () => {
 };
 
 // Helper to create mock store data with required fields
-export const createMockVectorStore = (overrides: Record<string, any> = {}) => ({
+export const createMockStore = (overrides: Record<string, any> = {}) => ({
   id: "550e8400-e29b-41d4-a716-446655440000",
   name: "test-store",
   created_at: "2021-01-01T00:00:00Z",

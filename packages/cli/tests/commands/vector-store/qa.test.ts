@@ -7,13 +7,13 @@ import {
   jest,
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
-import type { VectorStoreQuestionAnsweringResponse } from "@mixedbread/sdk/resources";
+import type { StoreQuestionAnsweringResponse } from "@mixedbread/sdk/resources";
 import type { Command } from "commander";
 import { createQACommand } from "../../../src/commands/vector-store/qa";
 import * as clientUtils from "../../../src/utils/client";
 import * as configUtils from "../../../src/utils/config";
 import * as outputUtils from "../../../src/utils/output";
-import * as vectorStoreUtils from "../../../src/utils/vector-store";
+import * as storeUtils from "../../../src/utils/vector-store";
 
 // Mock dependencies
 jest.mock("../../../src/utils/client");
@@ -25,10 +25,9 @@ jest.mock("../../../src/utils/output", () => ({
 jest.mock("../../../src/utils/config");
 
 // Explicit mock definitions
-const mockResolveVectorStore =
-  vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
-    typeof vectorStoreUtils.resolveVectorStore
-  >;
+const mockResolveStore = storeUtils.resolveStore as jest.MockedFunction<
+  typeof storeUtils.resolveStore
+>;
 const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
   typeof clientUtils.createClient
 >;
@@ -42,9 +41,9 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
 describe("QA Command", () => {
   let command: Command;
   let mockClient: {
-    vectorStores: {
+    stores: {
       questionAnswering: jest.MockedFunction<
-        Mixedbread["vectorStores"]["questionAnswering"]
+        Mixedbread["stores"]["questionAnswering"]
       >;
     };
   };
@@ -52,14 +51,14 @@ describe("QA Command", () => {
   beforeEach(() => {
     command = createQACommand();
     mockClient = {
-      vectorStores: {
+      stores: {
         questionAnswering: jest.fn(),
       },
     };
 
     // Setup default mocks
     mockCreateClient.mockReturnValue(mockClient as unknown as Mixedbread);
-    mockResolveVectorStore.mockResolvedValue({
+    mockResolveStore.mockResolvedValue({
       id: "550e8400-e29b-41d4-a716-446655440090",
       name: "test-store",
       created_at: "2021-01-01",
@@ -81,7 +80,7 @@ describe("QA Command", () => {
   });
 
   describe("Basic question answering", () => {
-    const mockQAResponse: VectorStoreQuestionAnsweringResponse = {
+    const mockQAResponse: StoreQuestionAnsweringResponse = {
       answer:
         "Machine learning is a subset of artificial intelligence that focuses on algorithms that can learn from data.",
       sources: [
@@ -91,7 +90,7 @@ describe("QA Command", () => {
           chunk_index: 2,
           metadata: { chapter: "Introduction" },
           file_id: "123",
-          vector_store_id: "456",
+          store_id: "456",
           type: "text",
           text: "Machine learning is a subset of artificial intelligence that focuses on algorithms that can learn from data.",
         },
@@ -101,7 +100,7 @@ describe("QA Command", () => {
           chunk_index: 0,
           metadata: { section: "Definitions" },
           file_id: "123",
-          vector_store_id: "456",
+          store_id: "456",
           type: "text",
           text: "Artificial intelligence (AI) is the simulation of human intelligence in machines that are programmed to think like humans and mimic their actions.",
         },
@@ -109,9 +108,7 @@ describe("QA Command", () => {
     };
 
     it("should ask question with default options", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(
-        mockQAResponse
-      );
+      mockClient.stores.questionAnswering.mockResolvedValue(mockQAResponse);
 
       await command.parseAsync([
         "node",
@@ -120,15 +117,15 @@ describe("QA Command", () => {
         "What is machine learning?",
       ]);
 
-      expect(mockResolveVectorStore).toHaveBeenCalledWith(
+      expect(mockResolveStore).toHaveBeenCalledWith(
         expect.objectContaining({
-          vectorStores: expect.any(Object),
+          stores: expect.any(Object),
         }),
         "test-store"
       );
-      expect(mockClient.vectorStores.questionAnswering).toHaveBeenCalledWith({
+      expect(mockClient.stores.questionAnswering).toHaveBeenCalledWith({
         query: "What is machine learning?",
-        vector_store_identifiers: ["550e8400-e29b-41d4-a716-446655440090"],
+        store_identifiers: ["550e8400-e29b-41d4-a716-446655440090"],
         top_k: 5,
         search_options: {
           score_threshold: undefined,
@@ -162,9 +159,7 @@ describe("QA Command", () => {
     });
 
     it("should ask question with custom top-k", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(
-        mockQAResponse
-      );
+      mockClient.stores.questionAnswering.mockResolvedValue(mockQAResponse);
 
       await command.parseAsync([
         "node",
@@ -175,7 +170,7 @@ describe("QA Command", () => {
         "15",
       ]);
 
-      expect(mockClient.vectorStores.questionAnswering).toHaveBeenCalledWith(
+      expect(mockClient.stores.questionAnswering).toHaveBeenCalledWith(
         expect.objectContaining({
           top_k: 15,
         })
@@ -183,9 +178,7 @@ describe("QA Command", () => {
     });
 
     it("should ask question with threshold", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(
-        mockQAResponse
-      );
+      mockClient.stores.questionAnswering.mockResolvedValue(mockQAResponse);
 
       await command.parseAsync([
         "node",
@@ -196,7 +189,7 @@ describe("QA Command", () => {
         "0.8",
       ]);
 
-      expect(mockClient.vectorStores.questionAnswering).toHaveBeenCalledWith(
+      expect(mockClient.stores.questionAnswering).toHaveBeenCalledWith(
         expect.objectContaining({
           search_options: expect.objectContaining({
             score_threshold: 0.8,
@@ -206,9 +199,7 @@ describe("QA Command", () => {
     });
 
     it("should ask question with return metadata enabled", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(
-        mockQAResponse
-      );
+      mockClient.stores.questionAnswering.mockResolvedValue(mockQAResponse);
 
       await command.parseAsync([
         "node",
@@ -218,7 +209,7 @@ describe("QA Command", () => {
         "--return-metadata",
       ]);
 
-      expect(mockClient.vectorStores.questionAnswering).toHaveBeenCalledWith(
+      expect(mockClient.stores.questionAnswering).toHaveBeenCalledWith(
         expect.objectContaining({
           search_options: expect.objectContaining({
             return_metadata: true,
@@ -237,7 +228,7 @@ describe("QA Command", () => {
         sources: [],
       };
 
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(
+      mockClient.stores.questionAnswering.mockResolvedValue(
         responseWithoutSources
       );
 
@@ -263,7 +254,7 @@ describe("QA Command", () => {
         answer: "The answer to your question.",
       };
 
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(
+      mockClient.stores.questionAnswering.mockResolvedValue(
         responseWithUndefinedSources
       );
 
@@ -288,7 +279,7 @@ describe("QA Command", () => {
   });
 
   describe("Output formatting", () => {
-    const mockResponse: VectorStoreQuestionAnsweringResponse = {
+    const mockResponse: StoreQuestionAnsweringResponse = {
       answer: "Test answer",
       sources: [
         {
@@ -297,7 +288,7 @@ describe("QA Command", () => {
           chunk_index: 1,
           metadata: { key: "value" },
           file_id: "123",
-          vector_store_id: "456",
+          store_id: "456",
           type: "text",
           text: "Test text",
         },
@@ -305,7 +296,7 @@ describe("QA Command", () => {
     };
 
     it("should format sources as table by default", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
+      mockClient.stores.questionAnswering.mockResolvedValue(mockResponse);
 
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
@@ -316,7 +307,7 @@ describe("QA Command", () => {
     });
 
     it("should format sources as JSON when specified", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
+      mockClient.stores.questionAnswering.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -331,7 +322,7 @@ describe("QA Command", () => {
     });
 
     it("should format sources as CSV when specified", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
+      mockClient.stores.questionAnswering.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -346,7 +337,7 @@ describe("QA Command", () => {
     });
 
     it("should format metadata correctly for table output", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
+      mockClient.stores.questionAnswering.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -362,7 +353,7 @@ describe("QA Command", () => {
     });
 
     it("should format metadata as object for non-table output", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
+      mockClient.stores.questionAnswering.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -380,7 +371,7 @@ describe("QA Command", () => {
     });
 
     it("should not include metadata in output when not requested", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
+      mockClient.stores.questionAnswering.mockResolvedValue(mockResponse);
 
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
@@ -501,7 +492,7 @@ describe("QA Command", () => {
   describe("Error handling", () => {
     it("should handle QA API errors", async () => {
       const error = new Error("API Error: Service unavailable");
-      mockClient.vectorStores.questionAnswering.mockRejectedValue(error);
+      mockClient.stores.questionAnswering.mockRejectedValue(error);
 
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
@@ -514,7 +505,7 @@ describe("QA Command", () => {
 
     it("should handle store resolution errors", async () => {
       const error = new Error("Store not found");
-      mockResolveVectorStore.mockRejectedValue(error);
+      mockResolveStore.mockRejectedValue(error);
 
       await command.parseAsync(["node", "qa", "nonexistent-store", "question"]);
 
@@ -526,9 +517,7 @@ describe("QA Command", () => {
     });
 
     it("should handle non-Error rejections", async () => {
-      mockClient.vectorStores.questionAnswering.mockRejectedValue(
-        "Unknown error"
-      );
+      mockClient.stores.questionAnswering.mockRejectedValue("Unknown error");
 
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
@@ -541,7 +530,7 @@ describe("QA Command", () => {
   });
 
   describe("Global options", () => {
-    const mockResponse: VectorStoreQuestionAnsweringResponse = {
+    const mockResponse: StoreQuestionAnsweringResponse = {
       answer: "Test answer",
       sources: [
         {
@@ -550,7 +539,7 @@ describe("QA Command", () => {
           chunk_index: 1,
           metadata: {},
           file_id: "123",
-          vector_store_id: "456",
+          store_id: "456",
           type: "text",
           text: "Test text",
         },
@@ -558,7 +547,7 @@ describe("QA Command", () => {
     };
 
     it("should support API key option", async () => {
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
+      mockClient.stores.questionAnswering.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -593,11 +582,11 @@ describe("QA Command", () => {
         },
       });
 
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
+      mockClient.stores.questionAnswering.mockResolvedValue(mockResponse);
 
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
-      expect(mockClient.vectorStores.questionAnswering).toHaveBeenCalledWith(
+      expect(mockClient.stores.questionAnswering).toHaveBeenCalledWith(
         expect.objectContaining({
           top_k: 12,
         })
@@ -614,7 +603,7 @@ describe("QA Command", () => {
         },
       });
 
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
+      mockClient.stores.questionAnswering.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -625,7 +614,7 @@ describe("QA Command", () => {
         "25",
       ]);
 
-      expect(mockClient.vectorStores.questionAnswering).toHaveBeenCalledWith(
+      expect(mockClient.stores.questionAnswering).toHaveBeenCalledWith(
         expect.objectContaining({
           top_k: 25,
         })
@@ -637,11 +626,11 @@ describe("QA Command", () => {
         version: "1.0",
       });
 
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
+      mockClient.stores.questionAnswering.mockResolvedValue(mockResponse);
 
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
-      expect(mockClient.vectorStores.questionAnswering).toHaveBeenCalledWith(
+      expect(mockClient.stores.questionAnswering).toHaveBeenCalledWith(
         expect.objectContaining({
           top_k: 10, // Fallback default
         })
@@ -651,7 +640,7 @@ describe("QA Command", () => {
 
   describe("Complex scenarios", () => {
     it("should handle all options together", async () => {
-      const mockResponse: VectorStoreQuestionAnsweringResponse = {
+      const mockResponse: StoreQuestionAnsweringResponse = {
         answer: "Complex answer with all options",
         sources: [
           {
@@ -660,14 +649,14 @@ describe("QA Command", () => {
             chunk_index: 5,
             metadata: { complexity: "high", topic: "advanced" },
             file_id: "123",
-            vector_store_id: "456",
+            store_id: "456",
             type: "text",
             text: "Test text",
           },
         ],
       };
 
-      mockClient.vectorStores.questionAnswering.mockResolvedValue(mockResponse);
+      mockClient.stores.questionAnswering.mockResolvedValue(mockResponse);
 
       await command.parseAsync([
         "node",
@@ -683,9 +672,9 @@ describe("QA Command", () => {
         "json",
       ]);
 
-      expect(mockClient.vectorStores.questionAnswering).toHaveBeenCalledWith({
+      expect(mockClient.stores.questionAnswering).toHaveBeenCalledWith({
         query: "Complex question?",
-        vector_store_identifiers: ["550e8400-e29b-41d4-a716-446655440090"],
+        store_identifiers: ["550e8400-e29b-41d4-a716-446655440090"],
         top_k: 20,
         search_options: {
           score_threshold: 0.75,

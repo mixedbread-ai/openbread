@@ -27,8 +27,8 @@ importers:
   packages/cli:
     dependencies:
       '@mixedbread/sdk':
-        specifier: ^0.26.0
-        version: 0.26.0
+        specifier: ^0.31.1
+        version: 0.31.1
       '@pnpm/tabtab':
         specifier: ^0.5.4
         version: 0.5.4
@@ -792,6 +792,10 @@ packages:
 
   '@mixedbread/sdk@0.26.0':
     resolution: {integrity: sha512-B0Un0thpz4UKN69QVmgdVsCIgiz+jR4V+nxuCOgdm/P0Iie1NctqY092VQ/iobY/FSMzhHJofXij086y/9E5rg==}
+    hasBin: true
+
+  '@mixedbread/sdk@0.31.1':
+    resolution: {integrity: sha512-cPbArdpdseUlPXAXyofaRpHw+5ePkQU68IsS//cnx9fBaFfBRTrQSUWDRkGoxaJ6cnNoVdGx/DuBO/Cuu5yj7g==}
     hasBin: true
 
   '@next/env@15.5.2':
@@ -4282,6 +4286,8 @@ snapshots:
       read-yaml-file: 1.1.0
 
   '@mixedbread/sdk@0.26.0': {}
+
+  '@mixedbread/sdk@0.31.1': {}
 
   '@next/env@15.5.2': {}
 

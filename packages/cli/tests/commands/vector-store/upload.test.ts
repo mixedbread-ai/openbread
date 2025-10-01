@@ -14,11 +14,11 @@ import { createUploadCommand } from "../../../src/commands/vector-store/upload";
 import * as clientUtils from "../../../src/utils/client";
 import * as configUtils from "../../../src/utils/config";
 import * as uploadUtils from "../../../src/utils/upload";
-import * as vectorStoreUtils from "../../../src/utils/vector-store";
+import * as storeUtils from "../../../src/utils/vector-store";
 
 import {
   createMockConfig,
-  createMockVectorStore,
+  createMockStore,
   type FlexibleMock,
 } from "../../helpers/test-utils";
 
@@ -34,14 +34,12 @@ jest.mock("glob");
 const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
   typeof clientUtils.createClient
 >;
-const mockResolveVectorStore =
-  vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
-    typeof vectorStoreUtils.resolveVectorStore
-  >;
-const mockGetVectorStoreFiles =
-  vectorStoreUtils.getVectorStoreFiles as jest.MockedFunction<
-    typeof vectorStoreUtils.getVectorStoreFiles
-  >;
+const mockResolveStore = storeUtils.resolveStore as jest.MockedFunction<
+  typeof storeUtils.resolveStore
+>;
+const mockGetStoreFiles = storeUtils.getStoreFiles as jest.MockedFunction<
+  typeof storeUtils.getStoreFiles
+>;
 const mockLoadConfig = configUtils.loadConfig as jest.MockedFunction<
   typeof configUtils.loadConfig
 >;
@@ -53,7 +51,7 @@ const mockUploadFilesInBatch =
 describe("Store Upload Command", () => {
   let command: Command;
   let mockClient: {
-    vectorStores: {
+    stores: {
       files: {
         list: FlexibleMock;
         upload: FlexibleMock;
@@ -67,7 +65,7 @@ describe("Store Upload Command", () => {
 
     // Setup mock client
     mockClient = {
-      vectorStores: {
+      stores: {
         files: {
           upload: jest.fn(),
           list: jest.fn(),
@@ -78,8 +76,8 @@ describe("Store Upload Command", () => {
 
     // Setup default mocks
     mockCreateClient.mockReturnValue(mockClient as unknown as Mixedbread);
-    mockResolveVectorStore.mockResolvedValue(
-      createMockVectorStore({
+    mockResolveStore.mockResolvedValue(
+      createMockStore({
         id: "550e8400-e29b-41d4-a716-446655440130",
         name: "test-store",
       })
@@ -353,16 +351,16 @@ describe("Store Upload Command", () => {
         "test.md",
       ]);
 
-      mockGetVectorStoreFiles.mockResolvedValue([
+      mockGetStoreFiles.mockResolvedValue([
         {
           id: "existing_file_id",
-          vector_store_id: "550e8400-e29b-41d4-a716-446655440130",
+          store_id: "550e8400-e29b-41d4-a716-446655440130",
           created_at: "2021-02-18T12:00:00Z",
           metadata: { file_path: "test.md" },
         },
       ]);
 
-      mockClient.vectorStores.files.delete.mockResolvedValue({});
+      mockClient.stores.files.delete.mockResolvedValue({});
 
       await command.parseAsync([
         "node",
@@ -372,7 +370,7 @@ describe("Store Upload Command", () => {
         "--unique",
       ]);
 
-      expect(mockGetVectorStoreFiles).toHaveBeenCalledWith(
+      expect(mockGetStoreFiles).toHaveBeenCalledWith(
         expect.any(Object),
         "550e8400-e29b-41d4-a716-446655440130"
       );
@@ -395,7 +393,7 @@ describe("Store Upload Command", () => {
       (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
         "test.md",
       ]);
-      mockGetVectorStoreFiles.mockRejectedValue(new Error("List failed"));
+      mockGetStoreFiles.mockRejectedValue(new Error("List failed"));
 
       await command.parseAsync([
         "node",
@@ -488,7 +486,7 @@ describe("Store Upload Command", () => {
     });
 
     it("should handle store resolution errors", async () => {
-      mockResolveVectorStore.mockRejectedValue(new Error("Store not found"));
+      mockResolveStore.mockRejectedValue(new Error("Store not found"));
 
       await command.parseAsync(["node", "upload", "invalid-store", "*.md"]);
 
@@ -609,10 +607,10 @@ describe("Store Upload Command", () => {
         "empty.md",
       ]);
 
-      mockGetVectorStoreFiles.mockResolvedValue([
+      mockGetStoreFiles.mockResolvedValue([
         {
           id: "existing_file_id",
-          vector_store_id: "550e8400-e29b-41d4-a716-446655440130",
+          store_id: "550e8400-e29b-41d4-a716-446655440130",
           created_at: "2021-02-18T12:00:00Z",
           metadata: { file_path: "existing.md" },
         },

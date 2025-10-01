@@ -1,7 +1,7 @@
 import { readFileSync, statSync } from "node:fs";
 import { basename, relative } from "node:path";
 import type Mixedbread from "@mixedbread/sdk";
-import type { FileCreateParams } from "@mixedbread/sdk/resources/vector-stores";
+import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { lookup } from "mime-types";
 import ora from "ora";
@@ -64,7 +64,7 @@ function fixMimeTypes(file: File): File {
  */
 export async function uploadFile(
   client: Mixedbread,
-  vectorStoreIdentifier: string,
+  storeIdentifier: string,
   filePath: string,
   options: UploadFileOptions = {}
 ): Promise<void> {
@@ -79,7 +79,7 @@ export async function uploadFile(
   );
 
   // Upload the file
-  await client.vectorStores.files.upload(vectorStoreIdentifier, file, {
+  await client.stores.files.upload(storeIdentifier, file, {
     metadata,
     experimental: {
       parsing_strategy: strategy,
@@ -93,7 +93,7 @@ export async function uploadFile(
  */
 export async function uploadFilesInBatch(
   client: Mixedbread,
-  vectorStoreIdentifier: string,
+  storeIdentifier: string,
   files: FileToUpload[],
   options: {
     unique: boolean;
@@ -141,8 +141,8 @@ export async function uploadFilesInBatch(
         const relativePath = relative(process.cwd(), file.path);
         if (unique && existingFiles.has(relativePath)) {
           const existingFileId = existingFiles.get(relativePath);
-          await client.vectorStores.files.delete(existingFileId, {
-            vector_store_identifier: vectorStoreIdentifier,
+          await client.stores.files.delete(existingFileId, {
+            store_identifier: storeIdentifier,
           });
         }
 
@@ -171,17 +171,13 @@ export async function uploadFilesInBatch(
           })
         );
 
-        await client.vectorStores.files.upload(
-          vectorStoreIdentifier,
-          fileToUpload,
-          {
-            metadata: fileMetadata,
-            experimental: {
-              parsing_strategy: file.strategy,
-              contextualization: file.contextualization,
-            },
-          }
-        );
+        await client.stores.files.upload(storeIdentifier, fileToUpload, {
+          metadata: fileMetadata,
+          experimental: {
+            parsing_strategy: file.strategy,
+            contextualization: file.contextualization,
+          },
+        });
 
         if (unique && existingFiles.has(relativePath)) {
           results.updated++;

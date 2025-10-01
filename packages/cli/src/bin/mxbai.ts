@@ -32,7 +32,7 @@ import {
   createCompletionServerCommand,
 } from "../commands/completion";
 import { createConfigCommand } from "../commands/config";
-import { createVectorStoreCommand } from "../commands/vector-store";
+import { createStoreCommand } from "../commands/vector-store";
 import { setupGlobalOptions } from "../utils/global-options";
 
 const program = new Command();
@@ -46,7 +46,7 @@ program
 setupGlobalOptions(program);
 
 // Add commands
-program.addCommand(createVectorStoreCommand());
+program.addCommand(createStoreCommand());
 program.addCommand(createConfigCommand());
 program.addCommand(createCompletionCommand());
 program.addCommand(createCompletionServerCommand());

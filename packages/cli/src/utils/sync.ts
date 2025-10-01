@@ -2,7 +2,7 @@ import { statSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type Mixedbread from "@mixedbread/sdk";
-import type { FileCreateParams } from "@mixedbread/sdk/resources/vector-stores";
+import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { glob } from "glob";
 import ora from "ora";
@@ -242,7 +242,7 @@ export function formatChangeSummary(analysis: SyncAnalysis): string {
 
 export async function executeSyncChanges(
   client: Mixedbread,
-  vectorStoreIdentifier: string,
+  storeIdentifier: string,
   analysis: SyncAnalysis,
   options: {
     strategy?: FileCreateParams.Experimental["parsing_strategy"];
@@ -285,8 +285,8 @@ export async function executeSyncChanges(
           `Deleting ${path.relative(process.cwd(), file.path)}`
         ).start();
         try {
-          await client.vectorStores.files.delete(file.fileId!, {
-            vector_store_identifier: vectorStoreIdentifier,
+          await client.stores.files.delete(file.fileId!, {
+            store_identifier: storeIdentifier,
           });
           completed++;
           deleteSpinner.succeed(
@@ -364,7 +364,7 @@ export async function executeSyncChanges(
           }
 
           // Upload file
-          await uploadFile(client, vectorStoreIdentifier, file.path, {
+          await uploadFile(client, storeIdentifier, file.path, {
             metadata: finalMetadata,
             strategy: options.strategy,
             contextualization: options.contextualization,

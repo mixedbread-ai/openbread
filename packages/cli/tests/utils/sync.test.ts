@@ -62,7 +62,7 @@ const mockNormalizeGitPatterns =
 
 describe("Sync Utils", () => {
   let mockClient: {
-    vectorStores: {
+    stores: {
       files: {
         upload: FlexibleMock;
         delete: FlexibleMock;
@@ -318,7 +318,7 @@ describe("Sync Utils", () => {
         totalSize: 27,
       };
 
-      mockClient.vectorStores.files.delete.mockResolvedValue({});
+      mockClient.stores.files.delete.mockResolvedValue({});
       mockUploadFile.mockResolvedValue();
 
       const result = await executeSyncChanges(
@@ -336,9 +336,9 @@ describe("Sync Utils", () => {
       expect(result.uploads.failed).toHaveLength(0);
       expect(result.deletions.successful).toHaveLength(1);
       expect(result.deletions.failed).toHaveLength(0);
-      expect(mockClient.vectorStores.files.delete).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.delete).toHaveBeenCalledWith(
         "modified-file-id",
-        { vector_store_identifier: "test-store" }
+        { store_identifier: "test-store" }
       );
       expect(mockUploadFile).toHaveBeenCalledTimes(2);
     });
@@ -428,7 +428,7 @@ describe("Sync Utils", () => {
         totalSize: 31,
       };
 
-      mockClient.vectorStores.files.delete.mockResolvedValue({});
+      mockClient.stores.files.delete.mockResolvedValue({});
       mockUploadFile.mockResolvedValue();
 
       const result = await executeSyncChanges(
@@ -446,9 +446,9 @@ describe("Sync Utils", () => {
       expect(result.uploads.failed).toHaveLength(1); // Empty file
       expect(result.uploads.failed[0].skipped).toBe(true);
       expect(result.deletions.successful).toHaveLength(1);
-      expect(mockClient.vectorStores.files.delete).toHaveBeenCalledWith(
+      expect(mockClient.stores.files.delete).toHaveBeenCalledWith(
         "modified-file-id",
-        { vector_store_identifier: "test-store" }
+        { store_identifier: "test-store" }
       );
       expect(mockUploadFile).toHaveBeenCalledTimes(2);
     });
