@@ -5,12 +5,12 @@ import { glob } from "glob";
 import ora from "ora";
 import { parse } from "yaml";
 import { z } from "zod";
-import type { UploadOptions } from "../commands/vector-store/upload";
+import type { UploadOptions } from "../commands/store/upload";
 import { loadConfig } from "./config";
 import { validateMetadata } from "./metadata";
 import { formatBytes, formatCountWithSuffix } from "./output";
+import { getStoreFiles } from "./store";
 import { type FileToUpload, uploadFilesInBatch } from "./upload";
-import { getStoreFiles } from "./vector-store";
 
 // Manifest file schema
 const ManifestFileEntrySchema = z.object({

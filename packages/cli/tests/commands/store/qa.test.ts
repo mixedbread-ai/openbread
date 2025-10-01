@@ -9,15 +9,15 @@ import {
 import type Mixedbread from "@mixedbread/sdk";
 import type { StoreQuestionAnsweringResponse } from "@mixedbread/sdk/resources";
 import type { Command } from "commander";
-import { createQACommand } from "../../../src/commands/vector-store/qa";
+import { createQACommand } from "../../../src/commands/store/qa";
 import * as clientUtils from "../../../src/utils/client";
 import * as configUtils from "../../../src/utils/config";
 import * as outputUtils from "../../../src/utils/output";
-import * as storeUtils from "../../../src/utils/vector-store";
+import * as storeUtils from "../../../src/utils/store";
 
 // Mock dependencies
 jest.mock("../../../src/utils/client");
-jest.mock("../../../src/utils/vector-store");
+jest.mock("../../../src/utils/store");
 jest.mock("../../../src/utils/output", () => ({
   ...(jest.requireActual("../../../src/utils/output") as object),
   formatOutput: jest.fn(),

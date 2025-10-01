@@ -9,17 +9,17 @@ import {
 import type Mixedbread from "@mixedbread/sdk";
 import type { Command } from "commander";
 import mockFs from "mock-fs";
-import { createSyncCommand } from "../../../src/commands/vector-store/sync";
+import { createSyncCommand } from "../../../src/commands/store/sync";
 import * as clientUtils from "../../../src/utils/client";
+import * as storeUtils from "../../../src/utils/store";
 import * as syncUtils from "../../../src/utils/sync";
 import * as syncStateUtils from "../../../src/utils/sync-state";
-import * as storeUtils from "../../../src/utils/vector-store";
 
 // Mock dependencies
 jest.mock("../../../src/utils/client");
 jest.mock("../../../src/utils/sync");
 jest.mock("../../../src/utils/sync-state");
-jest.mock("../../../src/utils/vector-store");
+jest.mock("../../../src/utils/store");
 
 // Explicit mock definitions
 const mockCreateClient = clientUtils.createClient as jest.MockedFunction<

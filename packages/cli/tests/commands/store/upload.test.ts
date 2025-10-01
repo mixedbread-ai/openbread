@@ -10,11 +10,11 @@ import type Mixedbread from "@mixedbread/sdk";
 import type { Command } from "commander";
 import { glob } from "glob";
 import mockFs from "mock-fs";
-import { createUploadCommand } from "../../../src/commands/vector-store/upload";
+import { createUploadCommand } from "../../../src/commands/store/upload";
 import * as clientUtils from "../../../src/utils/client";
 import * as configUtils from "../../../src/utils/config";
+import * as storeUtils from "../../../src/utils/store";
 import * as uploadUtils from "../../../src/utils/upload";
-import * as storeUtils from "../../../src/utils/vector-store";
 
 import {
   createMockConfig,
@@ -24,7 +24,7 @@ import {
 
 // Mock dependencies
 jest.mock("../../../src/utils/client");
-jest.mock("../../../src/utils/vector-store");
+jest.mock("../../../src/utils/store");
 jest.mock("../../../src/utils/config");
 jest.mock("../../../src/utils/upload");
 jest.mock("glob");

@@ -32,7 +32,7 @@ import {
   createCompletionServerCommand,
 } from "../commands/completion";
 import { createConfigCommand } from "../commands/config";
-import { createStoreCommand } from "../commands/vector-store";
+import { createStoreCommand } from "../commands/store";
 import { setupGlobalOptions } from "../utils/global-options";
 
 const program = new Command();

@@ -14,6 +14,7 @@ import {
 } from "../../utils/global-options";
 import { validateMetadata } from "../../utils/metadata";
 import { formatBytes, formatCountWithSuffix } from "../../utils/output";
+import { resolveStore } from "../../utils/store";
 import {
   analyzeChanges,
   displaySyncResultsSummary,
@@ -21,7 +22,6 @@ import {
   formatChangeSummary,
 } from "../../utils/sync";
 import { getSyncedFiles } from "../../utils/sync-state";
-import { resolveStore } from "../../utils/vector-store";
 
 const SyncStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),

@@ -8,13 +8,13 @@ import {
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
 import type { Command } from "commander";
-import { createDeleteCommand } from "../../../src/commands/vector-store/delete";
+import { createDeleteCommand } from "../../../src/commands/store/delete";
 import * as clientUtils from "../../../src/utils/client";
-import * as storeUtils from "../../../src/utils/vector-store";
+import * as storeUtils from "../../../src/utils/store";
 
 // Mock dependencies
 jest.mock("../../../src/utils/client");
-jest.mock("../../../src/utils/vector-store");
+jest.mock("../../../src/utils/store");
 
 // Explicit mock definitions
 const mockCreateClient = clientUtils.createClient as jest.MockedFunction<

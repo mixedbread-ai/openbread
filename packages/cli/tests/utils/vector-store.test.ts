@@ -9,7 +9,7 @@ import {
 } from "@jest/globals";
 import type { Mixedbread } from "@mixedbread/sdk";
 import * as configUtils from "../../src/utils/config";
-import { resolveStore } from "../../src/utils/vector-store";
+import { resolveStore } from "../../src/utils/store";
 
 // Mock config utils
 jest.mock("../../src/utils/config");

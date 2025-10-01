@@ -13,7 +13,7 @@ import {
   parseOptions,
 } from "../../utils/global-options";
 import { formatCountWithSuffix, formatOutput } from "../../utils/output";
-import { resolveStore } from "../../utils/vector-store";
+import { resolveStore } from "../../utils/store";
 
 const SearchStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),

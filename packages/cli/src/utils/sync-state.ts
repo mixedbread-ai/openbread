@@ -1,5 +1,5 @@
 import type Mixedbread from "@mixedbread/sdk";
-import { getStoreFiles } from "./vector-store";
+import { getStoreFiles } from "./store";
 
 export interface FileSyncMetadata {
   file_path: string;

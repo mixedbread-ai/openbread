@@ -10,7 +10,7 @@ import type Mixedbread from "@mixedbread/sdk";
 import type { CursorResponse } from "@mixedbread/sdk/core/pagination.mjs";
 import type { Store } from "@mixedbread/sdk/resources/index.mjs";
 import type { Command } from "commander";
-import { createListCommand } from "../../../src/commands/vector-store/list";
+import { createListCommand } from "../../../src/commands/store/list";
 import * as clientUtils from "../../../src/utils/client";
 import * as outputUtils from "../../../src/utils/output";
 

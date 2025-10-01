@@ -17,8 +17,8 @@ import {
 import { uploadFromManifest } from "../../utils/manifest";
 import { validateMetadata } from "../../utils/metadata";
 import { formatBytes, formatCountWithSuffix } from "../../utils/output";
+import { getStoreFiles, resolveStore } from "../../utils/store";
 import { type FileToUpload, uploadFilesInBatch } from "../../utils/upload";
-import { getStoreFiles, resolveStore } from "../../utils/vector-store";
 
 const UploadStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),

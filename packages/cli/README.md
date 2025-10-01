@@ -443,7 +443,7 @@ This CLI is built on top of the `@mixedbread/sdk` and provides a convenient comm
    pnpm test
 
    # Run specific test file
-   pnpm test tests/commands/vector-store/upload.test.ts
+   pnpm test tests/commands/store/upload.test.ts
 
    # Run tests in watch mode
    pnpm test --watch
@@ -467,7 +467,7 @@ src/
 │   │   ├── get.ts          # Get config values
 │   │   ├── set.ts          # Set config values
 │   │   └── index.ts
-│   └── vector-store/        # Store commands
+│   └── store/        # Store commands
 │       ├── files/           # File management subcommands
 │       │   ├── delete.ts
 │       │   ├── get.ts
@@ -496,7 +496,7 @@ src/
 │   ├── sync-state.ts       # Sync state management
 │   ├── sync.ts             # Sync logic
 │   ├── upload.ts           # Upload utilities
-│   └── vector-store.ts     # Store helpers
+│   └── store.ts     # Store helpers
 └── index.ts                # Package exports
 
 tests/
@@ -507,10 +507,10 @@ tests/
 
 #### Adding New Commands
 
-1. **Create command file** in `src/commands/vector-store/`:
+1. **Create command file** in `src/commands/store/`:
 
    ```typescript
-   // src/commands/vector-store/my-command.ts
+   // src/commands/store/my-command.ts
    import { Command } from 'commander';
    import { addGlobalOptions } from '../../utils/global-options';
 
@@ -526,7 +526,7 @@ tests/
    }
    ```
 
-2. **Register command** in `src/commands/vector-store/index.ts`:
+2. **Register command** in `src/commands/store/index.ts`:
 
    ```typescript
    import { createMyCommand } from './my-command';
@@ -535,10 +535,10 @@ tests/
    storeCommand.addCommand(createMyCommand());
    ```
 
-3. **Add tests** in `tests/commands/vector-store/my-command.test.ts`:
+3. **Add tests** in `tests/commands/store/my-command.test.ts`:
 
    ```typescript
-   import { createMyCommand } from '../../../src/commands/vector-store/my-command';
+   import { createMyCommand } from '../../../src/commands/store/my-command';
 
    describe('My Command', () => {
      it('should work correctly', async () => {

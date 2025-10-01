@@ -11,7 +11,7 @@ import {
   mergeCommandOptions,
   parseOptions,
 } from "../../../utils/global-options";
-import { resolveStore } from "../../../utils/vector-store";
+import { resolveStore } from "../../../utils/store";
 
 const DeleteFileSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),

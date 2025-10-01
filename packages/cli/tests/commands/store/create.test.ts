@@ -8,7 +8,7 @@ import {
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
 import type { Command } from "commander";
-import { createCreateCommand } from "../../../src/commands/vector-store/create";
+import { createCreateCommand } from "../../../src/commands/store/create";
 import * as clientUtils from "../../../src/utils/client";
 import * as outputUtils from "../../../src/utils/output";
 

@@ -15,7 +15,7 @@ import {
   formatCountWithSuffix,
   formatOutput,
 } from "../../../utils/output";
-import { resolveStore } from "../../../utils/vector-store";
+import { resolveStore } from "../../../utils/store";
 import type { FilesOptions } from ".";
 
 const ListFilesSchema = extendGlobalOptions({
