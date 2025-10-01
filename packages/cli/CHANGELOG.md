@@ -4,7 +4,23 @@
 
 ### Major Changes
 
-- aa54a04: Update `vs` to `store` in all commands
+- aa54a04: Renamed command structure from `vs` to `store` for clarity
+
+  ## Breaking Changes
+
+  All `vs` commands have been renamed to `store`:
+
+  - `mxbai vs` → `mxbai store`
+  - `mxbai vs create` → `mxbai store create`
+  - `mxbai vs list` → `mxbai store list`
+  - `mxbai vs get` → `mxbai store get`
+  - `mxbai vs update` → `mxbai store update`
+  - `mxbai vs delete` → `mxbai store delete`
+  - `mxbai vs files` → `mxbai store files`
+  - `mxbai vs sync` → `mxbai store sync`
+  - `mxbai vs upload` → `mxbai store upload`
+  - `mxbai vs search` → `mxbai store search`
+  - `mxbai vs qa` → `mxbai store qa`
 
 ## 1.2.1
 
