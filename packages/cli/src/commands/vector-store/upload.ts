@@ -59,8 +59,8 @@ export interface UploadOptions extends GlobalOptions {
 export function createUploadCommand(): Command {
   const command = addGlobalOptions(
     new Command("upload")
-      .description("Upload files to a vector store")
-      .argument("<name-or-id>", "Name or ID of the vector store")
+      .description("Upload files to a store")
+      .argument("<name-or-id>", "Name or ID of the store")
       .argument(
         "[patterns...]",
         'File patterns to upload (e.g., "*.md", "docs/**/*.pdf")'

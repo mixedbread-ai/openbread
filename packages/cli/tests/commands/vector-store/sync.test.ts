@@ -40,7 +40,7 @@ const mockResolveVectorStore =
     typeof vectorStoreUtils.resolveVectorStore
   >;
 
-describe("Vector Store Sync Command", () => {
+describe("Store Sync Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {

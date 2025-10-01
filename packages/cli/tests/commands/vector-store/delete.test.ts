@@ -57,7 +57,7 @@ describe("Delete Command", () => {
   });
 
   describe("Basic deletion", () => {
-    it("should delete vector store with yes flag", async () => {
+    it("should delete store with yes flag", async () => {
       mockClient.vectorStores.delete.mockResolvedValue({
         id: "550e8400-e29b-41d4-a716-446655440040",
         deleted: true,
@@ -76,9 +76,7 @@ describe("Delete Command", () => {
       );
       expect(console.log).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining(
-          'Vector store "test-store" deleted successfully'
-        )
+        expect.stringContaining('Store "test-store" deleted successfully')
       );
     });
 
@@ -110,8 +108,8 @@ describe("Delete Command", () => {
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it("should handle vector store resolution errors", async () => {
-      const error = new Error("Vector store not found");
+    it("should handle store resolution errors", async () => {
+      const error = new Error("Store not found");
       mockResolveVectorStore.mockRejectedValue(error);
 
       await command.parseAsync([
@@ -123,7 +121,7 @@ describe("Delete Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        "Vector store not found"
+        "Store not found"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -135,7 +133,7 @@ describe("Delete Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        "Failed to delete vector store"
+        "Failed to delete store"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

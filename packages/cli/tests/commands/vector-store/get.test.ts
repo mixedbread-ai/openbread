@@ -33,7 +33,7 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
 
-describe("Vector Store Get Command", () => {
+describe("Store Get Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
@@ -67,11 +67,11 @@ describe("Vector Store Get Command", () => {
   });
 
   describe("Basic retrieval", () => {
-    it("should get vector store details", async () => {
+    it("should get store details", async () => {
       mockResolveVectorStore.mockResolvedValue({
         id: "550e8400-e29b-41d4-a716-446655440050",
         name: "test-store",
-        description: "A test vector store",
+        description: "A test store",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
         file_counts: { total: 5 },
@@ -92,7 +92,7 @@ describe("Vector Store Get Command", () => {
         expect.objectContaining({
           id: "550e8400-e29b-41d4-a716-446655440050",
           name: "test-store",
-          description: "A test vector store",
+          description: "A test store",
           status: "active",
           "total files": 5,
           "completed files": 0,
@@ -106,14 +106,14 @@ describe("Vector Store Get Command", () => {
       );
     });
 
-    it("should handle expired vector stores", async () => {
+    it("should handle expired stores", async () => {
       const expiredDate = new Date();
       expiredDate.setDate(expiredDate.getDate() - 1); // Yesterday
 
       mockResolveVectorStore.mockResolvedValue({
         id: "550e8400-e29b-41d4-a716-446655440050",
         name: "test-store",
-        description: "An expired vector store",
+        description: "An expired store",
         created_at: "2024-01-01T00:00:00Z",
         updated_at: "2024-01-01T00:00:00Z",
         file_counts: { total: 5 },
@@ -159,7 +159,7 @@ describe("Vector Store Get Command", () => {
     const mockVectorStore = {
       id: "550e8400-e29b-41d4-a716-446655440050",
       name: "test-store",
-      description: "A test vector store",
+      description: "A test store",
       created_at: "2024-01-01T00:00:00Z",
       updated_at: "2024-01-01T00:00:00Z",
       file_counts: { total: 5 },
@@ -221,15 +221,15 @@ describe("Vector Store Get Command", () => {
   });
 
   describe("Error handling", () => {
-    it("should handle vector store resolution errors", async () => {
-      const error = new Error("Vector store not found");
+    it("should handle store resolution errors", async () => {
+      const error = new Error("Store not found");
       mockResolveVectorStore.mockRejectedValue(error);
 
       await command.parseAsync(["node", "get", "nonexistent-store"]);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        "Vector store not found"
+        "Store not found"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -241,7 +241,7 @@ describe("Vector Store Get Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        "Failed to get vector store details"
+        "Failed to get store details"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -251,7 +251,7 @@ describe("Vector Store Get Command", () => {
     const mockVectorStore = {
       id: "550e8400-e29b-41d4-a716-446655440050",
       name: "test-store",
-      description: "A test vector store",
+      description: "A test store",
       created_at: "2024-01-01T00:00:00Z",
       updated_at: "2024-01-01T00:00:00Z",
       file_counts: { total: 5 },

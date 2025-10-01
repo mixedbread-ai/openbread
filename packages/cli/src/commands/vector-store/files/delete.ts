@@ -23,8 +23,8 @@ export function createDeleteCommand(): Command {
   const deleteCommand = addGlobalOptions(
     new Command("delete")
       .alias("rm")
-      .description("Delete a file from vector store")
-      .argument("<name-or-id>", "Name or ID of the vector store")
+      .description("Delete a file from store")
+      .argument("<name-or-id>", "Name or ID of the store")
       .argument("<file-id>", "ID of the file")
       .option("-y, --yes", "Skip confirmation prompt")
   );
@@ -53,7 +53,7 @@ export function createDeleteCommand(): Command {
             {
               type: "confirm",
               name: "confirmed",
-              message: `Are you sure you want to delete file "${parsedOptions.fileId}" from vector store "${vectorStore.name}" (${vectorStore.id})? This action cannot be undone.`,
+              message: `Are you sure you want to delete file "${parsedOptions.fileId}" from store "${vectorStore.name}" (${vectorStore.id})? This action cannot be undone.`,
               default: false,
             },
           ]);

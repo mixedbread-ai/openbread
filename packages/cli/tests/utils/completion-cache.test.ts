@@ -169,7 +169,7 @@ describe("Completion Cache", () => {
   });
 
   describe("refreshCacheForKey", () => {
-    it("should fetch and cache vector stores for a key", async () => {
+    it("should fetch and cache stores for a key", async () => {
       mockFs({
         [configDir]: {},
       });
@@ -182,8 +182,8 @@ describe("Completion Cache", () => {
         >()
         .mockResolvedValue({
           data: [
-            { id: "vs1", name: "store1" },
-            { id: "vs2", name: "store2" },
+            { id: "store1", name: "store1" },
+            { id: "store2", name: "store2" },
           ],
         });
       const mockClient = {
@@ -216,7 +216,7 @@ describe("Completion Cache", () => {
           }) => Promise<{ data: Array<{ id: string; name: string }> }>
         >()
         .mockResolvedValue({
-          data: [{ id: "vs1", name: "work-store" }],
+          data: [{ id: "store1", name: "work-store" }],
         });
       const mockClient = {
         vectorStores: {
@@ -270,7 +270,7 @@ describe("Completion Cache", () => {
           }) => Promise<{ data: Array<{ id: string; name: string }> }>
         >()
         .mockResolvedValue({
-          data: [{ id: "vs1", name: "store1" }],
+          data: [{ id: "store1", name: "store1" }],
         });
       const mockClient = {
         vectorStores: {
@@ -306,10 +306,10 @@ describe("Completion Cache", () => {
           }) => Promise<{ data: Array<{ id: string; name: string }> }>
         >()
         .mockResolvedValueOnce({
-          data: [{ id: "vs1", name: "work-store" }],
+          data: [{ id: "store1", name: "work-store" }],
         })
         .mockResolvedValueOnce({
-          data: [{ id: "vs2", name: "personal-store" }],
+          data: [{ id: "store2", name: "personal-store" }],
         });
       const mockClient = {
         vectorStores: {
@@ -522,7 +522,7 @@ describe("Completion Cache", () => {
           }) => Promise<{ data: Array<{ id: string; name: string }> }>
         >()
         .mockResolvedValue({
-          data: [{ id: "vs1", name: "store1" }],
+          data: [{ id: "store1", name: "store1" }],
         });
       const mockClient = {
         vectorStores: {

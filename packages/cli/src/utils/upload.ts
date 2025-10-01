@@ -60,7 +60,7 @@ function fixMimeTypes(file: File): File {
 }
 
 /**
- * Upload a single file to a vector store
+ * Upload a single file to a store
  */
 export async function uploadFile(
   client: Mixedbread,
@@ -89,7 +89,7 @@ export async function uploadFile(
 }
 
 /**
- * Upload multiple files to a vector store with batch processing
+ * Upload multiple files to a store with batch processing
  */
 export async function uploadFilesInBatch(
   client: Mixedbread,
@@ -109,7 +109,7 @@ export async function uploadFilesInBatch(
   );
 
   console.log(
-    `\nUploading ${formatCountWithSuffix(files.length, "file")} to vector store...`
+    `\nUploading ${formatCountWithSuffix(files.length, "file")} to store...`
   );
 
   const results: UploadResults = {

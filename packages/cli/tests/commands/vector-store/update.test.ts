@@ -33,7 +33,7 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
 
-describe("Vector Store Update Command", () => {
+describe("Store Update Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
@@ -67,7 +67,7 @@ describe("Vector Store Update Command", () => {
   });
 
   describe("Basic updates", () => {
-    it("should update vector store name", async () => {
+    it("should update store name", async () => {
       const updatedVectorStore = {
         id: "550e8400-e29b-41d4-a716-446655440060",
         name: "updated-store",
@@ -102,9 +102,7 @@ describe("Vector Store Update Command", () => {
       );
       expect(console.log).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining(
-          'Vector store "test-store" updated successfully'
-        )
+        expect.stringContaining('Store "test-store" updated successfully')
       );
       expect(mockFormatOutput).toHaveBeenCalledWith(
         updatedVectorStore,
@@ -112,7 +110,7 @@ describe("Vector Store Update Command", () => {
       );
     });
 
-    it("should update vector store description", async () => {
+    it("should update store description", async () => {
       const updatedVectorStore = {
         id: "550e8400-e29b-41d4-a716-446655440060",
         name: "test-store",
@@ -141,7 +139,7 @@ describe("Vector Store Update Command", () => {
       );
     });
 
-    it("should update vector store expiration", async () => {
+    it("should update store expiration", async () => {
       const updatedVectorStore = {
         id: "550e8400-e29b-41d4-a716-446655440060",
         name: "test-store",
@@ -173,7 +171,7 @@ describe("Vector Store Update Command", () => {
       );
     });
 
-    it("should update vector store metadata", async () => {
+    it("should update store metadata", async () => {
       const metadata = { key: "value", version: "2.0" };
       const updatedVectorStore = {
         id: "550e8400-e29b-41d4-a716-446655440060",
@@ -436,8 +434,8 @@ describe("Vector Store Update Command", () => {
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it("should handle vector store resolution errors", async () => {
-      const error = new Error("Vector store not found");
+    it("should handle store resolution errors", async () => {
+      const error = new Error("Store not found");
       mockResolveVectorStore.mockRejectedValue(error);
 
       await command.parseAsync([
@@ -450,7 +448,7 @@ describe("Vector Store Update Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        "Vector store not found"
+        "Store not found"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -468,7 +466,7 @@ describe("Vector Store Update Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        "Failed to update vector store"
+        "Failed to update store"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

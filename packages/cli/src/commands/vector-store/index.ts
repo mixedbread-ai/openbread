@@ -11,24 +11,24 @@ import { createUpdateCommand } from "./update";
 import { createUploadCommand } from "./upload";
 
 export function createVectorStoreCommand(): Command {
-  const vsCommand = new Command("vs").description("Manage vector stores");
+  const storeCommand = new Command("store").description("Manage stores");
 
   // Add subcommands
-  vsCommand.addCommand(createListCommand());
-  vsCommand.addCommand(createCreateCommand());
-  vsCommand.addCommand(createGetCommand());
-  vsCommand.addCommand(createUpdateCommand());
-  vsCommand.addCommand(createDeleteCommand());
-  vsCommand.addCommand(createUploadCommand());
-  vsCommand.addCommand(createFilesCommand());
-  vsCommand.addCommand(createSearchCommand());
-  vsCommand.addCommand(createQACommand());
-  vsCommand.addCommand(createSyncCommand());
+  storeCommand.addCommand(createListCommand());
+  storeCommand.addCommand(createCreateCommand());
+  storeCommand.addCommand(createGetCommand());
+  storeCommand.addCommand(createUpdateCommand());
+  storeCommand.addCommand(createDeleteCommand());
+  storeCommand.addCommand(createUploadCommand());
+  storeCommand.addCommand(createFilesCommand());
+  storeCommand.addCommand(createSearchCommand());
+  storeCommand.addCommand(createQACommand());
+  storeCommand.addCommand(createSyncCommand());
 
   // Show help without error exit code when no subcommand provided
-  vsCommand.action(() => {
-    vsCommand.help();
+  storeCommand.action(() => {
+    storeCommand.help();
   });
 
-  return vsCommand;
+  return storeCommand;
 }

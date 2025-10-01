@@ -159,7 +159,7 @@ export async function analyzeChanges(
       if (gitStatus === "deleted") {
         const syncedFile = syncedFiles.get(filePath);
         if (syncedFile) {
-          // File was deleted in git and exists in vector store - mark for deletion
+          // File was deleted in git and exists in store - mark for deletion
           analysis.deleted.push({
             path: filePath,
             type: "deleted",
@@ -478,7 +478,7 @@ export function displaySyncResultsSummary(
   if (hasFailures) {
     console.log(chalk.yellow("\n⚠ Sync completed with errors"));
   } else {
-    console.log(chalk.green("\n✓ Vector store is now in sync"));
+    console.log(chalk.green("\n✓ Store is now in sync"));
   }
 
   if (fromGit && gitInfo.isRepo) {

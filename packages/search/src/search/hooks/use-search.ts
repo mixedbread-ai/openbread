@@ -42,7 +42,7 @@ export interface UseSearchReturn {
 }
 
 /**
- * Custom hook for implementing search functionality with mixedbread vector store
+ * Custom hook for implementing search functionality with mixedbread store
  *
  * @param config - Configuration options for the search
  * @returns Search state and handlers

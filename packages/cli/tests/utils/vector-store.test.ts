@@ -14,7 +14,7 @@ import { resolveVectorStore } from "../../src/utils/vector-store";
 // Mock config utils
 jest.mock("../../src/utils/config");
 
-describe("Vector Store Utils", () => {
+describe("Store Utils", () => {
   describe("resolveVectorStore", () => {
     let mockClient: {
       vectorStores: {
@@ -42,7 +42,7 @@ describe("Vector Store Utils", () => {
       jest.clearAllMocks();
     });
 
-    it("should resolve vector store ID directly", async () => {
+    it("should resolve store ID directly", async () => {
       const mockVectorStore = {
         id: "550e8400-e29b-41d4-a716-446655440010",
         name: "test-store",
@@ -63,7 +63,7 @@ describe("Vector Store Utils", () => {
       expect(mockClient.vectorStores.list).not.toHaveBeenCalled();
     });
 
-    it("should resolve vector store by name", async () => {
+    it("should resolve store by name", async () => {
       const mockVectorStore = {
         id: "550e8400-e29b-41d4-a716-446655440011",
         name: "my-store",
@@ -110,9 +110,9 @@ describe("Vector Store Utils", () => {
       );
     });
 
-    it("should handle vector store not found by ID", async () => {
+    it("should handle store not found by ID", async () => {
       mockClient.vectorStores.retrieve.mockRejectedValue(
-        new Error("Vector store not found")
+        new Error("Store not found")
       );
       mockClient.vectorStores.list.mockResolvedValue({ data: [] });
 
@@ -124,13 +124,13 @@ describe("Vector Store Utils", () => {
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringContaining(
-          'Vector store "550e8400-e29b-41d4-a716-446655440002" not found'
+          'Store "550e8400-e29b-41d4-a716-446655440002" not found'
         )
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it("should handle vector store not found by name", async () => {
+    it("should handle store not found by name", async () => {
       // Mock retrieve to fail first
       mockClient.vectorStores.retrieve.mockRejectedValue(
         new Error("Not found")
@@ -150,11 +150,11 @@ describe("Vector Store Utils", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining('Vector store "nonexistent-store" not found')
+        expect.stringContaining('Store "nonexistent-store" not found')
       );
     });
 
-    it("should handle empty vector store list", async () => {
+    it("should handle empty store list", async () => {
       // Mock retrieve to fail first
       mockClient.vectorStores.retrieve.mockRejectedValue(
         new Error("Not found")
@@ -169,7 +169,7 @@ describe("Vector Store Utils", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining('Vector store "any-store" not found')
+        expect.stringContaining('Store "any-store" not found')
       );
     });
 

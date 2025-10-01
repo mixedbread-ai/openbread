@@ -1,6 +1,6 @@
 # @mixedbread/cli
 
-CLI tool for managing Mixedbread vector stores and files.
+CLI tool for managing Mixedbread stores and files.
 
 ## Installation
 
@@ -23,66 +23,66 @@ mxbai completion install
 ## Check available commands and their options
 mxbai --help
 
-# List vector stores
-mxbai vs list
+# List stores
+mxbai store list
 
-# Create a new vector store
-mxbai vs create "My Documents"
+# Create a new store
+mxbai store create "My Documents"
 
 # Upload files
-mxbai vs upload "My Documents" "*.md" "docs/**/*.pdf"
+mxbai store upload "My Documents" "*.md" "docs/**/*.pdf"
 
 # Upload with high-quality processing and contextualization
-mxbai vs upload "My Documents" "**/*.md" --strategy high_quality --contextualization
+mxbai store upload "My Documents" "**/*.md" --strategy high_quality --contextualization
 
 # Search content
-mxbai vs search "My Documents" "how to get started"
+mxbai store search "My Documents" "how to get started"
 
 # Sync files with change detection
-mxbai vs sync "My Documents" "docs/**" --from-git HEAD~1
+mxbai store sync "My Documents" "docs/**" --from-git HEAD~1
 
 # Sync with processing options
-mxbai vs sync "My Documents" "**/*.md" --parallel 8
+mxbai store sync "My Documents" "**/*.md" --parallel 8
 
 # Upload with manifest file (JSON or YAML)
-mxbai vs upload "My Documents" --manifest upload-manifest.json
-mxbai vs upload "My Documents" --manifest upload-manifest.yaml
+mxbai store upload "My Documents" --manifest upload-manifest.json
+mxbai store upload "My Documents" --manifest upload-manifest.yaml
 ```
 
 ## Commands
 
-### Vector Store Management
+### Store Management
 
-- `mxbai vs list` - List all vector stores
+- `mxbai store list` - List all stores
   - Options: `--filter <name>`, `--limit <n>`
-- `mxbai vs create <name>` - Create a new vector store
+- `mxbai store create <name>` - Create a new store
   - Options: `--description <desc>`, `--expires-after <days>`, `--metadata <json>`
-- `mxbai vs get <name-or-id>` - Get vector store details
-- `mxbai vs update <name-or-id>` - Update vector store
+- `mxbai store get <name-or-id>` - Get store details
+- `mxbai store update <name-or-id>` - Update store
   - Options: `--name <name>`, `--description <desc>`, `--expires-after <days>`, `--metadata <json>`
-- `mxbai vs delete <name-or-id>` - Delete vector store (alias: `rm`)
+- `mxbai store delete <name-or-id>` - Delete store (alias: `rm`)
   - Options: `--yes/-y` (skip confirmation)
 
 ### File Management
 
-- `mxbai vs upload <name-or-id> <patterns...>` - Upload files to vector store
+- `mxbai store upload <name-or-id> <patterns...>` - Upload files to store
   - Options: `--strategy fast|high_quality`, `--contextualization`, `--metadata <json>`, `--dry-run`, `--parallel <n>` (1-200), `--unique`, `--manifest <file>`
-- `mxbai vs files list <name-or-id>` - List files in vector store (alias: `ls`)
+- `mxbai store files list <name-or-id>` - List files in store (alias: `ls`)
   - Options: `--status <status>` (pending|in_progress|cancelled|completed|failed), `--limit <n>`
-- `mxbai vs files get <name-or-id> <file-id>` - Get file details
-- `mxbai vs files delete <name-or-id> <file-id>` - Delete file (alias: `rm`)
+- `mxbai store files get <name-or-id> <file-id>` - Get file details
+- `mxbai store files delete <name-or-id> <file-id>` - Delete file (alias: `rm`)
   - Options: `--yes/-y` (skip confirmation)
 
 ### Search & Query
 
-- `mxbai vs search <name-or-id> <query>` - Search vector store
+- `mxbai store search <name-or-id> <query>` - Search store
   - Options: `--top-k <n>`, `--threshold <score>`, `--return-metadata`, `--rerank`, `--file-search`
-- `mxbai vs qa <name-or-id> <question>` - Ask questions about content
+- `mxbai store qa <name-or-id> <question>` - Ask questions about content
   - Options: `--top-k <n>`, `--threshold <score>`, `--return-metadata`
 
 ### Advanced Features
 
-- `mxbai vs sync <name-or-id> <patterns...>` - Sync files with intelligent change detection
+- `mxbai store sync <name-or-id> <patterns...>` - Sync files with intelligent change detection
   - Options: `--strategy <strategy>`, `--contextualization`, `--from-git <ref>`, `--dry-run`, `--yes/-y`, `--force/-f`, `--metadata <json>`, `--parallel <n>` (1-200)
 
 ### Configuration
@@ -97,7 +97,7 @@ mxbai vs upload "My Documents" --manifest upload-manifest.yaml
 - `mxbai completion install` - Install shell completion
   - Options: `--shell <shell>` (manually specify shell: bash, zsh, fish, pwsh)
 - `mxbai completion uninstall` - Uninstall shell completion
-- `mxbai completion refresh` - Refresh completion cache for vector store names
+- `mxbai completion refresh` - Refresh completion cache for store names
 
 ## Features
 
@@ -204,22 +204,22 @@ The sync command provides intelligent change detection and robust error handling
 **Example Usage:**
 ```bash
 # Sync with git-based detection (fastest)
-mxbai vs sync "My Docs" "docs/**" --from-git HEAD~1
+mxbai store sync "My Docs" "docs/**" --from-git HEAD~1
 
 # Sync with hash-based detection and custom parallel processing
-mxbai vs sync "My Docs" "**/*.md" --parallel 10
+mxbai store sync "My Docs" "**/*.md" --parallel 10
 
 # Sync with high-quality processing and contextualization
-mxbai vs sync "My Docs" "**/*.md" --strategy high_quality --contextualization
+mxbai store sync "My Docs" "**/*.md" --strategy high_quality --contextualization
 
 # Dry run to preview changes
-mxbai vs sync "My Docs" "src/**" --dry-run
+mxbai store sync "My Docs" "src/**" --dry-run
 
 # Force re-upload all files without confirmation 
-mxbai vs sync "My Docs" "**/*.pdf" --yes --force
+mxbai store sync "My Docs" "**/*.pdf" --yes --force
 
 # Same as above using short flags
-mxbai vs sync "My Docs" "**/*.pdf" -y -f
+mxbai store sync "My Docs" "**/*.pdf" -y -f
 ```
 
 ### Configuration Management
@@ -256,13 +256,13 @@ mxbai config keys remove personal
 # Remove an API key without confirmation
 mxbai config keys remove personal --yes
 
-# Create aliases for frequently used vector stores
+# Create aliases for frequently used stores
 mxbai config set aliases.docs "My Documentation"
 mxbai config set aliases.kb "Knowledge Base"
 
 # Then use aliases instead of full names
-mxbai vs upload docs "*.md"              # Instead of: mxbai vs upload "My Documentation" "*.md"
-mxbai vs search kb "how to get started"  # Instead of: mxbai vs search "Knowledge Base" "how to get started"
+mxbai store upload docs "*.md"              # Instead of: mxbai store upload "My Documentation" "*.md"
+mxbai store search kb "how to get started"  # Instead of: mxbai store search "Knowledge Base" "how to get started"
 
 # View all configuration
 mxbai config get
@@ -293,11 +293,11 @@ mxbai config keys add mxb_xxxxx work
 mxbai config keys add mxb_xxxxx personal
 
 # Use a specific saved API key for a command
-mxbai vs upload "My Docs" "*.md" --saved-key work
-mxbai vs search "Knowledge Base" "query" --saved-key personal
+mxbai store upload "My Docs" "*.md" --saved-key work
+mxbai store search "Knowledge Base" "query" --saved-key personal
 
 # Or use an actual API key directly
-mxbai vs upload "My Docs" "*.md" --api-key mxb_xxxxx
+mxbai store upload "My Docs" "*.md" --api-key mxb_xxxxx
 
 # The last added key becomes default automatically
 # Or explicitly set a default
@@ -306,7 +306,7 @@ mxbai config keys set-default personal
 
 ## Shell Completion
 
-The CLI supports intelligent tab completion for commands, subcommands, and **vector store names**.
+The CLI supports intelligent tab completion for commands, subcommands, and **store names**.
 
 ### Installation
 
@@ -332,29 +332,29 @@ After installation, restart your shell or reload your shell configuration:
 - **fish**: Completion is ready to use (fish auto-loads completions)
 - **pwsh**: `. $PROFILE` or restart terminal
 
-### Dynamic Vector Store Name Completion
+### Dynamic Store Name Completion
 
-The CLI provides intelligent tab completion for vector store names in commands:
+The CLI provides intelligent tab completion for store names in commands:
 
 ```bash
-# Tab completion shows your vector store names
-mxbai vs get [TAB]           # Shows: store1 store2 my-docs ...
-mxbai vs delete [TAB]        # Shows: store1 store2 my-docs ...
-mxbai vs sync [TAB]          # Shows: store1 store2 my-docs ...
-mxbai vs upload [TAB]        # Shows: store1 store2 my-docs ...
+# Tab completion shows your store names
+mxbai store get [TAB]           # Shows: store1 store2 my-docs ...
+mxbai store delete [TAB]        # Shows: store1 store2 my-docs ...
+mxbai store sync [TAB]          # Shows: store1 store2 my-docs ...
+mxbai store upload [TAB]        # Shows: store1 store2 my-docs ...
 
 # Also works with files subcommands
-mxbai vs files list [TAB]    # Shows: store1 store2 my-docs ...
+mxbai store files list [TAB]    # Shows: store1 store2 my-docs ...
 ```
 
 **How it works:**
-- Vector store names are cached locally for instant completion (no API latency)
-- Cache updates automatically when you create, update, delete, or list vector stores
+- Store names are cached locally for instant completion (no API latency)
+- Cache updates automatically when you create, update, delete, or list stores
 - Supports multiple API keys - completions show stores for your current default key
 - Manual refresh available: `mxbai completion refresh`
 
 **Cache management:**
-- Caches up to 50 most recent vector store names per API key
+- Caches up to 50 most recent store names per API key
 - Cache location follows your config directory:
   - Linux/Unix: `~/.config/mixedbread/completion-cache.json`
   - macOS: `~/Library/Application Support/mixedbread/completion-cache.json`
@@ -416,8 +416,8 @@ This CLI is built on top of the `@mixedbread/sdk` and provides a convenient comm
 
    **Option A: Quick testing** (no tab completion)
    ```bash
-   pnpm mxbai vs --help
-   pnpm mxbai vs list
+   pnpm mxbai store --help
+   pnpm mxbai store list
    ```
 
    **Option B: Full CLI experience with tab completion**
@@ -429,7 +429,7 @@ This CLI is built on top of the `@mixedbread/sdk` and provides a convenient comm
    cd packages/cli && npm link
    
    # Now test with full CLI features
-   mxbai vs --help
+   mxbai store --help
    mxbai [TAB]  # Tab completion works!
    
    # To unlink when done
@@ -467,20 +467,20 @@ src/
 │   │   ├── get.ts          # Get config values
 │   │   ├── set.ts          # Set config values
 │   │   └── index.ts
-│   └── vector-store/        # Vector store commands
+│   └── vector-store/        # Store commands
 │       ├── files/           # File management subcommands
 │       │   ├── delete.ts
 │       │   ├── get.ts
 │       │   ├── list.ts
 │       │   └── index.ts
-│       ├── create.ts        # Create vector store
-│       ├── delete.ts        # Delete vector store
-│       ├── get.ts           # Get vector store details
-│       ├── list.ts          # List vector stores
+│       ├── create.ts        # Create store
+│       ├── delete.ts        # Delete store
+│       ├── get.ts           # Get store details
+│       ├── list.ts          # List stores
 │       ├── qa.ts            # Q&A functionality
 │       ├── search.ts        # Search functionality
 │       ├── sync.ts          # Sync files
-│       ├── update.ts        # Update vector store
+│       ├── update.ts        # Update store
 │       ├── upload.ts        # Upload files
 │       └── index.ts
 ├── utils/                   # Shared utilities
@@ -496,7 +496,7 @@ src/
 │   ├── sync-state.ts       # Sync state management
 │   ├── sync.ts             # Sync logic
 │   ├── upload.ts           # Upload utilities
-│   └── vector-store.ts     # Vector store helpers
+│   └── vector-store.ts     # Store helpers
 └── index.ts                # Package exports
 
 tests/
@@ -549,7 +549,7 @@ tests/
 
 #### Debugging
 
-- Use `--debug` flag for verbose output: `pnpm mxbai --debug vs list`
+- Use `--debug` flag for verbose output: `pnpm mxbai --debug store list`
 - Set `MXBAI_DEBUG=true` environment variable for debug output
 - Debug output includes command hierarchy options and merged options
 - Tests include detailed error messages and mock setups

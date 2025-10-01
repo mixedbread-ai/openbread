@@ -11,7 +11,7 @@ export interface FilesOptions extends GlobalOptions {
 
 export function createFilesCommand(): Command {
   const filesCommand = new Command("files").description(
-    "Manage files in vector stores"
+    "Manage files in stores"
   );
 
   // Add subcommands

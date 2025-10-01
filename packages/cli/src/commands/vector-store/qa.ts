@@ -44,8 +44,8 @@ interface QAOptions extends GlobalOptions {
 export function createQACommand(): Command {
   const command = addGlobalOptions(
     new Command("qa")
-      .description("Ask questions about vector store content")
-      .argument("<name-or-id>", "Name or ID of the vector store")
+      .description("Ask questions about store content")
+      .argument("<name-or-id>", "Name or ID of the store")
       .argument("<question>", "Question to ask")
       .option("--top-k <n>", "Number of sources to consider")
       .option("--threshold <score>", "Minimum score threshold for sources")

@@ -40,7 +40,7 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
 
-describe("Vector Store Search Command", () => {
+describe("Store Search Command", () => {
   let command: Command;
   let mockClient: {
     vectorStores: {
@@ -104,7 +104,7 @@ describe("Vector Store Search Command", () => {
       ],
     };
 
-    it("should search chunks in vector store with default options", async () => {
+    it("should search chunks in store with default options", async () => {
       const mockChunkResults: VectorStoreSearchResponse = {
         data: [
           {
@@ -553,8 +553,8 @@ describe("Vector Store Search Command", () => {
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
-    it("should handle vector store resolution errors", async () => {
-      const error = new Error("Vector store not found");
+    it("should handle store resolution errors", async () => {
+      const error = new Error("Store not found");
       mockResolveVectorStore.mockRejectedValue(error);
 
       await command.parseAsync([
@@ -566,7 +566,7 @@ describe("Vector Store Search Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        "Vector store not found"
+        "Store not found"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -578,7 +578,7 @@ describe("Vector Store Search Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
-        "Failed to search vector store"
+        "Failed to search store"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });

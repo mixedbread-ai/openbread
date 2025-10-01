@@ -24,13 +24,13 @@ export async function resolveVectorStore(
 
   const vectorStores = await client.vectorStores.list({ limit: 100 });
 
-  const fuzzyMatches = vectorStores.data.filter((vs) =>
-    vs.name.toLowerCase().includes(resolved.toLowerCase())
+  const fuzzyMatches = vectorStores.data.filter((store) =>
+    store.name.toLowerCase().includes(resolved.toLowerCase())
   );
 
   if (fuzzyMatches.length === 0) {
-    console.error(chalk.red("✗"), `Vector store "${nameOrId}" not found.\n`);
-    console.error("Run 'mxbai vs list' to see all vector stores.");
+    console.error(chalk.red("✗"), `Store "${nameOrId}" not found.\n`);
+    console.error("Run 'mxbai store list' to see all stores.");
     process.exit(1);
   }
 
@@ -44,21 +44,21 @@ export async function resolveVectorStore(
       {
         type: "list",
         name: "selected",
-        message: "Multiple vector stores found. Select one:",
-        choices: fuzzyMatches.map((vs) => ({
-          name: `${vs.name} (${vs.id})`,
-          value: vs,
+        message: "Multiple stores found. Select one:",
+        choices: fuzzyMatches.map((store) => ({
+          name: `${store.name} (${store.id})`,
+          value: store,
         })),
       },
     ]);
     return selected;
   } else {
-    console.error(chalk.red("✗"), `Vector store "${nameOrId}" not found.\n`);
+    console.error(chalk.red("✗"), `Store "${nameOrId}" not found.\n`);
     console.log("Did you mean one of these?");
-    fuzzyMatches.forEach((vs) => {
-      console.log(`  • ${vs.name}`);
+    fuzzyMatches.forEach((store) => {
+      console.log(`  • ${store.name}`);
     });
-    console.log("\nRun 'mxbai vs list' to see all vector stores.");
+    console.log("\nRun 'mxbai store list' to see all stores.");
     process.exit(1);
   }
 }

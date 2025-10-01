@@ -38,7 +38,7 @@ interface ListOptions extends GlobalOptions {
 export function createListCommand(): Command {
   const command = addGlobalOptions(
     new Command("list")
-      .description("List vector stores")
+      .description("List stores")
       .option("--filter <name>", "Filter by name pattern")
       .option("--limit <n>", "Maximum number of results", "10")
   );
@@ -54,7 +54,7 @@ export function createListCommand(): Command {
       );
 
       const client = createClient(parsedOptions);
-      spinner = ora("Loading vector stores...").start();
+      spinner = ora("Loading stores...").start();
       const response = await client.vectorStores.list({
         limit: parsedOptions.limit || 10,
       });
@@ -64,31 +64,31 @@ export function createListCommand(): Command {
       // Apply filter if provided
       if (parsedOptions.filter) {
         const filterPattern = parsedOptions.filter.toLowerCase();
-        vectorStores = vectorStores.filter((vs) =>
-          vs.name.toLowerCase().includes(filterPattern)
+        vectorStores = vectorStores.filter((store) =>
+          store.name.toLowerCase().includes(filterPattern)
         );
       }
 
       if (vectorStores.length === 0) {
-        spinner.info("No vector stores found.");
+        spinner.info("No stores found.");
         return;
       }
 
       // Format data for output
-      const formattedData = vectorStores.map((vs) => ({
-        name: vs.name,
-        id: vs.id,
+      const formattedData = vectorStores.map((store) => ({
+        name: store.name,
+        id: store.id,
         status:
-          vs.expires_at && new Date(vs.expires_at) < new Date()
+          store.expires_at && new Date(store.expires_at) < new Date()
             ? "expired"
             : "active",
-        files: vs.file_counts?.total,
-        usage: formatBytes(vs.usage_bytes),
-        created: new Date(vs.created_at).toLocaleDateString(),
+        files: store.file_counts?.total,
+        usage: formatBytes(store.usage_bytes),
+        created: new Date(store.created_at).toLocaleDateString(),
       }));
 
       spinner.succeed(
-        `Found ${formatCountWithSuffix(vectorStores.length, "vector store")}`
+        `Found ${formatCountWithSuffix(vectorStores.length, "store")}`
       );
       formatOutput(formattedData, parsedOptions.format);
 
@@ -98,11 +98,11 @@ export function createListCommand(): Command {
         refreshCacheForKey(keyName, client);
       }
     } catch (error) {
-      spinner?.fail("Failed to load vector stores");
+      spinner?.fail("Failed to load stores");
       if (error instanceof Error) {
         console.error(chalk.red("\n✗"), error.message);
       } else {
-        console.error(chalk.red("\n✗"), "Failed to list vector stores");
+        console.error(chalk.red("\n✗"), "Failed to list stores");
       }
       process.exit(1);
     }
