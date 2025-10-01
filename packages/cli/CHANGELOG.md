@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0
+
+### Major Changes
+
+- aa54a04: Update `vs` to `store` in all commands
+
 ## 1.2.1
 
 ### Patch Changes
