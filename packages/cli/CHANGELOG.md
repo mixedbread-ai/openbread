@@ -4,7 +4,8 @@
 
 ### Minor Changes
 
-- 1da03c4: - Improve unkown command error message
+- 1da03c4:
+  - Improve unkown command error message
   - Notify users when a newer version is released
 
 ## 2.0.1
