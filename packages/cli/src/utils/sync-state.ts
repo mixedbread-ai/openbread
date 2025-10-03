@@ -1,5 +1,5 @@
 import type Mixedbread from "@mixedbread/sdk";
-import { getVectorStoreFiles } from "./vector-store";
+import { getStoreFiles } from "./store";
 
 export interface FileSyncMetadata {
   file_path: string;
@@ -15,7 +15,7 @@ export interface FileSyncMetadata {
  */
 export async function getSyncedFiles(
   client: Mixedbread,
-  vectorStoreIdentifier: string
+  storeIdentifier: string
 ): Promise<Map<string, { fileId: string; metadata: FileSyncMetadata }>> {
   const fileMap = new Map<
     string,
@@ -23,12 +23,9 @@ export async function getSyncedFiles(
   >();
 
   try {
-    const vectorStoreFiles = await getVectorStoreFiles(
-      client,
-      vectorStoreIdentifier
-    );
+    const storeFiles = await getStoreFiles(client, storeIdentifier);
 
-    for (const file of vectorStoreFiles) {
+    for (const file of storeFiles) {
       // Check if file has sync metadata
       const metadata = file.metadata as FileSyncMetadata;
       if (metadata && metadata.synced === true && metadata.file_path) {

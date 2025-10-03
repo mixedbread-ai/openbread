@@ -11,7 +11,7 @@ import {
   mergeCommandOptions,
   parseOptions,
 } from "../../../utils/global-options";
-import { resolveVectorStore } from "../../../utils/vector-store";
+import { resolveStore } from "../../../utils/store";
 
 const DeleteFileSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
@@ -42,10 +42,7 @@ export function createDeleteCommand(): Command {
         });
 
         const client = createClient(parsedOptions);
-        const vectorStore = await resolveVectorStore(
-          client,
-          parsedOptions.nameOrId
-        );
+        const store = await resolveStore(client, parsedOptions.nameOrId);
 
         // Confirmation prompt unless --yes is used
         if (!parsedOptions.yes) {
@@ -53,7 +50,7 @@ export function createDeleteCommand(): Command {
             {
               type: "confirm",
               name: "confirmed",
-              message: `Are you sure you want to delete file "${parsedOptions.fileId}" from store "${vectorStore.name}" (${vectorStore.id})? This action cannot be undone.`,
+              message: `Are you sure you want to delete file "${parsedOptions.fileId}" from store "${store.name}" (${store.id})? This action cannot be undone.`,
               default: false,
             },
           ]);
@@ -66,8 +63,8 @@ export function createDeleteCommand(): Command {
 
         spinner = ora("Deleting file...").start();
 
-        await client.vectorStores.files.delete(parsedOptions.fileId, {
-          vector_store_identifier: vectorStore.id,
+        await client.stores.files.delete(parsedOptions.fileId, {
+          store_identifier: store.id,
         });
 
         spinner.succeed(`File ${parsedOptions.fileId} deleted successfully`);

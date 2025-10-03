@@ -15,9 +15,9 @@ import {
   mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
-import { resolveVectorStore } from "../../utils/vector-store";
+import { resolveStore } from "../../utils/store";
 
-const DeleteVectorStoreSchema = extendGlobalOptions({
+const DeleteStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
   yes: z.boolean().optional(),
 });
@@ -41,16 +41,13 @@ export function createDeleteCommand(): Command {
     try {
       const mergedOptions = mergeCommandOptions(command, options);
 
-      const parsedOptions = parseOptions(DeleteVectorStoreSchema, {
+      const parsedOptions = parseOptions(DeleteStoreSchema, {
         ...mergedOptions,
         nameOrId,
       });
 
       const client = createClient(parsedOptions);
-      const vectorStore = await resolveVectorStore(
-        client,
-        parsedOptions.nameOrId
-      );
+      const store = await resolveStore(client, parsedOptions.nameOrId);
 
       // Confirmation prompt unless --yes is used
       if (!parsedOptions.yes) {
@@ -58,7 +55,7 @@ export function createDeleteCommand(): Command {
           {
             type: "confirm",
             name: "confirmed",
-            message: `Are you sure you want to delete store "${vectorStore.name}" (${vectorStore.id})? This action cannot be undone.`,
+            message: `Are you sure you want to delete store "${store.name}" (${store.id})? This action cannot be undone.`,
             default: false,
           },
         ]);
@@ -71,14 +68,14 @@ export function createDeleteCommand(): Command {
 
       spinner = ora("Deleting store...").start();
 
-      await client.vectorStores.delete(vectorStore.id);
+      await client.stores.delete(store.id);
 
-      spinner.succeed(`Store "${vectorStore.name}" deleted successfully`);
+      spinner.succeed(`Store "${store.name}" deleted successfully`);
 
       // Update completion cache by removing the deleted store
       const keyName = getCurrentKeyName();
       if (keyName) {
-        updateCacheAfterDelete(keyName, vectorStore.name);
+        updateCacheAfterDelete(keyName, store.name);
       }
     } catch (error) {
       spinner?.fail("Failed to delete store");

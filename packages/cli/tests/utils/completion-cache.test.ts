@@ -187,7 +187,7 @@ describe("Completion Cache", () => {
           ],
         });
       const mockClient = {
-        vectorStores: {
+        stores: {
           list: mockList,
         },
       } as unknown as Mixedbread;
@@ -219,7 +219,7 @@ describe("Completion Cache", () => {
           data: [{ id: "store1", name: "work-store" }],
         });
       const mockClient = {
-        vectorStores: {
+        stores: {
           list: mockList,
         },
       } as unknown as Mixedbread;
@@ -249,7 +249,7 @@ describe("Completion Cache", () => {
         >()
         .mockRejectedValue(new Error("API Error"));
       const mockClient = {
-        vectorStores: {
+        stores: {
           list: mockList,
         },
       } as unknown as Mixedbread;
@@ -273,7 +273,7 @@ describe("Completion Cache", () => {
           data: [{ id: "store1", name: "store1" }],
         });
       const mockClient = {
-        vectorStores: {
+        stores: {
           list: mockList,
         },
       } as unknown as Mixedbread;
@@ -312,7 +312,7 @@ describe("Completion Cache", () => {
           data: [{ id: "store2", name: "personal-store" }],
         });
       const mockClient = {
-        vectorStores: {
+        stores: {
           list: mockList,
         },
       } as unknown as Mixedbread;
@@ -525,7 +525,7 @@ describe("Completion Cache", () => {
           data: [{ id: "store1", name: "store1" }],
         });
       const mockClient = {
-        vectorStores: {
+        stores: {
           list: mockList,
         },
       } as unknown as Mixedbread;

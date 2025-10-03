@@ -8,14 +8,14 @@ import {
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
 import type { Command } from "commander";
-import { createUpdateCommand } from "../../../src/commands/vector-store/update";
+import { createUpdateCommand } from "../../../src/commands/store/update";
 import * as clientUtils from "../../../src/utils/client";
 import * as outputUtils from "../../../src/utils/output";
-import * as vectorStoreUtils from "../../../src/utils/vector-store";
+import * as storeUtils from "../../../src/utils/store";
 
 // Mock dependencies
 jest.mock("../../../src/utils/client");
-jest.mock("../../../src/utils/vector-store");
+jest.mock("../../../src/utils/store");
 jest.mock("../../../src/utils/output", () => ({
   ...(jest.requireActual("../../../src/utils/output") as object),
   formatOutput: jest.fn(),
@@ -25,10 +25,9 @@ jest.mock("../../../src/utils/output", () => ({
 const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
   typeof clientUtils.createClient
 >;
-const mockResolveVectorStore =
-  vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
-    typeof vectorStoreUtils.resolveVectorStore
-  >;
+const mockResolveStore = storeUtils.resolveStore as jest.MockedFunction<
+  typeof storeUtils.resolveStore
+>;
 const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
@@ -36,8 +35,8 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
 describe("Store Update Command", () => {
   let command: Command;
   let mockClient: {
-    vectorStores: {
-      update: jest.MockedFunction<Mixedbread["vectorStores"]["update"]>;
+    stores: {
+      update: jest.MockedFunction<Mixedbread["stores"]["update"]>;
     };
   };
 
@@ -46,14 +45,14 @@ describe("Store Update Command", () => {
 
     // Setup mock client
     mockClient = {
-      vectorStores: {
+      stores: {
         update: jest.fn(),
       },
     };
 
     // Setup default mocks
     mockCreateClient.mockReturnValue(mockClient as unknown as Mixedbread);
-    mockResolveVectorStore.mockResolvedValue({
+    mockResolveStore.mockResolvedValue({
       id: "550e8400-e29b-41d4-a716-446655440060",
       name: "test-store",
       created_at: "2021-01-01",
@@ -68,7 +67,7 @@ describe("Store Update Command", () => {
 
   describe("Basic updates", () => {
     it("should update store name", async () => {
-      const updatedVectorStore = {
+      const updatedStore = {
         id: "550e8400-e29b-41d4-a716-446655440060",
         name: "updated-store",
         description: null,
@@ -78,7 +77,7 @@ describe("Store Update Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
+      mockClient.stores.update.mockResolvedValue(updatedStore);
 
       await command.parseAsync([
         "node",
@@ -88,13 +87,13 @@ describe("Store Update Command", () => {
         "updated-store",
       ]);
 
-      expect(mockResolveVectorStore).toHaveBeenCalledWith(
+      expect(mockResolveStore).toHaveBeenCalledWith(
         expect.objectContaining({
-          vectorStores: expect.any(Object),
+          stores: expect.any(Object),
         }),
         "test-store"
       );
-      expect(mockClient.vectorStores.update).toHaveBeenCalledWith(
+      expect(mockClient.stores.update).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440060",
         {
           name: "updated-store",
@@ -104,14 +103,11 @@ describe("Store Update Command", () => {
         expect.any(String),
         expect.stringContaining('Store "test-store" updated successfully')
       );
-      expect(mockFormatOutput).toHaveBeenCalledWith(
-        updatedVectorStore,
-        undefined
-      );
+      expect(mockFormatOutput).toHaveBeenCalledWith(updatedStore, undefined);
     });
 
     it("should update store description", async () => {
-      const updatedVectorStore = {
+      const updatedStore = {
         id: "550e8400-e29b-41d4-a716-446655440060",
         name: "test-store",
         description: "Updated description",
@@ -121,7 +117,7 @@ describe("Store Update Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
+      mockClient.stores.update.mockResolvedValue(updatedStore);
 
       await command.parseAsync([
         "node",
@@ -131,7 +127,7 @@ describe("Store Update Command", () => {
         "Updated description",
       ]);
 
-      expect(mockClient.vectorStores.update).toHaveBeenCalledWith(
+      expect(mockClient.stores.update).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440060",
         {
           description: "Updated description",
@@ -140,7 +136,7 @@ describe("Store Update Command", () => {
     });
 
     it("should update store expiration", async () => {
-      const updatedVectorStore = {
+      const updatedStore = {
         id: "550e8400-e29b-41d4-a716-446655440060",
         name: "test-store",
         description: null,
@@ -150,7 +146,7 @@ describe("Store Update Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
+      mockClient.stores.update.mockResolvedValue(updatedStore);
 
       await command.parseAsync([
         "node",
@@ -160,7 +156,7 @@ describe("Store Update Command", () => {
         "30",
       ]);
 
-      expect(mockClient.vectorStores.update).toHaveBeenCalledWith(
+      expect(mockClient.stores.update).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440060",
         {
           expires_after: {
@@ -173,7 +169,7 @@ describe("Store Update Command", () => {
 
     it("should update store metadata", async () => {
       const metadata = { key: "value", version: "2.0" };
-      const updatedVectorStore = {
+      const updatedStore = {
         id: "550e8400-e29b-41d4-a716-446655440060",
         name: "test-store",
         description: null,
@@ -183,7 +179,7 @@ describe("Store Update Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
+      mockClient.stores.update.mockResolvedValue(updatedStore);
 
       await command.parseAsync([
         "node",
@@ -193,7 +189,7 @@ describe("Store Update Command", () => {
         JSON.stringify(metadata),
       ]);
 
-      expect(mockClient.vectorStores.update).toHaveBeenCalledWith(
+      expect(mockClient.stores.update).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440060",
         {
           metadata,
@@ -203,7 +199,7 @@ describe("Store Update Command", () => {
 
     it("should update multiple fields at once", async () => {
       const metadata = { updated: true };
-      const updatedVectorStore = {
+      const updatedStore = {
         id: "550e8400-e29b-41d4-a716-446655440060",
         name: "new-name",
         description: "New description",
@@ -213,7 +209,7 @@ describe("Store Update Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
+      mockClient.stores.update.mockResolvedValue(updatedStore);
 
       await command.parseAsync([
         "node",
@@ -229,7 +225,7 @@ describe("Store Update Command", () => {
         JSON.stringify(metadata),
       ]);
 
-      expect(mockClient.vectorStores.update).toHaveBeenCalledWith(
+      expect(mockClient.stores.update).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440060",
         {
           name: "new-name",
@@ -268,7 +264,7 @@ describe("Store Update Command", () => {
         numbers: [1, 2, 3],
       };
 
-      const updatedVectorStore = {
+      const updatedStore = {
         id: "550e8400-e29b-41d4-a716-446655440060",
         name: "test-store",
         description: null,
@@ -278,7 +274,7 @@ describe("Store Update Command", () => {
         updated_at: "2021-01-01T00:00:00Z",
       };
 
-      mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
+      mockClient.stores.update.mockResolvedValue(updatedStore);
 
       await command.parseAsync([
         "node",
@@ -288,7 +284,7 @@ describe("Store Update Command", () => {
         JSON.stringify(complexMetadata),
       ]);
 
-      expect(mockClient.vectorStores.update).toHaveBeenCalledWith(
+      expect(mockClient.stores.update).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440060",
         {
           metadata: complexMetadata,
@@ -298,7 +294,7 @@ describe("Store Update Command", () => {
   });
 
   describe("Output formatting", () => {
-    const updatedVectorStore = {
+    const updatedStore = {
       id: "550e8400-e29b-41d4-a716-446655440060",
       name: "test-store",
       description: "Updated",
@@ -309,7 +305,7 @@ describe("Store Update Command", () => {
     };
 
     it("should format as table by default", async () => {
-      mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
+      mockClient.stores.update.mockResolvedValue(updatedStore);
 
       await command.parseAsync([
         "node",
@@ -319,14 +315,11 @@ describe("Store Update Command", () => {
         "Updated",
       ]);
 
-      expect(mockFormatOutput).toHaveBeenCalledWith(
-        updatedVectorStore,
-        undefined
-      );
+      expect(mockFormatOutput).toHaveBeenCalledWith(updatedStore, undefined);
     });
 
     it("should format as JSON when specified", async () => {
-      mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
+      mockClient.stores.update.mockResolvedValue(updatedStore);
 
       await command.parseAsync([
         "node",
@@ -338,11 +331,11 @@ describe("Store Update Command", () => {
         "json",
       ]);
 
-      expect(mockFormatOutput).toHaveBeenCalledWith(updatedVectorStore, "json");
+      expect(mockFormatOutput).toHaveBeenCalledWith(updatedStore, "json");
     });
 
     it("should format as CSV when specified", async () => {
-      mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
+      mockClient.stores.update.mockResolvedValue(updatedStore);
 
       await command.parseAsync([
         "node",
@@ -354,7 +347,7 @@ describe("Store Update Command", () => {
         "csv",
       ]);
 
-      expect(mockFormatOutput).toHaveBeenCalledWith(updatedVectorStore, "csv");
+      expect(mockFormatOutput).toHaveBeenCalledWith(updatedStore, "csv");
     });
   });
 
@@ -417,7 +410,7 @@ describe("Store Update Command", () => {
   describe("Error handling", () => {
     it("should handle API errors", async () => {
       const error = new Error("API Error: Unauthorized");
-      mockClient.vectorStores.update.mockRejectedValue(error);
+      mockClient.stores.update.mockRejectedValue(error);
 
       await command.parseAsync([
         "node",
@@ -436,7 +429,7 @@ describe("Store Update Command", () => {
 
     it("should handle store resolution errors", async () => {
       const error = new Error("Store not found");
-      mockResolveVectorStore.mockRejectedValue(error);
+      mockResolveStore.mockRejectedValue(error);
 
       await command.parseAsync([
         "node",
@@ -454,7 +447,7 @@ describe("Store Update Command", () => {
     });
 
     it("should handle non-Error rejections", async () => {
-      mockClient.vectorStores.update.mockRejectedValue("Unknown error");
+      mockClient.stores.update.mockRejectedValue("Unknown error");
 
       await command.parseAsync([
         "node",
@@ -473,7 +466,7 @@ describe("Store Update Command", () => {
   });
 
   describe("Global options", () => {
-    const updatedVectorStore = {
+    const updatedStore = {
       id: "550e8400-e29b-41d4-a716-446655440060",
       name: "updated-store",
       description: null,
@@ -484,7 +477,7 @@ describe("Store Update Command", () => {
     };
 
     it("should support API key option", async () => {
-      mockClient.vectorStores.update.mockResolvedValue(updatedVectorStore);
+      mockClient.stores.update.mockResolvedValue(updatedStore);
 
       await command.parseAsync([
         "node",

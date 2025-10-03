@@ -12,9 +12,9 @@ import {
   parseOptions,
 } from "../../utils/global-options";
 import { formatOutput } from "../../utils/output";
-import { resolveVectorStore } from "../../utils/vector-store";
+import { resolveStore } from "../../utils/store";
 
-const QAVectorStoreSchema = extendGlobalOptions({
+const QAStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
   question: z.string().min(1, { error: '"question" is required' }),
   topK: z.coerce
@@ -58,7 +58,7 @@ export function createQACommand(): Command {
 
       try {
         const mergedOptions = mergeCommandOptions(command, options);
-        const parsedOptions = parseOptions(QAVectorStoreSchema, {
+        const parsedOptions = parseOptions(QAStoreSchema, {
           ...mergedOptions,
           nameOrId,
           question,
@@ -66,18 +66,15 @@ export function createQACommand(): Command {
 
         const client = createClient(parsedOptions);
         spinner = ora("Processing question...").start();
-        const vectorStore = await resolveVectorStore(
-          client,
-          parsedOptions.nameOrId
-        );
+        const store = await resolveStore(client, parsedOptions.nameOrId);
         const config = loadConfig();
 
         // Get default values from config
         const topK = parsedOptions.topK || config.defaults?.search?.top_k || 10;
 
-        const response = await client.vectorStores.questionAnswering({
+        const response = await client.stores.questionAnswering({
           query: parsedOptions.question,
-          vector_store_identifiers: [vectorStore.id],
+          store_identifiers: [store.id],
           top_k: topK,
           search_options: {
             score_threshold: parsedOptions.threshold

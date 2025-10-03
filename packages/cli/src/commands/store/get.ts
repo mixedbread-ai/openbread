@@ -11,9 +11,9 @@ import {
   parseOptions,
 } from "../../utils/global-options";
 import { formatBytes, formatOutput } from "../../utils/output";
-import { resolveVectorStore } from "../../utils/vector-store";
+import { resolveStore } from "../../utils/store";
 
-const GetVectorStoreSchema = extendGlobalOptions({
+const GetStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
 });
 
@@ -32,42 +32,38 @@ export function createGetCommand(): Command {
     try {
       const mergedOptions = mergeCommandOptions(command, options);
 
-      const parsedOptions = parseOptions(GetVectorStoreSchema, {
+      const parsedOptions = parseOptions(GetStoreSchema, {
         ...mergedOptions,
         nameOrId,
       });
 
       const client = createClient(parsedOptions);
       spinner = ora("Loading store details...").start();
-      const vectorStore = await resolveVectorStore(
-        client,
-        parsedOptions.nameOrId
-      );
+      const store = await resolveStore(client, parsedOptions.nameOrId);
 
       spinner.succeed("Store details loaded");
 
       const formattedData = {
-        name: vectorStore.name,
-        id: vectorStore.id,
-        description: vectorStore.description || "N/A",
+        name: store.name,
+        id: store.id,
+        description: store.description || "N/A",
         status:
-          vectorStore.expires_at &&
-          new Date(vectorStore.expires_at) < new Date()
+          store.expires_at && new Date(store.expires_at) < new Date()
             ? "expired"
             : "active",
-        "total files": vectorStore.file_counts?.total || 0,
-        "completed files": vectorStore.file_counts?.completed || 0,
-        "processing files": vectorStore.file_counts?.in_progress || 0,
-        "failed files": vectorStore.file_counts?.failed || 0,
-        usage: formatBytes(vectorStore.usage_bytes || 0),
-        "created at": new Date(vectorStore.created_at).toLocaleString(),
-        "expires at": vectorStore.expires_at
-          ? new Date(vectorStore.expires_at).toLocaleString()
+        "total files": store.file_counts?.total || 0,
+        "completed files": store.file_counts?.completed || 0,
+        "processing files": store.file_counts?.in_progress || 0,
+        "failed files": store.file_counts?.failed || 0,
+        usage: formatBytes(store.usage_bytes || 0),
+        "created at": new Date(store.created_at).toLocaleString(),
+        "expires at": store.expires_at
+          ? new Date(store.expires_at).toLocaleString()
           : "Never",
         metadata:
           parsedOptions.format === "table"
-            ? JSON.stringify(vectorStore.metadata, null, 2)
-            : vectorStore.metadata,
+            ? JSON.stringify(store.metadata, null, 2)
+            : store.metadata,
       };
 
       formatOutput(formattedData, parsedOptions.format);

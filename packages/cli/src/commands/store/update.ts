@@ -1,4 +1,4 @@
-import type { VectorStoreUpdateParams } from "@mixedbread/sdk/resources/index";
+import type { StoreUpdateParams } from "@mixedbread/sdk/resources/index";
 import chalk from "chalk";
 import { Command } from "commander";
 import ora, { type Ora } from "ora";
@@ -17,9 +17,9 @@ import {
 } from "../../utils/global-options";
 import { validateMetadata } from "../../utils/metadata";
 import { formatOutput } from "../../utils/output";
-import { resolveVectorStore } from "../../utils/vector-store";
+import { resolveStore } from "../../utils/store";
 
-const UpdateVectorStoreSchema = extendGlobalOptions({
+const UpdateStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
   name: z.string().optional(),
   description: z.string().optional(),
@@ -58,21 +58,18 @@ export function createUpdateCommand(): Command {
     try {
       const mergedOptions = mergeCommandOptions(command, options);
 
-      const parsedOptions = parseOptions(UpdateVectorStoreSchema, {
+      const parsedOptions = parseOptions(UpdateStoreSchema, {
         ...mergedOptions,
         nameOrId,
       });
 
       const client = createClient(parsedOptions);
-      const vectorStore = await resolveVectorStore(
-        client,
-        parsedOptions.nameOrId
-      );
+      const store = await resolveStore(client, parsedOptions.nameOrId);
 
       // Parse metadata if provided
       const metadata = validateMetadata(parsedOptions.metadata);
 
-      const updateData: VectorStoreUpdateParams = {};
+      const updateData: StoreUpdateParams = {};
       if (parsedOptions.name) updateData.name = parsedOptions.name;
       if (parsedOptions.description !== undefined)
         updateData.description = parsedOptions.description;
@@ -93,43 +90,36 @@ export function createUpdateCommand(): Command {
 
       spinner = ora("Updating store...").start();
 
-      const updatedVectorStore = await client.vectorStores.update(
-        vectorStore.id,
-        updateData
-      );
+      const updatedStore = await client.stores.update(store.id, updateData);
 
-      spinner.succeed(`Store "${vectorStore.name}" updated successfully`);
+      spinner.succeed(`Store "${store.name}" updated successfully`);
 
       formatOutput(
         {
-          id: updatedVectorStore.id,
-          name: updatedVectorStore.name,
-          description: updatedVectorStore.description,
-          expires_after: updatedVectorStore.expires_after,
+          id: updatedStore.id,
+          name: updatedStore.name,
+          description: updatedStore.description,
+          expires_after: updatedStore.expires_after,
           metadata:
             parsedOptions.format === "table"
-              ? JSON.stringify(updatedVectorStore.metadata, null, 2)
-              : updatedVectorStore.metadata,
-          file_counts: updatedVectorStore.file_counts,
-          status: updatedVectorStore.status,
-          created_at: updatedVectorStore.created_at,
-          updated_at: updatedVectorStore.updated_at,
-          last_active_at: updatedVectorStore.last_active_at,
-          usage_bytes: updatedVectorStore.usage_bytes,
-          expires_at: updatedVectorStore.expires_at,
+              ? JSON.stringify(updatedStore.metadata, null, 2)
+              : updatedStore.metadata,
+          file_counts: updatedStore.file_counts,
+          status: updatedStore.status,
+          created_at: updatedStore.created_at,
+          updated_at: updatedStore.updated_at,
+          last_active_at: updatedStore.last_active_at,
+          usage_bytes: updatedStore.usage_bytes,
+          expires_at: updatedStore.expires_at,
         },
         parsedOptions.format
       );
 
       // Update completion cache if the name was changed
-      if (vectorStore.name !== updatedVectorStore.name) {
+      if (store.name !== updatedStore.name) {
         const keyName = getCurrentKeyName();
         if (keyName) {
-          updateCacheAfterUpdate(
-            keyName,
-            vectorStore.name,
-            updatedVectorStore.name
-          );
+          updateCacheAfterUpdate(keyName, store.name, updatedStore.name);
         }
       }
     } catch (error) {

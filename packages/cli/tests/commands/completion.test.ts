@@ -505,7 +505,7 @@ describe("Completion Commands", () => {
       });
 
       describe("store completions", () => {
-        const vectorStoreCommands = [
+        const storeCommands = [
           "create",
           "delete",
           "get",
@@ -535,7 +535,7 @@ describe("Completion Commands", () => {
           await parseCommand(command, []);
 
           expect(mockLog).toHaveBeenCalledWith(
-            vectorStoreCommands,
+            storeCommands,
             "zsh",
             console.log
           );

@@ -8,14 +8,14 @@ import {
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
 import type { Command } from "commander";
-import { createGetCommand } from "../../../src/commands/vector-store/get";
+import { createGetCommand } from "../../../src/commands/store/get";
 import * as clientUtils from "../../../src/utils/client";
 import * as outputUtils from "../../../src/utils/output";
-import * as vectorStoreUtils from "../../../src/utils/vector-store";
+import * as storeUtils from "../../../src/utils/store";
 
 // Mock dependencies
 jest.mock("../../../src/utils/client");
-jest.mock("../../../src/utils/vector-store");
+jest.mock("../../../src/utils/store");
 jest.mock("../../../src/utils/output", () => ({
   ...(jest.requireActual("../../../src/utils/output") as object),
   formatOutput: jest.fn(),
@@ -25,10 +25,9 @@ jest.mock("../../../src/utils/output", () => ({
 const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
   typeof clientUtils.createClient
 >;
-const mockResolveVectorStore =
-  vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
-    typeof vectorStoreUtils.resolveVectorStore
-  >;
+const mockResolveStore = storeUtils.resolveStore as jest.MockedFunction<
+  typeof storeUtils.resolveStore
+>;
 const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
   typeof outputUtils.formatOutput
 >;
@@ -36,8 +35,8 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
 describe("Store Get Command", () => {
   let command: Command;
   let mockClient: {
-    vectorStores: {
-      retrieve: jest.MockedFunction<Mixedbread["vectorStores"]["retrieve"]>;
+    stores: {
+      retrieve: jest.MockedFunction<Mixedbread["stores"]["retrieve"]>;
     };
   };
 
@@ -46,14 +45,14 @@ describe("Store Get Command", () => {
 
     // Setup mock client
     mockClient = {
-      vectorStores: {
+      stores: {
         retrieve: jest.fn(),
       },
     };
 
     // Setup default mocks
     mockCreateClient.mockReturnValue(mockClient as unknown as Mixedbread);
-    mockResolveVectorStore.mockResolvedValue({
+    mockResolveStore.mockResolvedValue({
       id: "550e8400-e29b-41d4-a716-446655440050",
       name: "test-store",
       created_at: "2021-01-01",
@@ -68,7 +67,7 @@ describe("Store Get Command", () => {
 
   describe("Basic retrieval", () => {
     it("should get store details", async () => {
-      mockResolveVectorStore.mockResolvedValue({
+      mockResolveStore.mockResolvedValue({
         id: "550e8400-e29b-41d4-a716-446655440050",
         name: "test-store",
         description: "A test store",
@@ -82,9 +81,9 @@ describe("Store Get Command", () => {
 
       await command.parseAsync(["node", "get", "test-store"]);
 
-      expect(mockResolveVectorStore).toHaveBeenCalledWith(
+      expect(mockResolveStore).toHaveBeenCalledWith(
         expect.objectContaining({
-          vectorStores: expect.any(Object),
+          stores: expect.any(Object),
         }),
         "test-store"
       );
@@ -110,7 +109,7 @@ describe("Store Get Command", () => {
       const expiredDate = new Date();
       expiredDate.setDate(expiredDate.getDate() - 1); // Yesterday
 
-      mockResolveVectorStore.mockResolvedValue({
+      mockResolveStore.mockResolvedValue({
         id: "550e8400-e29b-41d4-a716-446655440050",
         name: "test-store",
         description: "An expired store",
@@ -129,7 +128,7 @@ describe("Store Get Command", () => {
     });
 
     it("should handle missing optional fields", async () => {
-      mockResolveVectorStore.mockResolvedValue({
+      mockResolveStore.mockResolvedValue({
         id: "550e8400-e29b-41d4-a716-446655440050",
         name: "test-store",
         created_at: "2024-01-01T00:00:00Z",
@@ -156,7 +155,7 @@ describe("Store Get Command", () => {
   });
 
   describe("Output formatting", () => {
-    const mockVectorStore = {
+    const mockStore = {
       id: "550e8400-e29b-41d4-a716-446655440050",
       name: "test-store",
       description: "A test store",
@@ -170,10 +169,10 @@ describe("Store Get Command", () => {
 
     it("should format as table by default", async () => {
       (
-        vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
-          typeof vectorStoreUtils.resolveVectorStore
+        storeUtils.resolveStore as jest.MockedFunction<
+          typeof storeUtils.resolveStore
         >
-      ).mockResolvedValue(mockVectorStore);
+      ).mockResolvedValue(mockStore);
 
       await command.parseAsync(["node", "get", "test-store"]);
 
@@ -185,10 +184,10 @@ describe("Store Get Command", () => {
 
     it("should format as JSON when specified", async () => {
       (
-        vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
-          typeof vectorStoreUtils.resolveVectorStore
+        storeUtils.resolveStore as jest.MockedFunction<
+          typeof storeUtils.resolveStore
         >
-      ).mockResolvedValue(mockVectorStore);
+      ).mockResolvedValue(mockStore);
 
       await command.parseAsync([
         "node",
@@ -203,10 +202,10 @@ describe("Store Get Command", () => {
 
     it("should format as CSV when specified", async () => {
       (
-        vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
-          typeof vectorStoreUtils.resolveVectorStore
+        storeUtils.resolveStore as jest.MockedFunction<
+          typeof storeUtils.resolveStore
         >
-      ).mockResolvedValue(mockVectorStore);
+      ).mockResolvedValue(mockStore);
 
       await command.parseAsync([
         "node",
@@ -223,7 +222,7 @@ describe("Store Get Command", () => {
   describe("Error handling", () => {
     it("should handle store resolution errors", async () => {
       const error = new Error("Store not found");
-      mockResolveVectorStore.mockRejectedValue(error);
+      mockResolveStore.mockRejectedValue(error);
 
       await command.parseAsync(["node", "get", "nonexistent-store"]);
 
@@ -235,7 +234,7 @@ describe("Store Get Command", () => {
     });
 
     it("should handle non-Error rejections", async () => {
-      mockResolveVectorStore.mockRejectedValue("Unknown error");
+      mockResolveStore.mockRejectedValue("Unknown error");
 
       await command.parseAsync(["node", "get", "test-store"]);
 
@@ -248,7 +247,7 @@ describe("Store Get Command", () => {
   });
 
   describe("Global options", () => {
-    const mockVectorStore = {
+    const mockStore = {
       id: "550e8400-e29b-41d4-a716-446655440050",
       name: "test-store",
       description: "A test store",
@@ -262,10 +261,10 @@ describe("Store Get Command", () => {
 
     it("should support API key option", async () => {
       (
-        vectorStoreUtils.resolveVectorStore as jest.MockedFunction<
-          typeof vectorStoreUtils.resolveVectorStore
+        storeUtils.resolveStore as jest.MockedFunction<
+          typeof storeUtils.resolveStore
         >
-      ).mockResolvedValue(mockVectorStore);
+      ).mockResolvedValue(mockStore);
 
       await command.parseAsync([
         "node",

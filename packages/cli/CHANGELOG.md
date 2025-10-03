@@ -4,7 +4,23 @@
 
 ### Major Changes
 
-- aa54a04: Update `vs` to `store` in all commands
+- aa54a04: Renamed command structure from `vs` to `store` for clarity
+
+  ### Breaking Changes
+
+  All `vs` commands have been renamed to `store`:
+
+  - `mxbai vs` → `mxbai store`
+  - `mxbai vs create` → `mxbai store create`
+  - `mxbai vs list` → `mxbai store list`
+  - `mxbai vs get` → `mxbai store get`
+  - `mxbai vs update` → `mxbai store update`
+  - `mxbai vs delete` → `mxbai store delete`
+  - `mxbai vs files` → `mxbai store files`
+  - `mxbai vs sync` → `mxbai store sync`
+  - `mxbai vs upload` → `mxbai store upload`
+  - `mxbai vs search` → `mxbai store search`
+  - `mxbai vs qa` → `mxbai store qa`
 
 ## 1.2.1
 
@@ -30,7 +46,7 @@
   - **Multi-key support**: Completions work seamlessly with multiple API keys, showing stores for the current default key
   - **New command**: `mxbai completion refresh` to manually refresh the completion cache
 
-  Breaking changes:
+  ### Breaking changes
 
   - Removed undocumented `vector-store` alias (use `vs` instead)
 
@@ -46,15 +62,15 @@
 
 - 617f988: Added force upload option and standardize CLI flags (breaking changes)
 
-  ## Breaking Changes
+  ### Breaking Changes
 
-  ### Sync Command Changes
+  #### Sync Command Changes
 
   - **REMOVED**: `--ci` flag - use `--yes/-y` instead for non-interactive mode
   - **CHANGED**: `--force/-f` behavior - now forces re-upload of all files (ignoring change detection)
   - **NEW**: `--yes/-y` flag - skips confirmation prompts (replaces old `--force` behavior)
 
-  ### Flag Standardization Across Commands
+  #### Flag Standardization Across Commands
 
   All confirmation-skipping flags have been standardized from `--force` to `--yes/-y`:
 

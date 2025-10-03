@@ -1,30 +1,30 @@
 import type { Mixedbread } from "@mixedbread/sdk";
 import type {
   FileListParams,
-  VectorStore,
-  VectorStoreFile,
-} from "@mixedbread/sdk/resources/vector-stores";
+  Store,
+  StoreFile,
+} from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import inquirer from "inquirer";
-import { resolveVectorStoreName } from "./config";
+import { resolveStoreName } from "./config";
 
-export async function resolveVectorStore(
+export async function resolveStore(
   client: Mixedbread,
   nameOrId: string,
   interactive = false
-): Promise<VectorStore> {
+): Promise<Store> {
   // First check if it's an alias
-  const resolved = resolveVectorStoreName(nameOrId);
+  const resolved = resolveStoreName(nameOrId);
 
   try {
-    return await client.vectorStores.retrieve(resolved);
+    return await client.stores.retrieve(resolved);
   } catch (_error) {
     // If not found by identifier, fall through to fuzzy search
   }
 
-  const vectorStores = await client.vectorStores.list({ limit: 100 });
+  const stores = await client.stores.list({ limit: 100 });
 
-  const fuzzyMatches = vectorStores.data.filter((store) =>
+  const fuzzyMatches = stores.data.filter((store) =>
     store.name.toLowerCase().includes(resolved.toLowerCase())
   );
 
@@ -63,18 +63,18 @@ export async function resolveVectorStore(
   }
 }
 
-export async function getVectorStoreFiles(
+export async function getStoreFiles(
   client: Mixedbread,
-  vectorStoreIdentifier: string
-): Promise<VectorStoreFile[]> {
-  const vectorStoreFiles = [];
+  storeIdentifier: string
+): Promise<StoreFile[]> {
+  const storeFiles = [];
   const fileListParams: FileListParams = {
     limit: 100,
   };
 
   while (true) {
-    const response = await client.vectorStores.files.list(
-      vectorStoreIdentifier,
+    const response = await client.stores.files.list(
+      storeIdentifier,
       fileListParams
     );
     if (response.data.length === 0) {
@@ -82,8 +82,8 @@ export async function getVectorStoreFiles(
     }
     fileListParams.after = response.pagination.last_cursor;
 
-    vectorStoreFiles.push(...response.data);
+    storeFiles.push(...response.data);
   }
 
-  return vectorStoreFiles;
+  return storeFiles;
 }

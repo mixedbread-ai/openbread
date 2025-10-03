@@ -8,9 +8,9 @@ import {
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
 import type { CursorResponse } from "@mixedbread/sdk/core/pagination.mjs";
-import type { VectorStore } from "@mixedbread/sdk/resources/index.mjs";
+import type { Store } from "@mixedbread/sdk/resources/index.mjs";
 import type { Command } from "commander";
-import { createListCommand } from "../../../src/commands/vector-store/list";
+import { createListCommand } from "../../../src/commands/store/list";
 import * as clientUtils from "../../../src/utils/client";
 import * as outputUtils from "../../../src/utils/output";
 
@@ -33,21 +33,21 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
 // Since the Cursor class has private fields, we need to use type assertion
 // but we avoid 'any' by being specific about what we're mocking
 const createMockCursor = (
-  data: VectorStore[],
+  data: Store[],
   pagination: CursorResponse.Pagination
-): CursorResponse<VectorStore> => {
+): CursorResponse<Store> => {
   return {
     data,
     pagination,
-  } as unknown as CursorResponse<VectorStore>;
+  } as unknown as CursorResponse<Store>;
 };
 
 describe("Store List Command", () => {
   let command: Command;
   let mockClient: {
-    vectorStores: {
+    stores: {
       list: jest.MockedFunction<
-        (options: { limit?: number }) => Promise<CursorResponse<VectorStore>>
+        (options: { limit?: number }) => Promise<CursorResponse<Store>>
       >;
     };
   };
@@ -57,7 +57,7 @@ describe("Store List Command", () => {
 
     // Setup mock client
     mockClient = {
-      vectorStores: {
+      stores: {
         list: jest.fn(),
       },
     };
@@ -94,7 +94,7 @@ describe("Store List Command", () => {
         },
       ];
 
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor(mockData, {
           first_cursor: "123",
           last_cursor: "456",
@@ -105,7 +105,7 @@ describe("Store List Command", () => {
 
       await command.parseAsync(["node", "list"]);
 
-      expect(mockClient.vectorStores.list).toHaveBeenCalledWith({
+      expect(mockClient.stores.list).toHaveBeenCalledWith({
         limit: 10,
       });
 
@@ -155,7 +155,7 @@ describe("Store List Command", () => {
         },
       ];
 
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor(mockData, {
           first_cursor: "123",
           last_cursor: "456",
@@ -174,7 +174,7 @@ describe("Store List Command", () => {
     });
 
     it("should handle empty results", async () => {
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor([], {
           first_cursor: "123",
           last_cursor: "456",
@@ -192,7 +192,7 @@ describe("Store List Command", () => {
 
   describe("Pagination", () => {
     it("should handle custom limit", async () => {
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor([], {
           first_cursor: "123",
           last_cursor: "456",
@@ -203,7 +203,7 @@ describe("Store List Command", () => {
 
       await command.parseAsync(["node", "list", "--limit", "50"]);
 
-      expect(mockClient.vectorStores.list).toHaveBeenCalledWith({
+      expect(mockClient.stores.list).toHaveBeenCalledWith({
         limit: 50,
       });
     });
@@ -233,7 +233,7 @@ describe("Store List Command", () => {
     ];
 
     it("should format as table by default", async () => {
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor(mockData, {
           first_cursor: "123",
           last_cursor: "456",
@@ -251,7 +251,7 @@ describe("Store List Command", () => {
     });
 
     it("should format as JSON when specified", async () => {
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor(mockData, {
           first_cursor: "123",
           last_cursor: "456",
@@ -266,7 +266,7 @@ describe("Store List Command", () => {
     });
 
     it("should format as CSV when specified", async () => {
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor(mockData, {
           first_cursor: "123",
           last_cursor: "456",
@@ -284,7 +284,7 @@ describe("Store List Command", () => {
   describe("Error handling", () => {
     it("should handle API errors", async () => {
       const error = new Error("API Error: Rate limit exceeded");
-      mockClient.vectorStores.list.mockRejectedValue(error);
+      mockClient.stores.list.mockRejectedValue(error);
 
       await command.parseAsync(["node", "list"]);
 
@@ -297,7 +297,7 @@ describe("Store List Command", () => {
 
     it("should handle network errors", async () => {
       const error = new Error("ECONNREFUSED");
-      mockClient.vectorStores.list.mockRejectedValue(error);
+      mockClient.stores.list.mockRejectedValue(error);
 
       await command.parseAsync(["node", "list"]);
 
@@ -309,7 +309,7 @@ describe("Store List Command", () => {
     });
 
     it("should handle non-Error rejections", async () => {
-      mockClient.vectorStores.list.mockRejectedValue("Unknown error");
+      mockClient.stores.list.mockRejectedValue("Unknown error");
 
       await command.parseAsync(["node", "list"]);
 
@@ -323,7 +323,7 @@ describe("Store List Command", () => {
 
   describe("API key handling", () => {
     it("should use API key from command line", async () => {
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor([], {
           first_cursor: "123",
           last_cursor: "456",
@@ -342,7 +342,7 @@ describe("Store List Command", () => {
     });
 
     it("should work without explicit API key (uses env/config)", async () => {
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor([], {
           first_cursor: "123",
           last_cursor: "456",
@@ -359,7 +359,7 @@ describe("Store List Command", () => {
 
   describe("Base URL handling", () => {
     it("should pass base URL from command line to createClient", async () => {
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor([], {
           first_cursor: "123",
           last_cursor: "456",
@@ -383,7 +383,7 @@ describe("Store List Command", () => {
     });
 
     it("should validate base URL is a valid URL", async () => {
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor([], {
           first_cursor: "123",
           last_cursor: "456",
@@ -407,7 +407,7 @@ describe("Store List Command", () => {
     });
 
     it("should work with base URL and API key together", async () => {
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor([], {
           first_cursor: "123",
           last_cursor: "456",
@@ -437,7 +437,7 @@ describe("Store List Command", () => {
       const originalEnv = process.env.MXBAI_BASE_URL;
       process.env.MXBAI_BASE_URL = "https://env-api.example.com";
 
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor([], {
           first_cursor: "123",
           last_cursor: "456",
@@ -481,7 +481,7 @@ describe("Store List Command", () => {
         },
       ];
 
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor(mockData, {
           first_cursor: "123",
           last_cursor: "456",
@@ -517,7 +517,7 @@ describe("Store List Command", () => {
         },
       ];
 
-      mockClient.vectorStores.list.mockResolvedValue(
+      mockClient.stores.list.mockResolvedValue(
         createMockCursor(mockData, {
           first_cursor: "123",
           last_cursor: "456",

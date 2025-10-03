@@ -11,7 +11,7 @@ import {
   parseOptions,
 } from "../../../utils/global-options";
 import { formatBytes, formatOutput } from "../../../utils/output";
-import { resolveVectorStore } from "../../../utils/vector-store";
+import { resolveStore } from "../../../utils/store";
 
 const GetFileSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
@@ -41,17 +41,11 @@ export function createGetCommand(): Command {
 
         const client = createClient(parsedOptions);
         spinner = ora("Loading file details...").start();
-        const vectorStore = await resolveVectorStore(
-          client,
-          parsedOptions.nameOrId
-        );
+        const store = await resolveStore(client, parsedOptions.nameOrId);
 
-        const file = await client.vectorStores.files.retrieve(
-          parsedOptions.fileId,
-          {
-            vector_store_identifier: vectorStore.id,
-          }
-        );
+        const file = await client.stores.files.retrieve(parsedOptions.fileId, {
+          store_identifier: store.id,
+        });
 
         spinner.succeed("File details loaded");
 

@@ -1,4 +1,4 @@
-import type { VectorStoreFile } from "@mixedbread/sdk/resources/vector-stores";
+import type { StoreFile } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { Command } from "commander";
 import ora, { type Ora } from "ora";
@@ -15,7 +15,7 @@ import {
   formatCountWithSuffix,
   formatOutput,
 } from "../../../utils/output";
-import { resolveVectorStore } from "../../../utils/vector-store";
+import { resolveStore } from "../../../utils/store";
 import type { FilesOptions } from ".";
 
 const ListFilesSchema = extendGlobalOptions({
@@ -59,12 +59,9 @@ export function createListCommand(): Command {
 
       const client = createClient(parsedOptions);
       spinner = ora("Loading files...").start();
-      const vectorStore = await resolveVectorStore(
-        client,
-        parsedOptions.nameOrId
-      );
+      const store = await resolveStore(client, parsedOptions.nameOrId);
 
-      const response = await client.vectorStores.files.list(vectorStore.id, {
+      const response = await client.stores.files.list(store.id, {
         limit: parsedOptions.limit || 10,
       });
 
@@ -73,7 +70,7 @@ export function createListCommand(): Command {
       // Apply status filter
       if (parsedOptions.status && parsedOptions.status !== "all") {
         files = files.filter(
-          (file: VectorStoreFile) => file.status === parsedOptions.status
+          (file: StoreFile) => file.status === parsedOptions.status
         );
       }
 

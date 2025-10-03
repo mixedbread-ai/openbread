@@ -10,7 +10,7 @@ import { createSyncCommand } from "./sync";
 import { createUpdateCommand } from "./update";
 import { createUploadCommand } from "./upload";
 
-export function createVectorStoreCommand(): Command {
+export function createStoreCommand(): Command {
   const storeCommand = new Command("store").description("Manage stores");
 
   // Add subcommands

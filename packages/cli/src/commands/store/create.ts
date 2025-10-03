@@ -17,7 +17,7 @@ import {
 import { validateMetadata } from "../../utils/metadata";
 import { formatOutput } from "../../utils/output";
 
-const CreateVectorStoreSchema = extendGlobalOptions({
+const CreateStoreSchema = extendGlobalOptions({
   name: z.string().min(1, { error: '"name" is required' }),
   description: z.string().optional(),
   expiresAfter: z.coerce
@@ -51,7 +51,7 @@ export function createCreateCommand(): Command {
       const mergedOptions = mergeCommandOptions(command, options);
       const client = createClient(mergedOptions);
 
-      const parsedOptions = parseOptions(CreateVectorStoreSchema, {
+      const parsedOptions = parseOptions(CreateStoreSchema, {
         ...mergedOptions,
         name,
       });
@@ -60,7 +60,7 @@ export function createCreateCommand(): Command {
 
       spinner = ora("Creating store...").start();
 
-      const vectorStore = await client.vectorStores.create({
+      const store = await client.stores.create({
         name: parsedOptions.name,
         description: parsedOptions.description,
         expires_after: parsedOptions.expiresAfter
@@ -76,14 +76,14 @@ export function createCreateCommand(): Command {
 
       formatOutput(
         {
-          id: vectorStore.id,
-          name: vectorStore.name,
-          description: vectorStore.description,
-          expires_after: vectorStore.expires_after,
+          id: store.id,
+          name: store.name,
+          description: store.description,
+          expires_after: store.expires_after,
           metadata:
             parsedOptions.format === "table"
-              ? JSON.stringify(vectorStore.metadata, null, 2)
-              : vectorStore.metadata,
+              ? JSON.stringify(store.metadata, null, 2)
+              : store.metadata,
         },
         parsedOptions.format
       );
@@ -91,7 +91,7 @@ export function createCreateCommand(): Command {
       // Update completion cache with the new store
       const keyName = getCurrentKeyName();
       if (keyName) {
-        updateCacheAfterCreate(keyName, vectorStore.name);
+        updateCacheAfterCreate(keyName, store.name);
       }
     } catch (error) {
       spinner?.fail("Failed to create store");
