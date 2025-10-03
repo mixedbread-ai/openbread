@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.1
+
+### Patch Changes
+
+- 03293e6: Increase the upload timeout limit
+
 ## 2.1.0
 
 ### Minor Changes
