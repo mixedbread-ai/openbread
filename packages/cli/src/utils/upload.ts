@@ -7,7 +7,7 @@ import { lookup } from "mime-types";
 import ora from "ora";
 import { formatBytes, formatCountWithSuffix } from "./output";
 
-const UPLOAD_TIMEOUT = 1000 * 60 * 10; // 10 minutes
+export const UPLOAD_TIMEOUT = 1000 * 60 * 10; // 10 minutes
 
 export interface UploadFileOptions {
   metadata?: Record<string, unknown>;
