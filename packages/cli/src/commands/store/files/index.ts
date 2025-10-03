@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { formatUnknownCommandError } from "../../../utils/command-suggestions";
 import type { GlobalOptions } from "../../../utils/global-options";
 import { createDeleteCommand } from "./delete";
 import { createGetCommand } from "./get";
@@ -14,13 +15,19 @@ export function createFilesCommand(): Command {
     "Manage files in stores"
   );
 
+  filesCommand.showHelpAfterError();
+
   // Add subcommands
   filesCommand.addCommand(createListCommand());
   filesCommand.addCommand(createGetCommand());
   filesCommand.addCommand(createDeleteCommand());
 
-  filesCommand.action(() => {
-    filesCommand.help();
+  // Handle unknown subcommands
+  filesCommand.on("command:*", () => {
+    const unknownCommand = filesCommand.args[0];
+    const availableCommands = filesCommand.commands.map((cmd) => cmd.name());
+    console.error(formatUnknownCommandError(unknownCommand, availableCommands));
+    process.exit(1);
   });
 
   return filesCommand;
