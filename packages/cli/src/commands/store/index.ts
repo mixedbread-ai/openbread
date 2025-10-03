@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { formatUnknownCommandError } from "../../utils/command-suggestions";
 import { createCreateCommand } from "./create";
 import { createDeleteCommand } from "./delete";
 import { createFilesCommand } from "./files";
@@ -13,6 +14,8 @@ import { createUploadCommand } from "./upload";
 export function createStoreCommand(): Command {
   const storeCommand = new Command("store").description("Manage stores");
 
+  storeCommand.showHelpAfterError();
+
   // Add subcommands
   storeCommand.addCommand(createListCommand());
   storeCommand.addCommand(createCreateCommand());
@@ -25,9 +28,12 @@ export function createStoreCommand(): Command {
   storeCommand.addCommand(createQACommand());
   storeCommand.addCommand(createSyncCommand());
 
-  // Show help without error exit code when no subcommand provided
-  storeCommand.action(() => {
-    storeCommand.help();
+  // Handle unknown subcommands
+  storeCommand.on("command:*", () => {
+    const unknownCommand = storeCommand.args[0];
+    const availableCommands = storeCommand.commands.map((cmd) => cmd.name());
+    console.error(formatUnknownCommandError(unknownCommand, availableCommands));
+    process.exit(1);
   });
 
   return storeCommand;

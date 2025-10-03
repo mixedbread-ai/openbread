@@ -4,6 +4,15 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import chalk from "chalk";
 import { Command } from "commander";
+import {
+  createCompletionCommand,
+  createCompletionServerCommand,
+} from "../commands/completion";
+import { createConfigCommand } from "../commands/config";
+import { createStoreCommand } from "../commands/store";
+import { formatUnknownCommandError } from "../utils/command-suggestions";
+import { setupGlobalOptions } from "../utils/global-options";
+import { checkForUpdates } from "../utils/update-checker";
 
 // Find package.json relative to the compiled file location
 // In the published package, from bin/mxbai.js, package.json is one level up
@@ -27,34 +36,23 @@ try {
   }
 }
 
-import {
-  createCompletionCommand,
-  createCompletionServerCommand,
-} from "../commands/completion";
-import { createConfigCommand } from "../commands/config";
-import { createStoreCommand } from "../commands/store";
-import { setupGlobalOptions } from "../utils/global-options";
-
 const program = new Command();
 
 program
   .name("mxbai")
   .description("CLI tool for managing the Mixedbread platform.")
-  .version(version)
-  .allowExcessArguments(false);
+  .version(version);
 
 setupGlobalOptions(program);
+
+// Configure command handling
+program.showHelpAfterError();
 
 // Add commands
 program.addCommand(createStoreCommand());
 program.addCommand(createConfigCommand());
 program.addCommand(createCompletionCommand());
 program.addCommand(createCompletionServerCommand());
-
-// Show help without error exit code when no command provided
-program.action(() => {
-  program.help();
-});
 
 // Global error handling
 program.on("error", (error: Error) => {
@@ -67,16 +65,24 @@ program.on("error", (error: Error) => {
 
 // Handle unknown commands
 program.on("command:*", () => {
-  console.error(
-    chalk.red("\n✗"),
-    `Unknown command: ${program.args.join(" ")}\n`
-  );
-  program.help();
+  const unknownCommand = program.args[0];
+  const availableCommands = program.commands
+    .map((cmd) => cmd.name())
+    .filter((name) => name !== "completion-server");
+  console.error(formatUnknownCommandError(unknownCommand, availableCommands));
+  process.exit(1);
 });
 
 // Parse arguments
 async function main() {
   try {
+    await checkForUpdates(version);
+
+    // Show help if no arguments provided
+    if (process.argv.length === 2) {
+      program.help();
+    }
+
     await program.parseAsync(process.argv);
   } catch (error) {
     if (error instanceof Error) {
