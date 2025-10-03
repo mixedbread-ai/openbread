@@ -12,6 +12,7 @@ import { createConfigCommand } from "../commands/config";
 import { createStoreCommand } from "../commands/store";
 import { formatUnknownCommandError } from "../utils/command-suggestions";
 import { setupGlobalOptions } from "../utils/global-options";
+import { checkForUpdates } from "../utils/update-checker";
 
 // Find package.json relative to the compiled file location
 // In the published package, from bin/mxbai.js, package.json is one level up
@@ -75,6 +76,8 @@ program.on("command:*", () => {
 // Parse arguments
 async function main() {
   try {
+    await checkForUpdates(version);
+
     // Show help if no arguments provided
     if (process.argv.length === 2) {
       program.help();
