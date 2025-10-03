@@ -109,11 +109,6 @@ export async function checkForUpdates(currentVersion: string): Promise<void> {
     return;
   }
 
-  // Skip if user explicitly disabled checks
-  if (process.env.MXBAI_NO_UPDATE_CHECK === "true") {
-    return;
-  }
-
   try {
     const cache = readCache();
     const now = Date.now();
