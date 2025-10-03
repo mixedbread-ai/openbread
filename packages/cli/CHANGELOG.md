@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1
+
+### Patch Changes
+
+- fbd76b8: Updated mixedbread SDK version
+
 ## 2.0.0
 
 ### Major Changes
