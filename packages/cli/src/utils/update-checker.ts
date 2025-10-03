@@ -17,25 +17,25 @@ const TIMEOUT = 2000;
 /**
  * Simple semantic version comparison
  * Returns true if versionA is less than versionB
+ * Ignores pre-release versions (only compares major.minor.patch)
  */
 function isVersionLessThan(versionA: string, versionB: string): boolean {
   const parseVersion = (v: string) => {
     const cleaned = v.replace(/^v/, "");
-    const parts = cleaned.split(/[.-]/).map((p) => parseInt(p, 10) || 0);
-    return parts;
+    const mainVersion = cleaned.split("-")[0];
+    const [major, minor, patch] = mainVersion
+      .split(".")
+      .map((p) => parseInt(p, 10) || 0);
+    return { major, minor, patch };
   };
 
   const a = parseVersion(versionA);
   const b = parseVersion(versionB);
 
-  for (let i = 0; i < Math.max(a.length, b.length); i++) {
-    const aVal = a[i] || 0;
-    const bVal = b[i] || 0;
-    if (aVal < bVal) return true;
-    if (aVal > bVal) return false;
-  }
-
-  return false;
+  // Compare major.minor.patch
+  if (a.major !== b.major) return a.major < b.major;
+  if (a.minor !== b.minor) return a.minor < b.minor;
+  return a.patch < b.patch;
 }
 
 async function fetchLatestVersion(): Promise<string> {
@@ -43,6 +43,10 @@ async function fetchLatestVersion(): Promise<string> {
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(TIMEOUT),
   });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch latest version: ${response.statusText}`);
+  }
 
   const json = await response.json();
   return json.version;
