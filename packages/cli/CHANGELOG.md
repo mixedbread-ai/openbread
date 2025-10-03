@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.0
+
+### Minor Changes
+
+- 1da03c4: - Improve unkown command error message
+  - Notify users when a newer version is released
+
 ## 2.0.1
 
 ### Patch Changes
