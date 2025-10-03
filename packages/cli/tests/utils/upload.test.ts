@@ -9,7 +9,11 @@ import {
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
 import mockFs from "mock-fs";
-import { uploadFile, uploadFilesInBatch } from "../../src/utils/upload";
+import {
+  UPLOAD_TIMEOUT,
+  uploadFile,
+  uploadFilesInBatch,
+} from "../../src/utils/upload";
 import { createMockClient, type FlexibleMock } from "../helpers/test-utils";
 
 // Mock console.warn since we're testing warning behavior
@@ -61,7 +65,8 @@ describe("Upload Utils", () => {
             parsing_strategy: undefined,
             contextualization: undefined,
           },
-        })
+        }),
+        { timeout: UPLOAD_TIMEOUT }
       );
       expect(mockConsoleWarn).not.toHaveBeenCalled();
     });
@@ -86,7 +91,8 @@ describe("Upload Utils", () => {
             parsing_strategy: undefined,
             contextualization: undefined,
           },
-        })
+        }),
+        { timeout: UPLOAD_TIMEOUT }
       );
       expect(mockConsoleWarn).not.toHaveBeenCalled();
     });
@@ -118,7 +124,8 @@ describe("Upload Utils", () => {
             parsing_strategy: "high_quality",
             contextualization: true,
           },
-        })
+        }),
+        { timeout: UPLOAD_TIMEOUT }
       );
       expect(mockConsoleWarn).not.toHaveBeenCalled();
     });
@@ -142,7 +149,8 @@ describe("Upload Utils", () => {
           name: "test.ts",
           type: "text/typescript",
         }),
-        expect.any(Object)
+        expect.any(Object),
+        { timeout: UPLOAD_TIMEOUT }
       );
     });
 
@@ -165,7 +173,8 @@ describe("Upload Utils", () => {
           name: "script.py",
           type: "text/x-python",
         }),
-        expect.any(Object)
+        expect.any(Object),
+        { timeout: UPLOAD_TIMEOUT }
       );
     });
 
@@ -188,7 +197,8 @@ describe("Upload Utils", () => {
           name: "content.mdx",
           type: "text/mdx",
         }),
-        expect.any(Object)
+        expect.any(Object),
+        { timeout: UPLOAD_TIMEOUT }
       );
     });
   });
@@ -451,7 +461,8 @@ describe("Upload Utils", () => {
           name: "app.ts",
           type: "text/typescript",
         }),
-        expect.any(Object)
+        expect.any(Object),
+        { timeout: UPLOAD_TIMEOUT }
       );
 
       // Verify Python file mime type was fixed
@@ -461,7 +472,8 @@ describe("Upload Utils", () => {
           name: "utils.py",
           type: "text/x-python",
         }),
-        expect.any(Object)
+        expect.any(Object),
+        { timeout: UPLOAD_TIMEOUT }
       );
 
       // Verify MDX file mime type was fixed
@@ -471,7 +483,8 @@ describe("Upload Utils", () => {
           name: "page.mdx",
           type: "text/mdx",
         }),
-        expect.any(Object)
+        expect.any(Object),
+        { timeout: UPLOAD_TIMEOUT }
       );
 
       // Verify regular markdown file kept its original mime type
@@ -481,7 +494,8 @@ describe("Upload Utils", () => {
           name: "readme.md",
           type: "text/markdown",
         }),
-        expect.any(Object)
+        expect.any(Object),
+        { timeout: UPLOAD_TIMEOUT }
       );
     });
   });

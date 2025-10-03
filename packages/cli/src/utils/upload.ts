@@ -7,6 +7,8 @@ import { lookup } from "mime-types";
 import ora from "ora";
 import { formatBytes, formatCountWithSuffix } from "./output";
 
+export const UPLOAD_TIMEOUT = 1000 * 60 * 10; // 10 minutes
+
 export interface UploadFileOptions {
   metadata?: Record<string, unknown>;
   strategy?: FileCreateParams.Experimental["parsing_strategy"];
@@ -78,14 +80,18 @@ export async function uploadFile(
     new File([fileContent], fileName, { type: mimeType })
   );
 
-  // Upload the file
-  await client.stores.files.upload(storeIdentifier, file, {
-    metadata,
-    experimental: {
-      parsing_strategy: strategy,
-      contextualization,
+  await client.stores.files.upload(
+    storeIdentifier,
+    file,
+    {
+      metadata,
+      experimental: {
+        parsing_strategy: strategy,
+        contextualization,
+      },
     },
-  });
+    { timeout: UPLOAD_TIMEOUT }
+  );
 }
 
 /**
@@ -171,13 +177,18 @@ export async function uploadFilesInBatch(
           })
         );
 
-        await client.stores.files.upload(storeIdentifier, fileToUpload, {
-          metadata: fileMetadata,
-          experimental: {
-            parsing_strategy: file.strategy,
-            contextualization: file.contextualization,
+        await client.stores.files.upload(
+          storeIdentifier,
+          fileToUpload,
+          {
+            metadata: fileMetadata,
+            experimental: {
+              parsing_strategy: file.strategy,
+              contextualization: file.contextualization,
+            },
           },
-        });
+          { timeout: UPLOAD_TIMEOUT }
+        );
 
         if (unique && existingFiles.has(relativePath)) {
           results.updated++;
