@@ -1,5 +1,4 @@
 import { statSync } from "node:fs";
-import { normalize, relative } from "node:path";
 import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { Command } from "commander";
@@ -17,7 +16,10 @@ import {
 } from "../../utils/global-options";
 import { uploadFromManifest } from "../../utils/manifest";
 import { validateMetadata } from "../../utils/metadata";
-import { loadMetadataMapping } from "../../utils/metadata-file";
+import {
+  loadMetadataMapping,
+  normalizePathForMetadata,
+} from "../../utils/metadata-file";
 import { formatBytes, formatCountWithSuffix } from "../../utils/output";
 import { getStoreFiles, resolveStore } from "../../utils/store";
 import { type FileToUpload, uploadFilesInBatch } from "../../utils/upload";
@@ -137,15 +139,13 @@ export function createUploadCommand(): Command {
 
         const metadata = validateMetadata(parsedOptions.metadata);
 
-        // Load metadata mapping file if provided
         let metadataMap: Map<string, Record<string, unknown>> | undefined;
         if (parsedOptions.metadataFile) {
           try {
             metadataMap = loadMetadataMapping(parsedOptions.metadataFile);
             console.log(
-              chalk.gray(
-                `Loaded metadata for ${metadataMap.size} file${metadataMap.size === 1 ? "" : "s"} from ${parsedOptions.metadataFile}`
-              )
+              chalk.green("✓"),
+              `Loaded metadata for ${metadataMap.size} file${metadataMap.size === 1 ? "" : "s"} from ${parsedOptions.metadataFile}`
             );
           } catch (error) {
             console.error(
@@ -183,6 +183,7 @@ export function createUploadCommand(): Command {
           }, 0);
 
           console.log(
+            chalk.green("✓"),
             `Found ${formatCountWithSuffix(uniqueFiles.length, "file")} matching the ${
               patterns.length > 1 ? "patterns" : "pattern"
             } (${formatBytes(totalSize)})`
@@ -231,7 +232,7 @@ export function createUploadCommand(): Command {
                 ])
             );
             spinner.succeed(
-              `Found ${formatCountWithSuffix(existingFiles.size, "existing file")}`
+              `Found ${formatCountWithSuffix(existingFiles.size, "existing file")} in store`
             );
           } catch (error) {
             spinner.fail("Failed to check existing files");
@@ -241,13 +242,8 @@ export function createUploadCommand(): Command {
 
         // Transform files to shared format
         const filesToUpload: FileToUpload[] = uniqueFiles.map((filePath) => {
-          const relativePath = relative(process.cwd(), filePath);
-          // Normalize path for consistent map lookup across platforms
-          const normalizedPath = normalize(relativePath).replace(
-            /^\.[\\/]/,
-            ""
-          );
-          const perFileMetadata = metadataMap.get(normalizedPath);
+          const normalizedPath = normalizePathForMetadata(filePath);
+          const perFileMetadata = metadataMap?.get(normalizedPath) || {};
 
           return {
             path: filePath,

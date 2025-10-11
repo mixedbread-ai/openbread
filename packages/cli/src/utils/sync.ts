@@ -9,7 +9,11 @@ import ora from "ora";
 import pLimit from "p-limit";
 import { getChangedFiles, normalizeGitPatterns } from "./git";
 import { calculateFileHash, hashesMatch } from "./hash";
-import { extractUserMetadata, metadataEquals } from "./metadata-file";
+import {
+  extractUserMetadata,
+  metadataEquals,
+  normalizePathForMetadata,
+} from "./metadata-file";
 import { formatBytes, formatCountWithSuffix } from "./output";
 import { buildFileSyncMetadata, type FileSyncMetadata } from "./sync-state";
 import { uploadFile } from "./upload";
@@ -21,6 +25,8 @@ interface FileChange {
   localHash?: string;
   remoteHash?: string;
   fileId?: string;
+  contentChanged?: boolean;
+  metadataChanged?: boolean;
 }
 
 interface SyncAnalysis {
@@ -125,6 +131,9 @@ export async function analyzeChanges(
       let isModified = false;
       let localHash: string | undefined;
 
+      let contentChanged = false;
+      let metadataChanged = false;
+
       if (forceUpload) {
         // When --force-upload is set, treat all existing files as modified
         isModified = true;
@@ -136,19 +145,11 @@ export async function analyzeChanges(
       } else {
         // Default behavior: use hash comparison
         localHash = await calculateFileHash(filePath);
-        const contentChanged = !hashesMatch(
-          localHash,
-          syncedFile.metadata.file_hash
-        );
+        contentChanged = !hashesMatch(localHash, syncedFile.metadata.file_hash);
 
         // Check metadata changes if --metadata-file provided
-        let metadataChanged = false;
         if (metadataMap) {
-          const relativePath = path.relative(process.cwd(), filePath);
-          // Normalize path for consistent map lookup across platforms
-          const normalizedPath = path
-            .normalize(relativePath)
-            .replace(/^\.[\\/]/, "");
+          const normalizedPath = normalizePathForMetadata(filePath);
           const newMetadata = metadataMap.get(normalizedPath);
 
           if (newMetadata !== undefined) {
@@ -174,6 +175,8 @@ export async function analyzeChanges(
           localHash,
           remoteHash: syncedFile.metadata.file_hash,
           fileId: syncedFile.fileId,
+          contentChanged,
+          metadataChanged,
         });
         analysis.totalSize += stats.size;
       } else {
@@ -224,8 +227,19 @@ export function formatChangeSummary(analysis: SyncAnalysis): string {
       `  ${chalk.yellow("Updated:")} (${formatCountWithSuffix(analysis.modified.length, "file")})`
     );
     analysis.modified.forEach((file) => {
+      const relativePath = path.relative(process.cwd(), file.path);
+
+      let indicator = "";
+      if (file.contentChanged && file.metadataChanged) {
+        indicator = chalk.cyan(" [content + metadata updated]");
+      } else if (file.contentChanged) {
+        indicator = chalk.blue(" [content updated]");
+      } else if (file.metadataChanged) {
+        indicator = chalk.magenta(" [metadata updated]");
+      }
+
       const size = file.size ? ` (${formatBytes(file.size)})` : "";
-      lines.push(`    • ${path.relative(process.cwd(), file.path)}${size}`);
+      lines.push(`    • ${relativePath}${indicator}${size}`);
     });
     lines.push("");
   }
@@ -379,11 +393,7 @@ export async function executeSyncChanges(
           );
 
           // Get per-file metadata from mapping
-          const relativePath = path.relative(process.cwd(), file.path);
-          // Normalize path for consistent map lookup across platforms
-          const normalizedPath = path
-            .normalize(relativePath)
-            .replace(/^\.[\\/]/, "");
+          const normalizedPath = normalizePathForMetadata(file.path);
           const perFileMetadata =
             options.metadataMap?.get(normalizedPath) || {};
 

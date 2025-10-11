@@ -133,6 +133,7 @@ describe("Store Upload Command", () => {
       ]);
 
       expect(console.log).toHaveBeenCalledWith(
+        expect.any(String),
         expect.stringContaining("Found 3 files matching the pattern")
       );
       expect(mockUploadFilesInBatch).toHaveBeenCalled();
@@ -161,6 +162,7 @@ describe("Store Upload Command", () => {
       ]);
 
       expect(console.log).toHaveBeenCalledWith(
+        expect.any(String),
         expect.stringContaining("Found 3 files matching the patterns")
       );
       expect(mockUploadFilesInBatch).toHaveBeenCalled();

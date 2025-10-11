@@ -110,15 +110,13 @@ export function createSyncCommand(): Command {
         // Parse metadata if provided
         const additionalMetadata = validateMetadata(parsedOptions.metadata);
 
-        // Load metadata mapping file if provided
         let metadataMap: Map<string, Record<string, unknown>> | undefined;
         if (parsedOptions.metadataFile) {
           try {
             metadataMap = loadMetadataMapping(parsedOptions.metadataFile);
             console.log(
-              chalk.gray(
-                `Loaded metadata for ${metadataMap.size} file${metadataMap.size === 1 ? "" : "s"} from ${parsedOptions.metadataFile}`
-              )
+              chalk.green("✓"),
+              `Loaded metadata for ${metadataMap.size} file${metadataMap.size === 1 ? "" : "s"} from ${parsedOptions.metadataFile}`
             );
           } catch (error) {
             console.error(
@@ -129,7 +127,6 @@ export function createSyncCommand(): Command {
           }
         }
 
-        // Get git info
         const gitInfo = await getGitInfo();
 
         const spinner = ora("Loading existing files from store...").start();

@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { normalize } from "node:path";
+import { normalize, relative } from "node:path";
 import equal from "fast-deep-equal";
 import { parse } from "yaml";
 import type { FileSyncMetadata } from "./sync-state";
@@ -14,6 +14,15 @@ const SYNC_METADATA_FIELDS = new Set<SyncMetadataFields>([
   "uploaded_at",
   "synced",
 ]);
+
+/**
+ * Normalize a file path for consistent metadata map lookups across platforms
+ * Converts absolute path to relative-to-CWD and removes leading ./
+ */
+export function normalizePathForMetadata(filePath: string): string {
+  const relativePath = relative(process.cwd(), filePath);
+  return normalize(relativePath).replace(/^\.[\\/]/, "");
+}
 
 /**
  * Load metadata mapping from JSON/YAML file
