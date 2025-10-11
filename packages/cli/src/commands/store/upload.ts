@@ -1,4 +1,5 @@
 import { statSync } from "node:fs";
+import { normalize, relative } from "node:path";
 import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { Command } from "commander";
@@ -16,6 +17,7 @@ import {
 } from "../../utils/global-options";
 import { uploadFromManifest } from "../../utils/manifest";
 import { validateMetadata } from "../../utils/metadata";
+import { loadMetadataMapping } from "../../utils/metadata-file";
 import { formatBytes, formatCountWithSuffix } from "../../utils/output";
 import { getStoreFiles, resolveStore } from "../../utils/store";
 import { type FileToUpload, uploadFilesInBatch } from "../../utils/upload";
@@ -32,6 +34,7 @@ const UploadStoreSchema = extendGlobalOptions({
     .boolean({ error: '"contextualization" must be a boolean' })
     .optional(),
   metadata: z.string().optional(),
+  metadataFile: z.string().optional(),
   dryRun: z.boolean().optional(),
   parallel: z.coerce
     .number({ error: '"parallel" must be a number' })
@@ -47,6 +50,7 @@ export interface UploadOptions extends GlobalOptions {
   strategy?: FileCreateParams.Experimental["parsing_strategy"];
   contextualization?: boolean;
   metadata?: string;
+  metadataFile?: string;
   dryRun?: boolean;
   parallel?: number;
   unique?: boolean;
@@ -65,6 +69,7 @@ export function createUploadCommand(): Command {
       .option("--strategy <strategy>", "Processing strategy")
       .option("--contextualization", "Enable context preservation")
       .option("--metadata <json>", "Additional metadata as JSON string")
+      .option("--metadata-file <file>", "Per-file metadata mapping (JSON/YAML)")
       .option("--dry-run", "Preview what would be uploaded", false)
       .option("--parallel <n>", "Number of concurrent uploads (1-200)")
       .option(
@@ -92,6 +97,15 @@ export function createUploadCommand(): Command {
         const config = loadConfig();
 
         spinner.succeed("Upload initialized");
+
+        // Validate mutually exclusive options
+        if (parsedOptions.manifest && parsedOptions.metadataFile) {
+          console.error(
+            chalk.red("✗"),
+            "Cannot use both --manifest and --metadata-file. Use --manifest with per-file metadata entries instead."
+          );
+          process.exit(1);
+        }
 
         // Handle manifest file upload
         if (parsedOptions.manifest) {
@@ -122,6 +136,25 @@ export function createUploadCommand(): Command {
           parsedOptions.parallel ?? config.defaults?.upload?.parallel ?? 100;
 
         const metadata = validateMetadata(parsedOptions.metadata);
+
+        // Load metadata mapping file if provided
+        let metadataMap: Map<string, Record<string, unknown>> | undefined;
+        if (parsedOptions.metadataFile) {
+          try {
+            metadataMap = loadMetadataMapping(parsedOptions.metadataFile);
+            console.log(
+              chalk.gray(
+                `Loaded metadata for ${metadataMap.size} file${metadataMap.size === 1 ? "" : "s"} from ${parsedOptions.metadataFile}`
+              )
+            );
+          } catch (error) {
+            console.error(
+              chalk.red("✗"),
+              `Failed to load metadata file: ${error instanceof Error ? error.message : "Unknown error"}`
+            );
+            process.exit(1);
+          }
+        }
 
         // Collect all files matching patterns
         const files: string[] = [];
@@ -207,12 +240,25 @@ export function createUploadCommand(): Command {
         }
 
         // Transform files to shared format
-        const filesToUpload: FileToUpload[] = uniqueFiles.map((filePath) => ({
-          path: filePath,
-          strategy,
-          contextualization,
-          metadata,
-        }));
+        const filesToUpload: FileToUpload[] = uniqueFiles.map((filePath) => {
+          const relativePath = relative(process.cwd(), filePath);
+          // Normalize path for consistent map lookup across platforms
+          const normalizedPath = normalize(relativePath).replace(
+            /^\.[\\/]/,
+            ""
+          );
+          const perFileMetadata = metadataMap.get(normalizedPath);
+
+          return {
+            path: filePath,
+            strategy,
+            contextualization,
+            metadata: {
+              ...metadata, // CLI --metadata (base for all files)
+              ...perFileMetadata, // Per-file from mapping (overrides)
+            },
+          };
+        });
 
         // Upload files with progress tracking
         await uploadFilesInBatch(client, store.id, filesToUpload, {

@@ -9,6 +9,7 @@ import ora from "ora";
 import pLimit from "p-limit";
 import { getChangedFiles, normalizeGitPatterns } from "./git";
 import { calculateFileHash, hashesMatch } from "./hash";
+import { extractUserMetadata, metadataEquals } from "./metadata-file";
 import { formatBytes, formatCountWithSuffix } from "./output";
 import { buildFileSyncMetadata, type FileSyncMetadata } from "./sync-state";
 import { uploadFile } from "./upload";
@@ -55,12 +56,14 @@ interface AnalyzeChangesParams {
   gitInfo: { commit: string; branch: string; isRepo: boolean };
   fromGit?: string;
   forceUpload?: boolean;
+  metadataMap?: Map<string, Record<string, unknown>>;
 }
 
 export async function analyzeChanges(
   params: AnalyzeChangesParams
 ): Promise<SyncAnalysis> {
-  const { patterns, syncedFiles, gitInfo, fromGit, forceUpload } = params;
+  const { patterns, syncedFiles, gitInfo, fromGit, forceUpload, metadataMap } =
+    params;
 
   const analysis: SyncAnalysis = {
     added: [],
@@ -133,7 +136,34 @@ export async function analyzeChanges(
       } else {
         // Default behavior: use hash comparison
         localHash = await calculateFileHash(filePath);
-        isModified = !hashesMatch(localHash, syncedFile.metadata.file_hash);
+        const contentChanged = !hashesMatch(
+          localHash,
+          syncedFile.metadata.file_hash
+        );
+
+        // Check metadata changes if --metadata-file provided
+        let metadataChanged = false;
+        if (metadataMap) {
+          const relativePath = path.relative(process.cwd(), filePath);
+          // Normalize path for consistent map lookup across platforms
+          const normalizedPath = path
+            .normalize(relativePath)
+            .replace(/^\.[\\/]/, "");
+          const newMetadata = metadataMap.get(normalizedPath);
+
+          if (newMetadata !== undefined) {
+            // Extract user metadata from existing file (exclude sync fields)
+            const existingUserMetadata = extractUserMetadata(
+              syncedFile.metadata as unknown as Record<string, unknown>
+            );
+            metadataChanged = !metadataEquals(
+              newMetadata,
+              existingUserMetadata
+            );
+          }
+        }
+
+        isModified = contentChanged || metadataChanged;
       }
 
       if (isModified) {
@@ -248,6 +278,7 @@ export async function executeSyncChanges(
     strategy?: FileCreateParams.Experimental["parsing_strategy"];
     contextualization?: boolean;
     metadata?: Record<string, unknown>;
+    metadataMap?: Map<string, Record<string, unknown>>;
     gitInfo?: { commit: string; branch: string };
     parallel?: number;
   }
@@ -347,10 +378,20 @@ export async function executeSyncChanges(
             options.gitInfo
           );
 
-          // Merge with user-provided metadata
+          // Get per-file metadata from mapping
+          const relativePath = path.relative(process.cwd(), file.path);
+          // Normalize path for consistent map lookup across platforms
+          const normalizedPath = path
+            .normalize(relativePath)
+            .replace(/^\.[\\/]/, "");
+          const perFileMetadata =
+            options.metadataMap?.get(normalizedPath) || {};
+
+          // Merge metadata with precedence: sync fields > per-file > CLI --metadata
           const finalMetadata = {
-            ...options.metadata,
-            ...syncMetadata,
+            ...options.metadata, // CLI --metadata (base for all files)
+            ...perFileMetadata, // Per-file from mapping
+            ...syncMetadata, // Sync fields
           };
 
           // Check if file is empty

@@ -51,7 +51,7 @@ pnpm release
 ## Architecture
 
 ### Monorepo Structure
-- Uses pnpm workspaces (v9.0.0 strictly enforced) and Turbo for task orchestration
+- Uses pnpm workspaces (v10.15.0 strictly enforced) and Turbo for task orchestration
 - Packages in `packages/*` directory
 - Node.js 20+ required
 - TypeScript 5.8+ with CommonJS module system for CLI package
