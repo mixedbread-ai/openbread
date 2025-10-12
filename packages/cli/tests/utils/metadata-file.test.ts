@@ -1,11 +1,12 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import {
   extractUserMetadata,
   loadMetadataMapping,
   metadataEquals,
+  normalizePathForMetadata,
 } from "../../src/utils/metadata-file";
 
 describe("Metadata File Utils", () => {
@@ -262,7 +263,7 @@ file2.txt:
 
     it("should handle Date objects", () => {
       const date = new Date("2024-01-01T00:00:00.000Z");
-      const a = { key1: "value1", date: date };
+      const a = { key1: "value1", date };
       const b = { key1: "value1", date: new Date("2024-01-01T00:00:00.000Z") };
 
       expect(metadataEquals(a, b)).toBe(true);
@@ -289,6 +290,50 @@ file2.txt:
 
       // fast-deep-equal treats missing key differently from undefined
       expect(metadataEquals(a, b)).toBe(false);
+    });
+  });
+
+  describe("normalizePathForMetadata", () => {
+    it("should convert absolute path to relative-to-CWD", () => {
+      const absolutePath = join(process.cwd(), "docs", "file.txt");
+      const result = normalizePathForMetadata(absolutePath);
+
+      expect(result).toBe(join("docs", "file.txt"));
+    });
+
+    it("should remove leading ./ from paths", () => {
+      const pathWithDot = join(process.cwd(), "./docs/file.txt");
+      const result = normalizePathForMetadata(pathWithDot);
+
+      expect(result).toBe(join("docs", "file.txt"));
+    });
+
+    it("should handle files in current directory", () => {
+      const filePath = join(process.cwd(), "file.txt");
+      const result = normalizePathForMetadata(filePath);
+
+      expect(result).toBe("file.txt");
+    });
+
+    it("should handle nested directory paths", () => {
+      const filePath = join(
+        process.cwd(),
+        "docs",
+        "api",
+        "v1",
+        "endpoints.txt"
+      );
+      const result = normalizePathForMetadata(filePath);
+
+      expect(result).toBe(join("docs", "api", "v1", "endpoints.txt"));
+    });
+
+    it("should handle parent directory references", () => {
+      const filePath = join(process.cwd(), "..", "sibling", "file.txt");
+      const result = normalizePathForMetadata(filePath);
+
+      // Should preserve ../ in the relative path
+      expect(result).toBe(join("..", "sibling", "file.txt"));
     });
   });
 });

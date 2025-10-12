@@ -173,7 +173,7 @@ describe("Sync Utils", () => {
         { fileId: string; metadata: FileSyncMetadata }
       >([
         [
-          require("path").resolve("modified.txt"),
+          require("node:path").resolve("modified.txt"),
           {
             fileId: "modified-file-id",
             metadata: {
@@ -185,7 +185,7 @@ describe("Sync Utils", () => {
           },
         ],
         [
-          require("path").resolve("unchanged.txt"),
+          require("node:path").resolve("unchanged.txt"),
           {
             fileId: "unchanged-file-id",
             metadata: {
@@ -243,7 +243,7 @@ describe("Sync Utils", () => {
         { fileId: string; metadata: FileSyncMetadata }
       >([
         [
-          require("path").resolve("modified.txt"),
+          require("node:path").resolve("modified.txt"),
           {
             fileId: "modified-file-id",
             metadata: {
@@ -299,14 +299,14 @@ describe("Sync Utils", () => {
       const analysis = {
         added: [
           {
-            path: require("path").resolve("new.txt"),
+            path: require("node:path").resolve("new.txt"),
             type: "added" as const,
             size: 11,
           },
         ],
         modified: [
           {
-            path: require("path").resolve("modified.txt"),
+            path: require("node:path").resolve("modified.txt"),
             type: "modified" as const,
             size: 16,
             fileId: "modified-file-id",
@@ -352,12 +352,12 @@ describe("Sync Utils", () => {
       const analysis = {
         added: [
           {
-            path: require("path").resolve("content.txt"),
+            path: require("node:path").resolve("content.txt"),
             type: "added" as const,
             size: 12,
           },
           {
-            path: require("path").resolve("empty.txt"),
+            path: require("node:path").resolve("empty.txt"),
             type: "added" as const,
             size: 0,
           },
@@ -404,19 +404,19 @@ describe("Sync Utils", () => {
       const analysis = {
         added: [
           {
-            path: require("path").resolve("success.txt"),
+            path: require("node:path").resolve("success.txt"),
             type: "added" as const,
             size: 15,
           },
           {
-            path: require("path").resolve("empty.txt"),
+            path: require("node:path").resolve("empty.txt"),
             type: "added" as const,
             size: 0,
           },
         ],
         modified: [
           {
-            path: require("path").resolve("modified.txt"),
+            path: require("node:path").resolve("modified.txt"),
             type: "modified" as const,
             size: 16,
             fileId: "modified-file-id",
@@ -451,6 +451,313 @@ describe("Sync Utils", () => {
         { store_identifier: "test-store" }
       );
       expect(mockUploadFile).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("Per-file metadata change detection", () => {
+    it("should detect metadata-only changes", async () => {
+      mockFs({
+        "file1.txt": "Content 1",
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "file1.txt",
+      ]);
+
+      const syncedFiles = new Map<
+        string,
+        { fileId: string; metadata: FileSyncMetadata }
+      >([
+        [
+          require("node:path").resolve("file1.txt"),
+          {
+            fileId: "file1-id",
+            metadata: {
+              file_path: "file1.txt",
+              file_hash: "hash123",
+              uploaded_at: "2023-01-01T00:00:00.000Z",
+              synced: true,
+              title: "Old Title", // User metadata
+            },
+          },
+        ],
+      ]);
+
+      // Mock hash comparison to indicate content unchanged
+      mockCalculateFileHash.mockResolvedValue("hash123");
+      mockHashesMatch.mockReturnValue(true); // Content unchanged
+
+      // Create metadata map with different metadata
+      const metadataMap = new Map<string, Record<string, unknown>>([
+        ["file1.txt", { title: "New Title", priority: 1 }],
+      ]);
+
+      const gitInfo = { commit: "abc123", branch: "main", isRepo: true };
+
+      const analysis = await analyzeChanges({
+        patterns: ["*.txt"],
+        syncedFiles,
+        gitInfo,
+        metadataMap,
+      });
+
+      expect(analysis.modified).toHaveLength(1);
+      expect(analysis.modified[0]).toMatchObject({
+        path: expect.stringContaining("file1.txt"),
+        contentChanged: false,
+        metadataChanged: true,
+      });
+    });
+
+    it("should detect content-only changes", async () => {
+      mockFs({
+        "file1.txt": "New Content",
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "file1.txt",
+      ]);
+
+      const syncedFiles = new Map<
+        string,
+        { fileId: string; metadata: FileSyncMetadata }
+      >([
+        [
+          require("node:path").resolve("file1.txt"),
+          {
+            fileId: "file1-id",
+            metadata: {
+              file_path: "file1.txt",
+              file_hash: "old-hash",
+              uploaded_at: "2023-01-01T00:00:00.000Z",
+              synced: true,
+              title: "Title", // User metadata
+            },
+          },
+        ],
+      ]);
+
+      // Mock hash comparison to indicate content changed
+      mockCalculateFileHash.mockResolvedValue("new-hash");
+      mockHashesMatch.mockReturnValue(false); // Content changed
+
+      // Create metadata map with same metadata
+      const metadataMap = new Map<string, Record<string, unknown>>([
+        ["file1.txt", { title: "Title" }],
+      ]);
+
+      const gitInfo = { commit: "abc123", branch: "main", isRepo: true };
+
+      const analysis = await analyzeChanges({
+        patterns: ["*.txt"],
+        syncedFiles,
+        gitInfo,
+        metadataMap,
+      });
+
+      expect(analysis.modified).toHaveLength(1);
+      expect(analysis.modified[0]).toMatchObject({
+        path: expect.stringContaining("file1.txt"),
+        contentChanged: true,
+        metadataChanged: false,
+      });
+    });
+
+    it("should detect both content and metadata changes", async () => {
+      mockFs({
+        "file1.txt": "New Content",
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "file1.txt",
+      ]);
+
+      const syncedFiles = new Map<
+        string,
+        { fileId: string; metadata: FileSyncMetadata }
+      >([
+        [
+          require("node:path").resolve("file1.txt"),
+          {
+            fileId: "file1-id",
+            metadata: {
+              file_path: "file1.txt",
+              file_hash: "old-hash",
+              uploaded_at: "2023-01-01T00:00:00.000Z",
+              synced: true,
+              title: "Old Title",
+            },
+          },
+        ],
+      ]);
+
+      // Mock hash comparison to indicate content changed
+      mockCalculateFileHash.mockResolvedValue("new-hash");
+      mockHashesMatch.mockReturnValue(false); // Content changed
+
+      // Create metadata map with different metadata
+      const metadataMap = new Map<string, Record<string, unknown>>([
+        ["file1.txt", { title: "New Title", priority: 1 }],
+      ]);
+
+      const gitInfo = { commit: "abc123", branch: "main", isRepo: true };
+
+      const analysis = await analyzeChanges({
+        patterns: ["*.txt"],
+        syncedFiles,
+        gitInfo,
+        metadataMap,
+      });
+
+      expect(analysis.modified).toHaveLength(1);
+      expect(analysis.modified[0]).toMatchObject({
+        path: expect.stringContaining("file1.txt"),
+        contentChanged: true,
+        metadataChanged: true,
+      });
+    });
+
+    it("should not flag as modified when neither content nor metadata changed", async () => {
+      mockFs({
+        "file1.txt": "Content 1",
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "file1.txt",
+      ]);
+
+      const syncedFiles = new Map<
+        string,
+        { fileId: string; metadata: FileSyncMetadata }
+      >([
+        [
+          require("node:path").resolve("file1.txt"),
+          {
+            fileId: "file1-id",
+            metadata: {
+              file_path: "file1.txt",
+              file_hash: "hash123",
+              uploaded_at: "2023-01-01T00:00:00.000Z",
+              synced: true,
+              title: "Title",
+            },
+          },
+        ],
+      ]);
+
+      // Mock hash comparison to indicate content unchanged
+      mockCalculateFileHash.mockResolvedValue("hash123");
+      mockHashesMatch.mockReturnValue(true); // Content unchanged
+
+      // Create metadata map with same metadata
+      const metadataMap = new Map<string, Record<string, unknown>>([
+        ["file1.txt", { title: "Title" }],
+      ]);
+
+      const gitInfo = { commit: "abc123", branch: "main", isRepo: true };
+
+      const analysis = await analyzeChanges({
+        patterns: ["*.txt"],
+        syncedFiles,
+        gitInfo,
+        metadataMap,
+      });
+
+      expect(analysis.modified).toHaveLength(0);
+      expect(analysis.unchanged).toBe(1);
+    });
+
+    it("should not track change types for git-based detection", async () => {
+      mockFs({
+        "file1.txt": "Content 1",
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "file1.txt",
+      ]);
+
+      const syncedFiles = new Map<
+        string,
+        { fileId: string; metadata: FileSyncMetadata }
+      >([
+        [
+          require("node:path").resolve("file1.txt"),
+          {
+            fileId: "file1-id",
+            metadata: {
+              file_path: "file1.txt",
+              file_hash: "old-hash",
+              uploaded_at: "2023-01-01T00:00:00.000Z",
+              synced: true,
+            },
+          },
+        ],
+      ]);
+
+      // Mock git changes
+      mockNormalizeGitPatterns.mockResolvedValue(["*.txt"]);
+      mockGetChangedFiles.mockResolvedValue([
+        { path: "file1.txt", status: "modified" },
+      ]);
+
+      const gitInfo = { commit: "abc123", branch: "main", isRepo: true };
+
+      const analysis = await analyzeChanges({
+        patterns: ["*.txt"],
+        syncedFiles,
+        gitInfo,
+        fromGit: "HEAD~1",
+      });
+
+      expect(analysis.modified).toHaveLength(1);
+      // Change types should not be tracked for git-based detection
+      expect(analysis.modified[0].contentChanged).toBe(false);
+      expect(analysis.modified[0].metadataChanged).toBe(false);
+    });
+
+    it("should not track change types for force upload", async () => {
+      mockFs({
+        "file1.txt": "Content 1",
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "file1.txt",
+      ]);
+
+      const syncedFiles = new Map<
+        string,
+        { fileId: string; metadata: FileSyncMetadata }
+      >([
+        [
+          require("node:path").resolve("file1.txt"),
+          {
+            fileId: "file1-id",
+            metadata: {
+              file_path: "file1.txt",
+              file_hash: "hash123",
+              uploaded_at: "2023-01-01T00:00:00.000Z",
+              synced: true,
+            },
+          },
+        ],
+      ]);
+
+      mockCalculateFileHash.mockResolvedValue("hash456");
+      mockHashesMatch.mockReturnValue(false);
+
+      const gitInfo = { commit: "abc123", branch: "main", isRepo: true };
+
+      const analysis = await analyzeChanges({
+        patterns: ["*.txt"],
+        syncedFiles,
+        gitInfo,
+        forceUpload: true,
+      });
+
+      expect(analysis.modified).toHaveLength(1);
+      // Change types should not be tracked for force upload
+      expect(analysis.modified[0].contentChanged).toBe(false);
+      expect(analysis.modified[0].metadataChanged).toBe(false);
     });
   });
 
