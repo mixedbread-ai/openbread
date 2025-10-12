@@ -9,6 +9,11 @@ import ora from "ora";
 import pLimit from "p-limit";
 import { getChangedFiles, normalizeGitPatterns } from "./git";
 import { calculateFileHash, hashesMatch } from "./hash";
+import {
+  extractUserMetadata,
+  metadataEquals,
+  normalizePathForMetadata,
+} from "./metadata-file";
 import { formatBytes, formatCountWithSuffix } from "./output";
 import { buildFileSyncMetadata, type FileSyncMetadata } from "./sync-state";
 import { uploadFile } from "./upload";
@@ -20,6 +25,8 @@ interface FileChange {
   localHash?: string;
   remoteHash?: string;
   fileId?: string;
+  contentChanged?: boolean;
+  metadataChanged?: boolean;
 }
 
 interface SyncAnalysis {
@@ -55,12 +62,14 @@ interface AnalyzeChangesParams {
   gitInfo: { commit: string; branch: string; isRepo: boolean };
   fromGit?: string;
   forceUpload?: boolean;
+  metadataMap?: Map<string, Record<string, unknown>>;
 }
 
 export async function analyzeChanges(
   params: AnalyzeChangesParams
 ): Promise<SyncAnalysis> {
-  const { patterns, syncedFiles, gitInfo, fromGit, forceUpload } = params;
+  const { patterns, syncedFiles, gitInfo, fromGit, forceUpload, metadataMap } =
+    params;
 
   const analysis: SyncAnalysis = {
     added: [],
@@ -122,6 +131,9 @@ export async function analyzeChanges(
       let isModified = false;
       let localHash: string | undefined;
 
+      let contentChanged = false;
+      let metadataChanged = false;
+
       if (forceUpload) {
         // When --force-upload is set, treat all existing files as modified
         isModified = true;
@@ -133,7 +145,26 @@ export async function analyzeChanges(
       } else {
         // Default behavior: use hash comparison
         localHash = await calculateFileHash(filePath);
-        isModified = !hashesMatch(localHash, syncedFile.metadata.file_hash);
+        contentChanged = !hashesMatch(localHash, syncedFile.metadata.file_hash);
+
+        // Check metadata changes if --metadata-file provided
+        if (metadataMap) {
+          const normalizedPath = normalizePathForMetadata(filePath);
+          const newMetadata = metadataMap.get(normalizedPath);
+
+          if (newMetadata !== undefined) {
+            // Extract user metadata from existing file (exclude sync fields)
+            const existingUserMetadata = extractUserMetadata(
+              syncedFile.metadata as unknown as Record<string, unknown>
+            );
+            metadataChanged = !metadataEquals(
+              newMetadata,
+              existingUserMetadata
+            );
+          }
+        }
+
+        isModified = contentChanged || metadataChanged;
       }
 
       if (isModified) {
@@ -144,6 +175,8 @@ export async function analyzeChanges(
           localHash,
           remoteHash: syncedFile.metadata.file_hash,
           fileId: syncedFile.fileId,
+          contentChanged,
+          metadataChanged,
         });
         analysis.totalSize += stats.size;
       } else {
@@ -194,8 +227,19 @@ export function formatChangeSummary(analysis: SyncAnalysis): string {
       `  ${chalk.yellow("Updated:")} (${formatCountWithSuffix(analysis.modified.length, "file")})`
     );
     analysis.modified.forEach((file) => {
+      const relativePath = path.relative(process.cwd(), file.path);
+
+      let indicator = "";
+      if (file.contentChanged && file.metadataChanged) {
+        indicator = chalk.cyan(" [content + metadata updated]");
+      } else if (file.contentChanged) {
+        indicator = chalk.blue(" [content updated]");
+      } else if (file.metadataChanged) {
+        indicator = chalk.magenta(" [metadata updated]");
+      }
+
       const size = file.size ? ` (${formatBytes(file.size)})` : "";
-      lines.push(`    • ${path.relative(process.cwd(), file.path)}${size}`);
+      lines.push(`    • ${relativePath}${indicator}${size}`);
     });
     lines.push("");
   }
@@ -248,6 +292,7 @@ export async function executeSyncChanges(
     strategy?: FileCreateParams.Experimental["parsing_strategy"];
     contextualization?: boolean;
     metadata?: Record<string, unknown>;
+    metadataMap?: Map<string, Record<string, unknown>>;
     gitInfo?: { commit: string; branch: string };
     parallel?: number;
   }
@@ -347,10 +392,16 @@ export async function executeSyncChanges(
             options.gitInfo
           );
 
-          // Merge with user-provided metadata
+          // Get per-file metadata from mapping
+          const normalizedPath = normalizePathForMetadata(file.path);
+          const perFileMetadata =
+            options.metadataMap?.get(normalizedPath) || {};
+
+          // Merge metadata with precedence: sync fields > per-file > CLI --metadata
           const finalMetadata = {
-            ...options.metadata,
-            ...syncMetadata,
+            ...options.metadata, // CLI --metadata (base for all files)
+            ...perFileMetadata, // Per-file from mapping
+            ...syncMetadata, // Sync fields
           };
 
           // Check if file is empty

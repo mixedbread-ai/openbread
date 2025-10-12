@@ -133,6 +133,7 @@ describe("Store Upload Command", () => {
       ]);
 
       expect(console.log).toHaveBeenCalledWith(
+        expect.any(String),
         expect.stringContaining("Found 3 files matching the pattern")
       );
       expect(mockUploadFilesInBatch).toHaveBeenCalled();
@@ -161,6 +162,7 @@ describe("Store Upload Command", () => {
       ]);
 
       expect(console.log).toHaveBeenCalledWith(
+        expect.any(String),
         expect.stringContaining("Found 3 files matching the patterns")
       );
       expect(mockUploadFilesInBatch).toHaveBeenCalled();
@@ -749,6 +751,257 @@ describe("Store Upload Command", () => {
         ]),
         expect.any(Object)
       );
+    });
+  });
+
+  describe("Per-file metadata", () => {
+    it("should load and apply per-file metadata from JSON file", async () => {
+      mockFs({
+        "file1.txt": "content1",
+        "file2.txt": "content2",
+        "metadata.json": JSON.stringify({
+          "file1.txt": { title: "File One", priority: 1 },
+          "file2.txt": { title: "File Two", priority: 2 },
+        }),
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "file1.txt",
+        "file2.txt",
+      ]);
+
+      await command.parseAsync([
+        "node",
+        "upload",
+        "test-store",
+        "*.txt",
+        "--metadata-file",
+        "metadata.json",
+      ]);
+
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130",
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: "file1.txt",
+            metadata: expect.objectContaining({
+              title: "File One",
+              priority: 1,
+            }),
+          }),
+          expect.objectContaining({
+            path: "file2.txt",
+            metadata: expect.objectContaining({
+              title: "File Two",
+              priority: 2,
+            }),
+          }),
+        ]),
+        expect.any(Object)
+      );
+    });
+
+    it("should load and apply per-file metadata from YAML file", async () => {
+      mockFs({
+        "file1.txt": "content1",
+        "metadata.yaml": `
+file1.txt:
+  title: File One
+  priority: 1
+`,
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "file1.txt",
+      ]);
+
+      await command.parseAsync([
+        "node",
+        "upload",
+        "test-store",
+        "*.txt",
+        "--metadata-file",
+        "metadata.yaml",
+      ]);
+
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130",
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: "file1.txt",
+            metadata: expect.objectContaining({
+              title: "File One",
+              priority: 1,
+            }),
+          }),
+        ]),
+        expect.any(Object)
+      );
+    });
+
+    it("should override CLI metadata with per-file metadata", async () => {
+      mockFs({
+        "file1.txt": "content1",
+        "metadata.json": JSON.stringify({
+          "file1.txt": { author: "Jane", version: "2.0" },
+        }),
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "file1.txt",
+      ]);
+
+      await command.parseAsync([
+        "node",
+        "upload",
+        "test-store",
+        "*.txt",
+        "--metadata",
+        '{"author":"John","project":"test"}',
+        "--metadata-file",
+        "metadata.json",
+      ]);
+
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130",
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: "file1.txt",
+            metadata: expect.objectContaining({
+              author: "Jane", // Overridden from per-file
+              version: "2.0", // From per-file
+              project: "test", // From CLI metadata
+            }),
+          }),
+        ]),
+        expect.any(Object)
+      );
+    });
+
+    it("should use CLI metadata for files not in metadata file", async () => {
+      mockFs({
+        "file1.txt": "content1",
+        "file2.txt": "content2",
+        "metadata.json": JSON.stringify({
+          "file1.txt": { title: "File One" },
+        }),
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "file1.txt",
+        "file2.txt",
+      ]);
+
+      await command.parseAsync([
+        "node",
+        "upload",
+        "test-store",
+        "*.txt",
+        "--metadata",
+        '{"author":"John"}',
+        "--metadata-file",
+        "metadata.json",
+      ]);
+
+      expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440130",
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: "file1.txt",
+            metadata: expect.objectContaining({
+              title: "File One",
+              author: "John",
+            }),
+          }),
+          expect.objectContaining({
+            path: "file2.txt",
+            metadata: expect.objectContaining({
+              author: "John",
+            }),
+          }),
+        ]),
+        expect.any(Object)
+      );
+    });
+
+    it("should reject both --manifest and --metadata-file", async () => {
+      mockFs({
+        "manifest.yaml": "files: []",
+        "metadata.json": "{}",
+      });
+
+      await command.parseAsync([
+        "node",
+        "upload",
+        "test-store",
+        "--manifest",
+        "manifest.yaml",
+        "--metadata-file",
+        "metadata.json",
+      ]);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining(
+          "Cannot use both --manifest and --metadata-file"
+        )
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should handle invalid metadata file", async () => {
+      mockFs({
+        "file1.txt": "content1",
+        "metadata.json": "invalid json {{{",
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "file1.txt",
+      ]);
+
+      await command.parseAsync([
+        "node",
+        "upload",
+        "test-store",
+        "*.txt",
+        "--metadata-file",
+        "metadata.json",
+      ]);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining("Failed to load metadata file")
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should handle non-existent metadata file", async () => {
+      mockFs({
+        "file1.txt": "content1",
+      });
+
+      (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
+        "file1.txt",
+      ]);
+
+      await command.parseAsync([
+        "node",
+        "upload",
+        "test-store",
+        "*.txt",
+        "--metadata-file",
+        "nonexistent.json",
+      ]);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining("Failed to load metadata file")
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
     });
   });
 });

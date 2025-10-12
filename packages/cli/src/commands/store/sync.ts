@@ -13,6 +13,7 @@ import {
   parseOptions,
 } from "../../utils/global-options";
 import { validateMetadata } from "../../utils/metadata";
+import { loadMetadataMapping } from "../../utils/metadata-file";
 import { formatBytes, formatCountWithSuffix } from "../../utils/output";
 import { resolveStore } from "../../utils/store";
 import {
@@ -37,6 +38,7 @@ const SyncStoreSchema = extendGlobalOptions({
   yes: z.boolean().optional(),
   force: z.boolean().optional(),
   metadata: z.string().optional(),
+  metadataFile: z.string().optional(),
   parallel: z.coerce
     .number({ error: '"parallel" must be a number' })
     .int({ error: '"parallel" must be an integer' })
@@ -54,6 +56,7 @@ interface SyncOptions extends GlobalOptions {
   yes?: boolean;
   force?: boolean;
   metadata?: string;
+  metadataFile?: string;
   parallel?: number;
 }
 
@@ -79,6 +82,7 @@ export function createSyncCommand(): Command {
         "Force re-upload all files, ignoring change detection"
       )
       .option("--metadata <json>", "Additional metadata for files")
+      .option("--metadata-file <file>", "Per-file metadata mapping (JSON/YAML)")
       .option("--parallel <n>", "Number of concurrent operations (1-200)")
   );
 
@@ -106,7 +110,23 @@ export function createSyncCommand(): Command {
         // Parse metadata if provided
         const additionalMetadata = validateMetadata(parsedOptions.metadata);
 
-        // Get git info
+        let metadataMap: Map<string, Record<string, unknown>> | undefined;
+        if (parsedOptions.metadataFile) {
+          try {
+            metadataMap = loadMetadataMapping(parsedOptions.metadataFile);
+            console.log(
+              chalk.green("✓"),
+              `Loaded metadata for ${metadataMap.size} file${metadataMap.size === 1 ? "" : "s"} from ${parsedOptions.metadataFile}`
+            );
+          } catch (error) {
+            console.error(
+              chalk.red("✗"),
+              `Failed to load metadata file: ${error instanceof Error ? error.message : "Unknown error"}`
+            );
+            process.exit(1);
+          }
+        }
+
         const gitInfo = await getGitInfo();
 
         const spinner = ora("Loading existing files from store...").start();
@@ -154,6 +174,7 @@ export function createSyncCommand(): Command {
           gitInfo,
           fromGit,
           forceUpload: parsedOptions.force,
+          metadataMap,
         });
 
         analyzeSpinner.succeed("Change analysis complete");
@@ -221,6 +242,7 @@ export function createSyncCommand(): Command {
             strategy: parsedOptions.strategy,
             contextualization: parsedOptions.contextualization,
             metadata: additionalMetadata,
+            metadataMap,
             gitInfo: gitInfo.isRepo ? gitInfo : undefined,
             parallel: parsedOptions.parallel,
           }

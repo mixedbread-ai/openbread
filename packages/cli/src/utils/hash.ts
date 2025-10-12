@@ -15,15 +15,6 @@ export async function calculateFileHash(filePath: string): Promise<string> {
 }
 
 /**
- * Calculate SHA-256 hash of a string or buffer
- */
-export function calculateHash(content: string | Buffer): string {
-  const hash = createHash("sha256");
-  hash.update(content);
-  return `sha256:${hash.digest("hex")}`;
-}
-
-/**
  * Compare two hashes
  */
 export function hashesMatch(hash1: string, hash2: string): boolean {

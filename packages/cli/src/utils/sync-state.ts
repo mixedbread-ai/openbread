@@ -8,6 +8,7 @@ export interface FileSyncMetadata {
   git_branch?: string;
   uploaded_at: string;
   synced: boolean;
+  [key: string]: unknown;
 }
 
 /**

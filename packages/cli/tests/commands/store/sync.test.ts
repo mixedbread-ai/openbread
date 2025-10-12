@@ -181,4 +181,124 @@ describe("Store Sync Command", () => {
       );
     });
   });
+
+  describe("Per-file metadata", () => {
+    beforeEach(() => {
+      mockFs({
+        "file1.txt": "content1",
+        "file2.txt": "content2",
+        "metadata.json": JSON.stringify({
+          "file1.txt": { title: "File One", priority: 1 },
+          "file2.txt": { title: "File Two", priority: 2 },
+        }),
+      });
+    });
+
+    it("should pass metadata file to analyzeChanges", async () => {
+      await command.parseAsync([
+        "node",
+        "sync",
+        "test-store",
+        "*.txt",
+        "--metadata-file",
+        "metadata.json",
+        "-y",
+      ]);
+
+      expect(mockAnalyzeChanges).toHaveBeenCalledWith(
+        expect.objectContaining({
+          metadataMap: expect.any(Map),
+        })
+      );
+
+      // Verify the metadata map was loaded
+      const call = mockAnalyzeChanges.mock.calls[0][0];
+      expect(call.metadataMap?.size).toBe(2);
+      expect(call.metadataMap?.get("file1.txt")).toEqual({
+        title: "File One",
+        priority: 1,
+      });
+    });
+
+    it("should pass metadata file to executeSyncChanges", async () => {
+      mockAnalyzeChanges.mockResolvedValue({
+        added: [
+          {
+            path: "file1.txt",
+            type: "added",
+            size: 100,
+          },
+        ],
+        modified: [],
+        deleted: [],
+        unchanged: 0,
+        totalFiles: 1,
+        totalSize: 100,
+      });
+
+      await command.parseAsync([
+        "node",
+        "sync",
+        "test-store",
+        "*.txt",
+        "--metadata-file",
+        "metadata.json",
+        "-y",
+      ]);
+
+      expect(mockExecuteSyncChanges).toHaveBeenCalledWith(
+        expect.any(Object),
+        "550e8400-e29b-41d4-a716-446655440040",
+        expect.any(Object),
+        expect.objectContaining({
+          metadataMap: expect.any(Map),
+        })
+      );
+    });
+
+    it("should handle invalid metadata file", async () => {
+      mockFs({
+        "file1.txt": "content1",
+        "metadata.json": "invalid json {{{",
+      });
+
+      await command.parseAsync([
+        "node",
+        "sync",
+        "test-store",
+        "*.txt",
+        "--metadata-file",
+        "metadata.json",
+        "-y",
+      ]);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining("Failed to load metadata file")
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should handle non-existent metadata file", async () => {
+      mockFs({
+        "file1.txt": "content1",
+      });
+
+      await command.parseAsync([
+        "node",
+        "sync",
+        "test-store",
+        "*.txt",
+        "--metadata-file",
+        "nonexistent.json",
+        "-y",
+      ]);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining("Failed to load metadata file")
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+  });
 });
