@@ -261,8 +261,7 @@ export async function executeSyncChanges(
   storeIdentifier: string,
   analysis: SyncAnalysis,
   options: {
-    strategy?: FileCreateParams.Experimental["parsing_strategy"];
-    contextualization?: boolean;
+    strategy?: FileCreateParams.Config["parsing_strategy"];
     metadata?: Record<string, unknown>;
     gitInfo?: { commit: string; branch: string };
     parallel?: number;
@@ -375,7 +374,6 @@ export async function executeSyncChanges(
           await uploadFile(client, storeIdentifier, file.path, {
             metadata: finalMetadata,
             strategy: options.strategy,
-            contextualization: options.contextualization,
             externalId: file.path,
           });
 
@@ -419,8 +417,7 @@ export function displaySyncResultsSummary(
   gitInfo: { commit: string; branch: string; isRepo: boolean },
   fromGit?: string,
   uploadOptions?: {
-    strategy?: FileCreateParams.Experimental["parsing_strategy"];
-    contextualization?: boolean;
+    strategy?: FileCreateParams.Config["parsing_strategy"];
   }
 ): void {
   console.log(chalk.bold("\nSummary:"));
@@ -475,11 +472,7 @@ export function displaySyncResultsSummary(
 
   if (successfulUploads > 0 && uploadOptions) {
     const strategy = uploadOptions.strategy ?? "fast";
-    const contextText = uploadOptions.contextualization
-      ? "enabled"
-      : "disabled";
     console.log(chalk.gray(`Strategy: ${strategy}`));
-    console.log(chalk.gray(`Contextualization: ${contextText}`));
   }
 
   const hasFailures = failedUploads > 0 || failedDeletions > 0;

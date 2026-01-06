@@ -122,10 +122,6 @@ export function createUploadCommand(): Command {
         // Get configuration values with precedence: command-line > config defaults > built-in defaults
         const strategy =
           parsedOptions.strategy ?? config.defaults?.upload?.strategy ?? "fast";
-        const contextualization =
-          parsedOptions.contextualization ??
-          config.defaults?.upload?.contextualization ??
-          false;
         const parallel =
           parsedOptions.parallel ?? config.defaults?.upload?.parallel ?? 100;
 
@@ -171,7 +167,6 @@ export function createUploadCommand(): Command {
               const stats = statSync(file);
               console.log(`  \n${file} (${formatBytes(stats.size)})`);
               console.log(`    Strategy: ${strategy}`);
-              console.log(`    Contextualization: ${contextualization}`);
 
               if (metadata && Object.keys(metadata).length > 0) {
                 console.log(`    Metadata: ${JSON.stringify(metadata)}`);
@@ -218,7 +213,6 @@ export function createUploadCommand(): Command {
         const filesToUpload: FileToUpload[] = uniqueFiles.map((filePath) => ({
           path: filePath,
           strategy,
-          contextualization,
           metadata,
         }));
 

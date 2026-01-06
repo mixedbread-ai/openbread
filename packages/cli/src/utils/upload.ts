@@ -12,14 +12,12 @@ export const UPLOAD_TIMEOUT = 1000 * 60 * 10; // 10 minutes
 export interface UploadFileOptions {
   metadata?: Record<string, unknown>;
   strategy?: FileCreateParams.Config["parsing_strategy"];
-  contextualization?: boolean; // TODO(@zach): remove
   externalId?: string;
 }
 
 export interface FileToUpload {
   path: string;
   strategy: FileCreateParams.Config["parsing_strategy"];
-  contextualization: boolean; // TODO(@zach): remove
   metadata: Record<string, unknown>;
 }
 
@@ -201,10 +199,7 @@ export async function uploadFilesInBatch(
         let successMessage = `${relative(process.cwd(), file.path)} (${formatBytes(stats.size)})`;
 
         if (isManifestUpload) {
-          const contextText = file.contextualization
-            ? "contextualized"
-            : "no-context";
-          successMessage += ` [${file.strategy}, ${contextText}]`;
+          successMessage += ` [${file.strategy}]`;
         }
 
         spinner.succeed(successMessage);
@@ -248,9 +243,7 @@ export async function uploadFilesInBatch(
 
   if (!isManifestUpload && files.length > 0) {
     const firstFile = files[0];
-    const contextText = firstFile.contextualization ? "enabled" : "disabled";
     console.log(chalk.gray(`Strategy: ${firstFile.strategy}`));
-    console.log(chalk.gray(`Contextualization: ${contextText}`));
   }
 
   console.log(chalk.gray(`Total size: ${formatBytes(results.successfulSize)}`));

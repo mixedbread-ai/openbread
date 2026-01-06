@@ -48,7 +48,7 @@ const SyncStoreSchema = extendGlobalOptions({
 });
 
 interface SyncOptions extends GlobalOptions {
-  strategy?: FileCreateParams.Experimental["parsing_strategy"];
+  strategy?: FileCreateParams.Config["parsing_strategy"];
   contextualization?: boolean;
   fromGit?: string;
   dryRun?: boolean;
@@ -227,7 +227,6 @@ export function createSyncCommand(): Command {
           analysis,
           {
             strategy: parsedOptions.strategy,
-            contextualization: parsedOptions.contextualization,
             metadata: additionalMetadata,
             gitInfo: gitInfo.isRepo ? gitInfo : undefined,
             parallel: parsedOptions.parallel,
@@ -237,7 +236,6 @@ export function createSyncCommand(): Command {
         // Display summary
         displaySyncResultsSummary(syncResults, gitInfo, fromGit, {
           strategy: parsedOptions.strategy,
-          contextualization: parsedOptions.contextualization,
         });
       } catch (error) {
         if (error instanceof Error) {
