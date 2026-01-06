@@ -10,17 +10,22 @@ export interface FileSyncMetadata {
   synced: boolean;
 }
 
+export type SyncedFileEntry = {
+  fileId: string;
+  metadata: FileSyncMetadata;
+  externalId?: string;
+};
+
+export type SyncedFileByPath = Map<string, SyncedFileEntry>;
+
 /**
  * Get all synced files from store
  */
 export async function getSyncedFiles(
   client: Mixedbread,
   storeIdentifier: string
-): Promise<Map<string, { fileId: string; metadata: FileSyncMetadata }>> {
-  const fileMap = new Map<
-    string,
-    { fileId: string; metadata: FileSyncMetadata }
-  >();
+): Promise<SyncedFileByPath> {
+  const syncedFiles: SyncedFileByPath = new Map();
 
   try {
     const storeFiles = await getStoreFiles(client, storeIdentifier);
@@ -29,14 +34,15 @@ export async function getSyncedFiles(
       // Check if file has sync metadata
       const metadata = file.metadata as FileSyncMetadata;
       if (metadata && metadata.synced === true && metadata.file_path) {
-        fileMap.set(metadata.file_path, {
+        syncedFiles.set(metadata.file_path, {
           fileId: file.id,
           metadata,
+          externalId: file.external_id,
         });
       }
     }
 
-    return fileMap;
+    return syncedFiles;
   } catch (error) {
     throw new Error(`Failed to get synced files: ${error}`);
   }

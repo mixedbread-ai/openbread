@@ -11,14 +11,15 @@ export const UPLOAD_TIMEOUT = 1000 * 60 * 10; // 10 minutes
 
 export interface UploadFileOptions {
   metadata?: Record<string, unknown>;
-  strategy?: FileCreateParams.Experimental["parsing_strategy"];
-  contextualization?: boolean;
+  strategy?: FileCreateParams.Config["parsing_strategy"];
+  contextualization?: boolean; // TODO(@zach): remove
+  externalId?: string;
 }
 
 export interface FileToUpload {
   path: string;
-  strategy: FileCreateParams.Experimental["parsing_strategy"];
-  contextualization: boolean;
+  strategy: FileCreateParams.Config["parsing_strategy"];
+  contextualization: boolean; // TODO(@zach): remove
   metadata: Record<string, unknown>;
 }
 
@@ -70,7 +71,7 @@ export async function uploadFile(
   filePath: string,
   options: UploadFileOptions = {}
 ): Promise<void> {
-  const { metadata = {}, strategy, contextualization } = options;
+  const { metadata = {}, strategy, externalId } = options;
 
   // Read file content
   const fileContent = readFileSync(filePath);
@@ -85,10 +86,10 @@ export async function uploadFile(
     file,
     {
       metadata,
-      experimental: {
+      config: {
         parsing_strategy: strategy,
-        contextualization,
       },
+      ...(externalId ? { external_id: externalId } : {}),
     },
     { timeout: UPLOAD_TIMEOUT }
   );
@@ -182,9 +183,8 @@ export async function uploadFilesInBatch(
           fileToUpload,
           {
             metadata: fileMetadata,
-            experimental: {
+            config: {
               parsing_strategy: file.strategy,
-              contextualization: file.contextualization,
             },
           },
           { timeout: UPLOAD_TIMEOUT }

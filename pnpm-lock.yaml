@@ -27,8 +27,8 @@ importers:
   packages/cli:
     dependencies:
       '@mixedbread/sdk':
-        specifier: ^0.31.1
-        version: 0.31.1
+        specifier: ^0.46.0
+        version: 0.46.0
       '@pnpm/tabtab':
         specifier: ^0.5.4
         version: 0.5.4
@@ -794,8 +794,8 @@ packages:
     resolution: {integrity: sha512-B0Un0thpz4UKN69QVmgdVsCIgiz+jR4V+nxuCOgdm/P0Iie1NctqY092VQ/iobY/FSMzhHJofXij086y/9E5rg==}
     hasBin: true
 
-  '@mixedbread/sdk@0.31.1':
-    resolution: {integrity: sha512-cPbArdpdseUlPXAXyofaRpHw+5ePkQU68IsS//cnx9fBaFfBRTrQSUWDRkGoxaJ6cnNoVdGx/DuBO/Cuu5yj7g==}
+  '@mixedbread/sdk@0.46.0':
+    resolution: {integrity: sha512-0WhmubKhwUdPWfygyOnW9L+nda/MhHtnrxeXnMp5k4cDYZeMrfnX00iWyQbNS+CwXi9EH6qG541xYF04O6QArA==}
     hasBin: true
 
   '@next/env@15.5.2':
@@ -2658,6 +2658,7 @@ packages:
   next@15.5.2:
     resolution: {integrity: sha512-H8Otr7abj1glFhbGnvUt3gz++0AF1+QoCXEBmd/6aKbfdFwrn0LpA836Ed5+00va/7HQSDD+mOoVhn3tNy3e/Q==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
+    deprecated: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/CVE-2025-66478 for more details.
     hasBin: true
     peerDependencies:
       '@opentelemetry/api': ^1.1.0
@@ -4287,7 +4288,7 @@ snapshots:
 
   '@mixedbread/sdk@0.26.0': {}
 
-  '@mixedbread/sdk@0.31.1': {}
+  '@mixedbread/sdk@0.46.0': {}
 
   '@next/env@15.5.2': {}
 
