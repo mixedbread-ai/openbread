@@ -32,8 +32,8 @@ mxbai store create "My Documents"
 # Upload files
 mxbai store upload "My Documents" "*.md" "docs/**/*.pdf"
 
-# Upload with high-quality processing and contextualization
-mxbai store upload "My Documents" "**/*.md" --strategy high_quality --contextualization
+# Upload with high-quality processing
+mxbai store upload "My Documents" "**/*.md" --strategy high_quality
 
 # Search content
 mxbai store search "My Documents" "how to get started"
@@ -66,7 +66,7 @@ mxbai store upload "My Documents" --manifest upload-manifest.yaml
 ### File Management
 
 - `mxbai store upload <name-or-id> <patterns...>` - Upload files to store
-  - Options: `--strategy fast|high_quality`, `--contextualization`, `--metadata <json>`, `--dry-run`, `--parallel <n>` (1-200), `--unique`, `--manifest <file>`
+  - Options: `--strategy fast|high_quality`, `--metadata <json>`, `--dry-run`, `--parallel <n>` (1-200), `--unique`, `--manifest <file>`
 - `mxbai store files list <name-or-id>` - List files in store (alias: `ls`)
   - Options: `--status <status>` (pending|in_progress|cancelled|completed|failed), `--limit <n>`
 - `mxbai store files get <name-or-id> <file-id>` - Get file details
@@ -83,7 +83,7 @@ mxbai store upload "My Documents" --manifest upload-manifest.yaml
 ### Advanced Features
 
 - `mxbai store sync <name-or-id> <patterns...>` - Sync files with intelligent change detection
-  - Options: `--strategy <strategy>`, `--contextualization`, `--from-git <ref>`, `--dry-run`, `--yes/-y`, `--force/-f`, `--metadata <json>`, `--parallel <n>` (1-200)
+  - Options: `--strategy <strategy>`, `--from-git <ref>`, `--dry-run`, `--yes/-y`, `--force/-f`, `--metadata <json>`, `--parallel <n>` (1-200)
 
 ### Configuration
 
@@ -111,7 +111,6 @@ You can upload files using a manifest file (JSON or YAML) that defines file patt
   "version": "1.0",
   "defaults": {
     "strategy": "fast",
-    "contextualization": false,
     "metadata": {
       "project": "my-project"
     }
@@ -126,7 +125,6 @@ You can upload files using a manifest file (JSON or YAML) that defines file patt
     {
       "path": "README.md",
       "strategy": "high_quality",
-      "contextualization": true,
       "metadata": {
         "importance": "high"
       }
@@ -141,7 +139,6 @@ version: "1.0"
 
 defaults:
   strategy: fast
-  contextualization: false
   metadata:
     project: my-project
 
@@ -151,7 +148,6 @@ files:
       category: documentation
   - path: README.md
     strategy: high_quality
-    contextualization: true
     metadata:
       importance: high
 ```
@@ -171,26 +167,25 @@ This allows flexible configuration while maintaining predictable behavior.
 
 ### Upload Summary Information
 
-The upload and sync commands display strategy and contextualization information in their summaries:
+The upload and sync commands display strategy information in their summaries:
 
 **Normal uploads** show configuration in the summary:
 ```
 ✓ 5 files uploaded successfully
 Strategy: fast
-Contextualization: enabled
 Total size: 25.3 KB
 ```
 
 **Manifest uploads** show configuration beside each file:
 ```
-✓ docs/api.md (15.2 KB) [fast, no-context]
-✓ README.md (8.5 KB) [high_quality, contextualized]
-✓ guide.md (1.6 KB) [fast, no-context]
+✓ docs/api.md (15.2 KB) [fast]
+✓ README.md (8.5 KB) [high_quality]
+✓ guide.md (1.6 KB) [fast]
 ```
 
 ### Intelligent Sync
 
-The sync command provides intelligent change detection and robust error handling with full support for processing strategies and contextualization:
+The sync command provides intelligent change detection and robust error handling with full support for processing strategies:
 
 **Change Detection Methods:**
 1. **Git-based** (fastest): Uses `git diff` to detect changes since a specific commit
@@ -198,7 +193,6 @@ The sync command provides intelligent change detection and robust error handling
 
 **Processing Options:**
 - **Strategy**: Choose between `fast` (default) or `high_quality` processing
-- **Contextualization**: Enable context preservation for better semantic understanding
 - **Parallel processing**: Control concurrency for optimal performance
 
 **Example Usage:**
@@ -209,8 +203,8 @@ mxbai store sync "My Docs" "docs/**" --from-git HEAD~1
 # Sync with hash-based detection and custom parallel processing
 mxbai store sync "My Docs" "**/*.md" --parallel 10
 
-# Sync with high-quality processing and contextualization
-mxbai store sync "My Docs" "**/*.md" --strategy high_quality --contextualization
+# Sync with high-quality processing
+mxbai store sync "My Docs" "**/*.md" --strategy high_quality
 
 # Dry run to preview changes
 mxbai store sync "My Docs" "src/**" --dry-run
@@ -229,7 +223,6 @@ Set defaults for common options:
 ```bash
 # Upload defaults (apply to both upload and sync commands)
 mxbai config set defaults.upload.strategy high_quality  # or 'fast' (default: fast)
-mxbai config set defaults.upload.contextualization true  # Enable context preservation (default: false)
 mxbai config set defaults.upload.parallel 10             # Concurrent operations (1-200, default: 100)
 
 # Search defaults
