@@ -7,6 +7,7 @@ import { parse } from "yaml";
 import { z } from "zod";
 import type { UploadOptions } from "../commands/store/upload";
 import { loadConfig } from "./config";
+import { warnContextualizationDeprecated } from "./deprecation";
 import { validateMetadata } from "./metadata";
 import { formatBytes, formatCountWithSuffix } from "./output";
 import { getStoreFiles } from "./store";
@@ -76,6 +77,13 @@ export async function uploadFromManifest(
 
     const defaults = manifest.defaults || {};
     const optionsMetadata = validateMetadata(options.metadata);
+
+    if (
+      defaults.contextualization ||
+      manifest.files.some((f) => f.contextualization)
+    ) {
+      warnContextualizationDeprecated("manifest upload");
+    }
 
     for (const entry of manifest.files) {
       console.log(chalk.gray(`Resolving: ${entry.path}`));

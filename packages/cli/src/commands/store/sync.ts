@@ -4,6 +4,7 @@ import { Command } from "commander";
 import ora from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
+import { warnContextualizationDeprecated } from "../../utils/deprecation";
 import { getGitInfo } from "../../utils/git";
 import {
   addGlobalOptions,
@@ -67,7 +68,10 @@ export function createSyncCommand(): Command {
         "File patterns, folders, or paths to sync (supports ./** and folder names)"
       )
       .option("--strategy <strategy>", "Upload strategy (fast|high_quality)")
-      .option("--contextualization", "Enable context preservation")
+      .option(
+        "--contextualization",
+        "Deprecated (ignored): contextualization is now configured at the store level"
+      )
       .option(
         "--from-git <ref>",
         "Only sync files changed since git ref (default: last sync)"
@@ -95,6 +99,10 @@ export function createSyncCommand(): Command {
         const client = createClient(parsedOptions);
 
         console.log(chalk.bold.blue("🔄 Starting Store Sync\n"));
+
+        if (parsedOptions.contextualization) {
+          warnContextualizationDeprecated("store sync");
+        }
 
         // Step 0: Resolve store
         const resolveSpinner = ora(

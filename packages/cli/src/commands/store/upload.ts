@@ -7,6 +7,7 @@ import ora from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
+import { warnContextualizationDeprecated } from "../../utils/deprecation";
 import {
   addGlobalOptions,
   extendGlobalOptions,
@@ -63,7 +64,10 @@ export function createUploadCommand(): Command {
         'File patterns to upload (e.g., "*.md", "docs/**/*.pdf")'
       )
       .option("--strategy <strategy>", "Processing strategy")
-      .option("--contextualization", "Enable context preservation")
+      .option(
+        "--contextualization",
+        "Deprecated (ignored): contextualization is now configured at the store level"
+      )
       .option("--metadata <json>", "Additional metadata as JSON string")
       .option("--dry-run", "Preview what would be uploaded", false)
       .option("--parallel <n>", "Number of concurrent uploads (1-200)")
@@ -85,6 +89,10 @@ export function createUploadCommand(): Command {
           nameOrId,
           patterns,
         });
+
+        if (parsedOptions.contextualization) {
+          warnContextualizationDeprecated("store upload");
+        }
 
         const client = createClient(parsedOptions);
         const spinner = ora("Initializing upload...").start();
