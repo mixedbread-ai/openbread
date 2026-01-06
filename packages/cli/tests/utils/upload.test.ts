@@ -61,10 +61,7 @@ describe("Upload Utils", () => {
         "test-store",
         expect.any(File),
         expect.objectContaining({
-          experimental: {
-            parsing_strategy: undefined,
-            contextualization: undefined,
-          },
+          config: { parsing_strategy: undefined },
         }),
         { timeout: UPLOAD_TIMEOUT }
       );
@@ -87,10 +84,7 @@ describe("Upload Utils", () => {
         "test-store",
         expect.any(File),
         expect.objectContaining({
-          experimental: {
-            parsing_strategy: undefined,
-            contextualization: undefined,
-          },
+          config: { parsing_strategy: undefined },
         }),
         { timeout: UPLOAD_TIMEOUT }
       );
@@ -120,10 +114,7 @@ describe("Upload Utils", () => {
         expect.any(File),
         expect.objectContaining({
           metadata: { author: "test" },
-          experimental: {
-            parsing_strategy: "high_quality",
-            contextualization: true,
-          },
+          config: { parsing_strategy: "high_quality" },
         }),
         { timeout: UPLOAD_TIMEOUT }
       );
@@ -461,7 +452,7 @@ describe("Upload Utils", () => {
           name: "app.ts",
           type: "text/typescript",
         }),
-        expect.any(Object),
+        expect.objectContaining({ config: { parsing_strategy: "fast" } }),
         { timeout: UPLOAD_TIMEOUT }
       );
 
@@ -472,7 +463,7 @@ describe("Upload Utils", () => {
           name: "utils.py",
           type: "text/x-python",
         }),
-        expect.any(Object),
+        expect.objectContaining({ config: { parsing_strategy: "fast" } }),
         { timeout: UPLOAD_TIMEOUT }
       );
 
@@ -483,7 +474,7 @@ describe("Upload Utils", () => {
           name: "page.mdx",
           type: "text/mdx",
         }),
-        expect.any(Object),
+        expect.objectContaining({ config: { parsing_strategy: "fast" } }),
         { timeout: UPLOAD_TIMEOUT }
       );
 
@@ -494,7 +485,7 @@ describe("Upload Utils", () => {
           name: "readme.md",
           type: "text/markdown",
         }),
-        expect.any(Object),
+        expect.objectContaining({ config: { parsing_strategy: "fast" } }),
         { timeout: UPLOAD_TIMEOUT }
       );
     });
