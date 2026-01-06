@@ -328,7 +328,6 @@ describe("Sync Utils", () => {
         analysis,
         {
           strategy: "fast",
-          contextualization: false,
           parallel: 2,
         }
       );
@@ -371,7 +370,6 @@ describe("Sync Utils", () => {
         analysis,
         {
           strategy: "fast",
-          contextualization: false,
           parallel: 1,
         }
       );
@@ -416,7 +414,6 @@ describe("Sync Utils", () => {
         analysis,
         {
           strategy: "fast",
-          contextualization: false,
           parallel: 2,
         }
       );
@@ -476,7 +473,6 @@ describe("Sync Utils", () => {
         analysis,
         {
           strategy: "fast",
-          contextualization: false,
           parallel: 3,
         }
       );

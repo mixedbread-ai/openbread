@@ -105,7 +105,6 @@ describe("Upload Utils", () => {
         {
           metadata: { author: "test" },
           strategy: "high_quality",
-          contextualization: true,
         }
       );
 
@@ -207,13 +206,11 @@ describe("Upload Utils", () => {
         {
           path: "file1.txt",
           strategy: "fast" as const,
-          contextualization: false,
           metadata: {},
         },
         {
           path: "file2.txt",
           strategy: "fast" as const,
-          contextualization: false,
           metadata: {},
         },
       ];
