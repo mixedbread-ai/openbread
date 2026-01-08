@@ -7,6 +7,7 @@ import { parse } from "yaml";
 import { z } from "zod";
 import type { UploadOptions } from "../commands/store/upload";
 import { loadConfig } from "./config";
+import { warnContextualizationDeprecated } from "./deprecation";
 import { validateMetadata } from "./metadata";
 import { formatBytes, formatCountWithSuffix } from "./output";
 import { getStoreFiles } from "./store";
@@ -77,6 +78,13 @@ export async function uploadFromManifest(
     const defaults = manifest.defaults || {};
     const optionsMetadata = validateMetadata(options.metadata);
 
+    if (
+      defaults.contextualization ||
+      manifest.files.some((f) => f.contextualization)
+    ) {
+      warnContextualizationDeprecated("manifest upload");
+    }
+
     for (const entry of manifest.files) {
       console.log(chalk.gray(`Resolving: ${entry.path}`));
 
@@ -102,12 +110,6 @@ export async function uploadFromManifest(
           defaults.strategy ??
           config.defaults.upload.strategy ??
           "fast";
-        const fileContextualization =
-          options.contextualization ??
-          entry.contextualization ??
-          defaults.contextualization ??
-          config.defaults.upload.contextualization ??
-          false;
 
         // Merge metadata: command-line (highest) > entry-specific > manifest defaults
         const fileMetadata = {
@@ -120,7 +122,6 @@ export async function uploadFromManifest(
         resolvedFiles.push({
           path: filePath,
           strategy: fileStrategy,
-          contextualization: fileContextualization,
           metadata: fileMetadata,
         });
       }
@@ -157,7 +158,6 @@ export async function uploadFromManifest(
           const stats = statSync(file.path);
           console.log(`  \n${file.path} (${formatBytes(stats.size)})`);
           console.log(`    Strategy: ${file.strategy}`);
-          console.log(`    Contextualization: ${file.contextualization}`);
 
           if (Object.keys(file.metadata).length > 0) {
             console.log(`    Metadata: ${JSON.stringify(file.metadata)}`);

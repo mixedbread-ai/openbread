@@ -7,6 +7,7 @@ import ora from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
+import { warnContextualizationDeprecated } from "../../utils/deprecation";
 import {
   addGlobalOptions,
   extendGlobalOptions,
@@ -63,7 +64,10 @@ export function createUploadCommand(): Command {
         'File patterns to upload (e.g., "*.md", "docs/**/*.pdf")'
       )
       .option("--strategy <strategy>", "Processing strategy")
-      .option("--contextualization", "Enable context preservation")
+      .option(
+        "--contextualization",
+        "Deprecated (ignored): contextualization is now configured at the store level"
+      )
       .option("--metadata <json>", "Additional metadata as JSON string")
       .option("--dry-run", "Preview what would be uploaded", false)
       .option("--parallel <n>", "Number of concurrent uploads (1-200)")
@@ -85,6 +89,10 @@ export function createUploadCommand(): Command {
           nameOrId,
           patterns,
         });
+
+        if (parsedOptions.contextualization) {
+          warnContextualizationDeprecated("store upload");
+        }
 
         const client = createClient(parsedOptions);
         const spinner = ora("Initializing upload...").start();
@@ -114,10 +122,6 @@ export function createUploadCommand(): Command {
         // Get configuration values with precedence: command-line > config defaults > built-in defaults
         const strategy =
           parsedOptions.strategy ?? config.defaults?.upload?.strategy ?? "fast";
-        const contextualization =
-          parsedOptions.contextualization ??
-          config.defaults?.upload?.contextualization ??
-          false;
         const parallel =
           parsedOptions.parallel ?? config.defaults?.upload?.parallel ?? 100;
 
@@ -163,7 +167,6 @@ export function createUploadCommand(): Command {
               const stats = statSync(file);
               console.log(`  \n${file} (${formatBytes(stats.size)})`);
               console.log(`    Strategy: ${strategy}`);
-              console.log(`    Contextualization: ${contextualization}`);
 
               if (metadata && Object.keys(metadata).length > 0) {
                 console.log(`    Metadata: ${JSON.stringify(metadata)}`);
@@ -210,7 +213,6 @@ export function createUploadCommand(): Command {
         const filesToUpload: FileToUpload[] = uniqueFiles.map((filePath) => ({
           path: filePath,
           strategy,
-          contextualization,
           metadata,
         }));
 

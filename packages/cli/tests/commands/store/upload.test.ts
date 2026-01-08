@@ -227,7 +227,7 @@ describe("Store Upload Command", () => {
       );
     });
 
-    it("should enable contextualization", async () => {
+    it("should ignore contextualization", async () => {
       await command.parseAsync([
         "node",
         "upload",
@@ -239,9 +239,9 @@ describe("Store Upload Command", () => {
       expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
         expect.any(Object),
         "550e8400-e29b-41d4-a716-446655440130",
-        expect.arrayContaining([
+        expect.not.arrayContaining([
           expect.objectContaining({
-            contextualization: true,
+            contextualization: expect.anything(),
           }),
         ]),
         expect.any(Object)
@@ -453,7 +453,6 @@ describe("Store Upload Command", () => {
           expect.objectContaining({
             path: "test.md",
             strategy: "fast",
-            contextualization: false,
           }),
         ]),
         expect.any(Object)

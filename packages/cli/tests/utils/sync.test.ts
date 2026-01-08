@@ -290,7 +290,7 @@ describe("Sync Utils", () => {
   });
 
   describe("executeSyncChanges", () => {
-    it("should execute sync changes for regular files", async () => {
+    it("should execute sync changes for regular files with direct overwrite", async () => {
       mockFs({
         "new.txt": "New content",
         "modified.txt": "Modified content",
@@ -310,6 +310,7 @@ describe("Sync Utils", () => {
             type: "modified" as const,
             size: 16,
             fileId: "modified-file-id",
+            remoteExternalId: "path/to/file",
           },
         ],
         deleted: [],
@@ -327,20 +328,56 @@ describe("Sync Utils", () => {
         analysis,
         {
           strategy: "fast",
-          contextualization: false,
           parallel: 2,
         }
       );
 
       expect(result.uploads.successful).toHaveLength(2);
       expect(result.uploads.failed).toHaveLength(0);
+      expect(result.deletions.successful).toHaveLength(0);
+      expect(result.deletions.failed).toHaveLength(0);
+    });
+
+    it("should migrate modified files by delete-then-upload with external id", async () => {
+      mockFs({
+        "legacy.txt": "Legacy modified content",
+      });
+
+      const legacyPath = require("path").resolve("legacy.txt");
+
+      const analysis = {
+        added: [],
+        modified: [
+          {
+            path: legacyPath,
+            type: "modified" as const,
+            size: 13,
+            fileId: "legacy-file-id",
+          },
+        ],
+        deleted: [],
+        unchanged: 0,
+        totalFiles: 1,
+        totalSize: 13,
+      };
+
+      mockClient.stores.files.delete.mockResolvedValue({});
+      mockUploadFile.mockResolvedValue();
+
+      const result = await executeSyncChanges(
+        mockClient as unknown as Mixedbread,
+        "test-store",
+        analysis,
+        {
+          strategy: "fast",
+          parallel: 1,
+        }
+      );
+
       expect(result.deletions.successful).toHaveLength(1);
       expect(result.deletions.failed).toHaveLength(0);
-      expect(mockClient.stores.files.delete).toHaveBeenCalledWith(
-        "modified-file-id",
-        { store_identifier: "test-store" }
-      );
-      expect(mockUploadFile).toHaveBeenCalledTimes(2);
+      expect(result.uploads.successful).toHaveLength(1);
+      expect(result.uploads.failed).toHaveLength(0);
     });
 
     it("should skip empty files during sync execution", async () => {
@@ -377,7 +414,6 @@ describe("Sync Utils", () => {
         analysis,
         {
           strategy: "fast",
-          contextualization: false,
           parallel: 2,
         }
       );
@@ -437,7 +473,6 @@ describe("Sync Utils", () => {
         analysis,
         {
           strategy: "fast",
-          contextualization: false,
           parallel: 3,
         }
       );

@@ -10,7 +10,7 @@ import pLimit from "p-limit";
 import { getChangedFiles, normalizeGitPatterns } from "./git";
 import { calculateFileHash, hashesMatch } from "./hash";
 import { formatBytes, formatCountWithSuffix } from "./output";
-import { buildFileSyncMetadata, type FileSyncMetadata } from "./sync-state";
+import { buildFileSyncMetadata, type SyncedFileByPath } from "./sync-state";
 import { uploadFile } from "./upload";
 
 interface FileChange {
@@ -20,6 +20,7 @@ interface FileChange {
   localHash?: string;
   remoteHash?: string;
   fileId?: string;
+  remoteExternalId?: string;
 }
 
 interface SyncAnalysis {
@@ -49,9 +50,25 @@ interface SyncResults {
   };
 }
 
+function buildSyncPlan(analysis: SyncAnalysis): {
+  filesToUpload: FileChange[];
+  filesToDelete: FileChange[];
+} {
+  const filesToUpload = [...analysis.added, ...analysis.modified];
+  // Clean up files previously uploaded without external id
+  const modifiedWithoutExternalId = analysis.modified.filter(
+    (f) => !f.remoteExternalId
+  );
+  // Exclude Git-detected deletions that may not have been uploaded before
+  const deleted = analysis.deleted.filter((f) => f.fileId);
+  const filesToDelete = [...modifiedWithoutExternalId, ...deleted];
+
+  return { filesToUpload, filesToDelete };
+}
+
 interface AnalyzeChangesParams {
   patterns: string[];
-  syncedFiles: Map<string, { fileId: string; metadata: FileSyncMetadata }>;
+  syncedFiles: SyncedFileByPath;
   gitInfo: { commit: string; branch: string; isRepo: boolean };
   fromGit?: string;
   forceUpload?: boolean;
@@ -144,6 +161,7 @@ export async function analyzeChanges(
           localHash,
           remoteHash: syncedFile.metadata.file_hash,
           fileId: syncedFile.fileId,
+          remoteExternalId: syncedFile.externalId,
         });
         analysis.totalSize += stats.size;
       } else {
@@ -222,12 +240,10 @@ export function formatChangeSummary(analysis: SyncAnalysis): string {
     lines.push("");
   }
 
-  const totalChanges =
-    analysis.added.length +
-    analysis.modified.length * 2 +
-    analysis.deleted.length;
-  const totalUploads = analysis.added.length + analysis.modified.length;
-  const totalDeletes = analysis.modified.length + analysis.deleted.length;
+  const { filesToUpload, filesToDelete } = buildSyncPlan(analysis);
+  const totalUploads = filesToUpload.length;
+  const totalDeletes = filesToDelete.length;
+  const totalChanges = totalUploads + totalDeletes;
 
   lines.push(
     `Total: ${formatCountWithSuffix(totalChanges, "change")} (${formatCountWithSuffix(
@@ -245,8 +261,7 @@ export async function executeSyncChanges(
   storeIdentifier: string,
   analysis: SyncAnalysis,
   options: {
-    strategy?: FileCreateParams.Experimental["parsing_strategy"];
-    contextualization?: boolean;
+    strategy?: FileCreateParams.Config["parsing_strategy"];
     metadata?: Record<string, unknown>;
     gitInfo?: { commit: string; branch: string };
     parallel?: number;
@@ -254,10 +269,8 @@ export async function executeSyncChanges(
 ): Promise<SyncResults> {
   const parallel = options.parallel ?? 100;
   const limit = pLimit(parallel);
-  const totalOperations =
-    analysis.added.length +
-    analysis.modified.length * 2 +
-    analysis.deleted.length;
+  const { filesToUpload, filesToDelete } = buildSyncPlan(analysis);
+  const totalOperations = filesToUpload.length + filesToDelete.length;
   let completed = 0;
 
   console.log(chalk.bold("\nSyncing changes..."));
@@ -267,11 +280,7 @@ export async function executeSyncChanges(
     uploads: { successful: [], failed: [] },
   };
 
-  // Delete modified and removed files
-  const filesToDelete = [...analysis.modified, ...analysis.deleted].filter(
-    (f) => f.fileId
-  );
-
+  // Delete legacy modified files and removed files
   if (filesToDelete.length > 0) {
     console.log(
       chalk.yellow(
@@ -321,8 +330,6 @@ export async function executeSyncChanges(
   }
 
   // Upload new and modified files
-  const filesToUpload = [...analysis.added, ...analysis.modified];
-
   if (filesToUpload.length > 0) {
     console.log(
       chalk.blue(
@@ -367,7 +374,7 @@ export async function executeSyncChanges(
           await uploadFile(client, storeIdentifier, file.path, {
             metadata: finalMetadata,
             strategy: options.strategy,
-            contextualization: options.contextualization,
+            externalId: file.path,
           });
 
           completed++;
@@ -410,8 +417,7 @@ export function displaySyncResultsSummary(
   gitInfo: { commit: string; branch: string; isRepo: boolean },
   fromGit?: string,
   uploadOptions?: {
-    strategy?: FileCreateParams.Experimental["parsing_strategy"];
-    contextualization?: boolean;
+    strategy?: FileCreateParams.Config["parsing_strategy"];
   }
 ): void {
   console.log(chalk.bold("\nSummary:"));
@@ -466,11 +472,7 @@ export function displaySyncResultsSummary(
 
   if (successfulUploads > 0 && uploadOptions) {
     const strategy = uploadOptions.strategy ?? "fast";
-    const contextText = uploadOptions.contextualization
-      ? "enabled"
-      : "disabled";
     console.log(chalk.gray(`Strategy: ${strategy}`));
-    console.log(chalk.gray(`Contextualization: ${contextText}`));
   }
 
   const hasFailures = failedUploads > 0 || failedDeletions > 0;

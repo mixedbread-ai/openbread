@@ -11,14 +11,13 @@ export const UPLOAD_TIMEOUT = 1000 * 60 * 10; // 10 minutes
 
 export interface UploadFileOptions {
   metadata?: Record<string, unknown>;
-  strategy?: FileCreateParams.Experimental["parsing_strategy"];
-  contextualization?: boolean;
+  strategy?: FileCreateParams.Config["parsing_strategy"];
+  externalId?: string;
 }
 
 export interface FileToUpload {
   path: string;
-  strategy: FileCreateParams.Experimental["parsing_strategy"];
-  contextualization: boolean;
+  strategy: FileCreateParams.Config["parsing_strategy"];
   metadata: Record<string, unknown>;
 }
 
@@ -70,7 +69,7 @@ export async function uploadFile(
   filePath: string,
   options: UploadFileOptions = {}
 ): Promise<void> {
-  const { metadata = {}, strategy, contextualization } = options;
+  const { metadata = {}, strategy, externalId } = options;
 
   // Read file content
   const fileContent = readFileSync(filePath);
@@ -85,10 +84,10 @@ export async function uploadFile(
     file,
     {
       metadata,
-      experimental: {
+      config: {
         parsing_strategy: strategy,
-        contextualization,
       },
+      ...(externalId ? { external_id: externalId } : {}),
     },
     { timeout: UPLOAD_TIMEOUT }
   );
@@ -182,9 +181,8 @@ export async function uploadFilesInBatch(
           fileToUpload,
           {
             metadata: fileMetadata,
-            experimental: {
+            config: {
               parsing_strategy: file.strategy,
-              contextualization: file.contextualization,
             },
           },
           { timeout: UPLOAD_TIMEOUT }
@@ -201,10 +199,7 @@ export async function uploadFilesInBatch(
         let successMessage = `${relative(process.cwd(), file.path)} (${formatBytes(stats.size)})`;
 
         if (isManifestUpload) {
-          const contextText = file.contextualization
-            ? "contextualized"
-            : "no-context";
-          successMessage += ` [${file.strategy}, ${contextText}]`;
+          successMessage += ` [${file.strategy}]`;
         }
 
         spinner.succeed(successMessage);
@@ -248,9 +243,7 @@ export async function uploadFilesInBatch(
 
   if (!isManifestUpload && files.length > 0) {
     const firstFile = files[0];
-    const contextText = firstFile.contextualization ? "enabled" : "disabled";
     console.log(chalk.gray(`Strategy: ${firstFile.strategy}`));
-    console.log(chalk.gray(`Contextualization: ${contextText}`));
   }
 
   console.log(chalk.gray(`Total size: ${formatBytes(results.successfulSize)}`));
