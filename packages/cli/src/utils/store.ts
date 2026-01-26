@@ -87,6 +87,11 @@ export function buildStoreConfig(
       .split(",")
       .map((f) => f.trim())
       .filter(Boolean);
+    if (fields.length === 0) {
+      throw new Error(
+        `Invalid value for --contextualization: "${contextualization}". Use a comma-separated list of metadata fields.`
+      );
+    }
     return { contextualization: { with_metadata: fields } };
   }
   return { contextualization: true };
