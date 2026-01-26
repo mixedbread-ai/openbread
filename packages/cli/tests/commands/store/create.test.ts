@@ -504,6 +504,21 @@ describe("Store Create Command", () => {
       });
     });
 
+    it("should throw error for empty contextualization fields", async () => {
+      await command.parseAsync([
+        "node",
+        "create",
+        "ctx-store",
+        "--contextualization=,,,",
+      ]);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining("Invalid value for --contextualization")
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
     it("should combine --public and --contextualization flags", async () => {
       const mockResponse = {
         id: "550e8400-e29b-41d4-a716-446655440010",
