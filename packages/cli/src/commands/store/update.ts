@@ -17,12 +17,13 @@ import {
 } from "../../utils/global-options";
 import { validateMetadata } from "../../utils/metadata";
 import { formatOutput } from "../../utils/output";
-import { resolveStore } from "../../utils/store";
+import { parsePublicFlag, resolveStore } from "../../utils/store";
 
 const UpdateStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
   name: z.string().optional(),
   description: z.string().optional(),
+  public: z.union([z.boolean(), z.string()]).optional(),
   expiresAfter: z.coerce
     .number({ error: '"expires-after" must be a number' })
     .int({ error: '"expires-after" must be an integer' })
@@ -34,6 +35,7 @@ const UpdateStoreSchema = extendGlobalOptions({
 interface UpdateOptions extends GlobalOptions {
   name?: string;
   description?: string;
+  public?: boolean | string;
   expiresAfter?: number;
   metadata?: string;
 }
@@ -45,6 +47,10 @@ export function createUpdateCommand(): Command {
       .argument("<name-or-id>", "Name or ID of the store")
       .option("--name <name>", "New name for the store")
       .option("--description <desc>", "New description for the store")
+      .option(
+        "--public [value]",
+        "Make store publicly accessible, the requestor pays for the usage, not the store owner"
+      )
       .option("--expires-after <days>", "Expire after number of days")
       .option(
         "--metadata <json>",
@@ -73,6 +79,8 @@ export function createUpdateCommand(): Command {
       if (parsedOptions.name) updateData.name = parsedOptions.name;
       if (parsedOptions.description !== undefined)
         updateData.description = parsedOptions.description;
+      const isPublic = parsePublicFlag(parsedOptions.public);
+      if (isPublic !== undefined) updateData.is_public = isPublic;
       if (metadata !== undefined) updateData.metadata = metadata;
       if (parsedOptions.expiresAfter !== undefined)
         updateData.expires_after = {
@@ -83,7 +91,7 @@ export function createUpdateCommand(): Command {
       if (Object.keys(updateData).length === 0) {
         console.error(
           chalk.red("✗"),
-          "No update fields provided. Use --name, --description, or --metadata"
+          "No update fields provided. Use --name, --description, --public, or --metadata"
         );
         process.exit(1);
       }
@@ -99,6 +107,7 @@ export function createUpdateCommand(): Command {
           id: updatedStore.id,
           name: updatedStore.name,
           description: updatedStore.description,
+          is_public: updatedStore.is_public,
           expires_after: updatedStore.expires_after,
           metadata:
             parsedOptions.format === "table"

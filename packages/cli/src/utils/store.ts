@@ -63,6 +63,35 @@ export async function resolveStore(
   }
 }
 
+export function parsePublicFlag(value?: boolean | string): boolean | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value === "boolean") {
+    return value;
+  }
+  const lower = value.toLowerCase();
+  if (lower === "true") return true;
+  if (lower === "false") return false;
+  throw new Error(`Invalid value for --public: "${value}". Use true or false.`);
+}
+
+export function buildStoreConfig(
+  contextualization?: boolean | string
+): { contextualization: boolean | { with_metadata: string[] } } | undefined {
+  if (contextualization === undefined) {
+    return undefined;
+  }
+  if (typeof contextualization === "string") {
+    const fields = contextualization
+      .split(",")
+      .map((f) => f.trim())
+      .filter(Boolean);
+    return { contextualization: { with_metadata: fields } };
+  }
+  return { contextualization: true };
+}
+
 export async function getStoreFiles(
   client: Mixedbread,
   storeIdentifier: string

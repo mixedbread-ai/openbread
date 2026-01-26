@@ -29,6 +29,15 @@ mxbai store list
 # Create a new store
 mxbai store create "My Documents"
 
+# Create a public store with contextualization enabled
+mxbai store create "Public Docs" --public --contextualization
+
+# Create a store with contextualization for specific metadata fields
+mxbai store create "My Docs" --contextualization="title,author"
+
+# Update a store to make it private
+mxbai store update "My Docs" --public=false
+
 # Upload files
 mxbai store upload "My Documents" "*.md" "docs/**/*.pdf"
 
@@ -56,12 +65,20 @@ mxbai store upload "My Documents" --manifest upload-manifest.yaml
 - `mxbai store list` - List all stores
   - Options: `--filter <name>`, `--limit <n>`
 - `mxbai store create <name>` - Create a new store
-  - Options: `--description <desc>`, `--expires-after <days>`, `--metadata <json>`
+  - Options: `--description <desc>`, `--public[=value]`, `--contextualization[=fields]`, `--expires-after <days>`, `--metadata <json>`
 - `mxbai store get <name-or-id>` - Get store details
 - `mxbai store update <name-or-id>` - Update store
-  - Options: `--name <name>`, `--description <desc>`, `--expires-after <days>`, `--metadata <json>`
+  - Options: `--name <name>`, `--description <desc>`, `--public[=value]`, `--expires-after <days>`, `--metadata <json>`
 - `mxbai store delete <name-or-id>` - Delete store (alias: `rm`)
   - Options: `--yes/-y` (skip confirmation)
+
+#### Store Options
+
+**`--public[=value]`** - Make store publicly accessible. The requestor pays for the usage, not the store owner.
+
+**`--contextualization[=fields]`** - Enable contextualization for improved search relevance. Can be used in two ways:
+- `--contextualization` - Enable with all available metadata fields
+- `--contextualization="title,author"` - Enable with specific metadata fields (comma-separated)
 
 ### File Management
 

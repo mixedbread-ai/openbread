@@ -27,8 +27,8 @@ importers:
   packages/cli:
     dependencies:
       '@mixedbread/sdk':
-        specifier: ^0.46.0
-        version: 0.46.0
+        specifier: ^0.50.1
+        version: 0.50.1
       '@pnpm/tabtab':
         specifier: ^0.5.4
         version: 0.5.4
@@ -794,8 +794,8 @@ packages:
     resolution: {integrity: sha512-B0Un0thpz4UKN69QVmgdVsCIgiz+jR4V+nxuCOgdm/P0Iie1NctqY092VQ/iobY/FSMzhHJofXij086y/9E5rg==}
     hasBin: true
 
-  '@mixedbread/sdk@0.46.0':
-    resolution: {integrity: sha512-0WhmubKhwUdPWfygyOnW9L+nda/MhHtnrxeXnMp5k4cDYZeMrfnX00iWyQbNS+CwXi9EH6qG541xYF04O6QArA==}
+  '@mixedbread/sdk@0.50.1':
+    resolution: {integrity: sha512-GuTuOGmPC2ocKR+rCiEr7Efs4P7KyrdagpDVYAlunV6jFO4VOcJUZLeiD08e0ytbu/NH23svxkTaMI+n+aq1Rw==}
     hasBin: true
 
   '@next/env@15.5.9':
@@ -3171,6 +3171,7 @@ packages:
   tar@7.4.3:
     resolution: {integrity: sha512-5S7Va8hKfV7W5U6g3aYxXmlPoZVAwUMy9AOKyF2fVuZa2UD3qZjg578OrLRt8PcNN1PleVaL/5/yYATNL0ICUw==}
     engines: {node: '>=18'}
+    deprecated: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
 
   term-size@2.2.1:
     resolution: {integrity: sha512-wK0Ri4fOGjv/XPy8SBHZChl8CM7uMc5VML7SqiQ0zG7+J5Vr+RMQDoHa2CNT6KHUnTGIXH34UDMkPzAUyapBZg==}
@@ -4287,7 +4288,7 @@ snapshots:
 
   '@mixedbread/sdk@0.26.0': {}
 
-  '@mixedbread/sdk@0.46.0': {}
+  '@mixedbread/sdk@0.50.1': {}
 
   '@next/env@15.5.9': {}
 
