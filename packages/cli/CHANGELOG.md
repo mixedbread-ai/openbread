@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.2.0
+
+### Minor Changes
+
+- ce1eef3:
+  - Added `--contextualization` and `--public` options to store create/update commands
+  - Deprecated `--contextualization` flag in upload command (use store-level setting instead)
+
 ## 2.1.1
 
 ### Patch Changes
