@@ -16,10 +16,13 @@ import {
 } from "../../utils/global-options";
 import { validateMetadata } from "../../utils/metadata";
 import { formatOutput } from "../../utils/output";
+import { buildStoreConfig, parsePublicFlag } from "../../utils/store";
 
 const CreateStoreSchema = extendGlobalOptions({
   name: z.string().min(1, { error: '"name" is required' }),
   description: z.string().optional(),
+  public: z.union([z.boolean(), z.string()]).optional(),
+  contextualization: z.union([z.boolean(), z.string()]).optional(),
   expiresAfter: z.coerce
     .number({ error: '"expires-after" must be a number' })
     .int({ error: '"expires-after" must be an integer' })
@@ -30,6 +33,8 @@ const CreateStoreSchema = extendGlobalOptions({
 
 interface CreateOptions extends GlobalOptions {
   description?: string;
+  public?: boolean | string;
+  contextualization?: boolean | string;
   expiresAfter?: number;
   metadata?: string;
 }
@@ -40,6 +45,14 @@ export function createCreateCommand(): Command {
       .description("Create a new store")
       .argument("<name>", "Name of the store")
       .option("--description <desc>", "Description of the store")
+      .option(
+        "--public [value]",
+        "Make store publicly accessible, the requestor pays for the usage, not the store owner"
+      )
+      .option(
+        "--contextualization [fields]",
+        "Enable contextualization, optionally with specific metadata fields (comma-separated)"
+      )
       .option("--expires-after <days>", "Expire after number of days")
       .option("--metadata <json>", "Additional metadata as JSON string")
   );
@@ -63,6 +76,8 @@ export function createCreateCommand(): Command {
       const store = await client.stores.create({
         name: parsedOptions.name,
         description: parsedOptions.description,
+        is_public: parsePublicFlag(parsedOptions.public),
+        config: buildStoreConfig(parsedOptions.contextualization),
         expires_after: parsedOptions.expiresAfter
           ? {
               anchor: "last_active_at",
@@ -79,6 +94,8 @@ export function createCreateCommand(): Command {
           id: store.id,
           name: store.name,
           description: store.description,
+          is_public: store.is_public,
+          config: store.config,
           expires_after: store.expires_after,
           metadata:
             parsedOptions.format === "table"

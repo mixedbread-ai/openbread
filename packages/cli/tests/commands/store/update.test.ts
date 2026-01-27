@@ -15,7 +15,10 @@ import * as storeUtils from "../../../src/utils/store";
 
 // Mock dependencies
 jest.mock("../../../src/utils/client");
-jest.mock("../../../src/utils/store");
+jest.mock("../../../src/utils/store", () => ({
+  ...(jest.requireActual("../../../src/utils/store") as object),
+  resolveStore: jest.fn(),
+}));
 jest.mock("../../../src/utils/output", () => ({
   ...(jest.requireActual("../../../src/utils/output") as object),
   formatOutput: jest.fn(),
@@ -240,6 +243,138 @@ describe("Store Update Command", () => {
     });
   });
 
+  describe("Public flag", () => {
+    it("should update store with --public flag", async () => {
+      const updatedStore = {
+        id: "550e8400-e29b-41d4-a716-446655440060",
+        name: "test-store",
+        description: null,
+        is_public: true,
+        expires_after: null,
+        metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
+      };
+
+      mockClient.stores.update.mockResolvedValue(updatedStore);
+
+      await command.parseAsync([
+        "node",
+        "update",
+        "test-store",
+        "--public",
+      ]);
+
+      expect(mockClient.stores.update).toHaveBeenCalledWith(
+        "550e8400-e29b-41d4-a716-446655440060",
+        {
+          is_public: true,
+        }
+      );
+
+      expect(mockFormatOutput).toHaveBeenCalledWith(
+        expect.objectContaining({
+          is_public: true,
+        }),
+        undefined
+      );
+    });
+
+    it("should not include is_public when --public flag is not provided", async () => {
+      const updatedStore = {
+        id: "550e8400-e29b-41d4-a716-446655440060",
+        name: "updated-store",
+        description: null,
+        is_public: false,
+        expires_after: null,
+        metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
+      };
+
+      mockClient.stores.update.mockResolvedValue(updatedStore);
+
+      await command.parseAsync([
+        "node",
+        "update",
+        "test-store",
+        "--name",
+        "updated-store",
+      ]);
+
+      expect(mockClient.stores.update).toHaveBeenCalledWith(
+        "550e8400-e29b-41d4-a716-446655440060",
+        {
+          name: "updated-store",
+        }
+      );
+    });
+
+    it("should set is_public to false with --public=false", async () => {
+      const updatedStore = {
+        id: "550e8400-e29b-41d4-a716-446655440060",
+        name: "test-store",
+        description: null,
+        is_public: false,
+        expires_after: null,
+        metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
+      };
+
+      mockClient.stores.update.mockResolvedValue(updatedStore);
+
+      await command.parseAsync([
+        "node",
+        "update",
+        "test-store",
+        "--public=false",
+      ]);
+
+      expect(mockClient.stores.update).toHaveBeenCalledWith(
+        "550e8400-e29b-41d4-a716-446655440060",
+        {
+          is_public: false,
+        }
+      );
+    });
+
+    it("should combine --public with other update fields", async () => {
+      const updatedStore = {
+        id: "550e8400-e29b-41d4-a716-446655440060",
+        name: "updated-store",
+        description: "Updated description",
+        is_public: true,
+        expires_after: null,
+        metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
+      };
+
+      mockClient.stores.update.mockResolvedValue(updatedStore);
+
+      await command.parseAsync([
+        "node",
+        "update",
+        "test-store",
+        "--name",
+        "updated-store",
+        "--description",
+        "Updated description",
+        "--public",
+      ]);
+
+      expect(mockClient.stores.update).toHaveBeenCalledWith(
+        "550e8400-e29b-41d4-a716-446655440060",
+        {
+          name: "updated-store",
+          description: "Updated description",
+          is_public: true,
+        }
+      );
+    });
+  });
+
   describe("Metadata handling", () => {
     it("should handle invalid metadata JSON", async () => {
       await command.parseAsync([
@@ -390,7 +525,7 @@ describe("Store Update Command", () => {
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
         expect.stringContaining(
-          "No update fields provided. Use --name, --description, or --metadata"
+          "No update fields provided. Use --name, --description, --public, or --metadata"
         )
       );
       expect(process.exit).toHaveBeenCalledWith(1);

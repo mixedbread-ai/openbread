@@ -337,6 +337,224 @@ describe("Store Create Command", () => {
     });
   });
 
+  describe("Public flag", () => {
+    it("should create store with --public flag", async () => {
+      const mockResponse = {
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "public-store",
+        description: null,
+        is_public: true,
+        config: null,
+        expires_after: null,
+        metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
+      };
+
+      mockClient.stores.create.mockResolvedValue(mockResponse);
+
+      await command.parseAsync(["node", "create", "public-store", "--public"]);
+
+      expect(mockClient.stores.create).toHaveBeenCalledWith({
+        name: "public-store",
+        description: undefined,
+        is_public: true,
+        config: undefined,
+        expires_after: undefined,
+        metadata: undefined,
+      });
+
+      expect(mockFormatOutput).toHaveBeenCalledWith(
+        expect.objectContaining({
+          is_public: true,
+        }),
+        undefined
+      );
+    });
+
+    it("should omit is_public when --public flag is not provided", async () => {
+      const mockResponse = {
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "test-store",
+        description: null,
+        is_public: false,
+        config: null,
+        expires_after: null,
+        metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
+      };
+
+      mockClient.stores.create.mockResolvedValue(mockResponse);
+
+      await command.parseAsync(["node", "create", "test-store"]);
+
+      expect(mockClient.stores.create).toHaveBeenCalledWith({
+        name: "test-store",
+        description: undefined,
+        is_public: undefined,
+        config: undefined,
+        expires_after: undefined,
+        metadata: undefined,
+      });
+    });
+  });
+
+  describe("Contextualization flag", () => {
+    it("should enable contextualization with --contextualization flag alone", async () => {
+      const mockResponse = {
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "ctx-store",
+        description: null,
+        is_public: false,
+        config: { contextualization: true },
+        expires_after: null,
+        metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
+      };
+
+      mockClient.stores.create.mockResolvedValue(mockResponse);
+
+      await command.parseAsync([
+        "node",
+        "create",
+        "ctx-store",
+        "--contextualization",
+      ]);
+
+      expect(mockClient.stores.create).toHaveBeenCalledWith({
+        name: "ctx-store",
+        description: undefined,
+        is_public: undefined,
+        config: { contextualization: true },
+        expires_after: undefined,
+        metadata: undefined,
+      });
+
+      expect(mockFormatOutput).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: { contextualization: true },
+        }),
+        undefined
+      );
+    });
+
+    it("should parse comma-separated fields for --contextualization", async () => {
+      const mockResponse = {
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "ctx-store",
+        description: null,
+        is_public: false,
+        config: { contextualization: { with_metadata: ["title", "author"] } },
+        expires_after: null,
+        metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
+      };
+
+      mockClient.stores.create.mockResolvedValue(mockResponse);
+
+      await command.parseAsync([
+        "node",
+        "create",
+        "ctx-store",
+        "--contextualization=title,author",
+      ]);
+
+      expect(mockClient.stores.create).toHaveBeenCalledWith({
+        name: "ctx-store",
+        description: undefined,
+        is_public: undefined,
+        config: { contextualization: { with_metadata: ["title", "author"] } },
+        expires_after: undefined,
+        metadata: undefined,
+      });
+    });
+
+    it("should parse single field for --contextualization", async () => {
+      const mockResponse = {
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "ctx-store",
+        description: null,
+        is_public: false,
+        config: { contextualization: { with_metadata: ["title"] } },
+        expires_after: null,
+        metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
+      };
+
+      mockClient.stores.create.mockResolvedValue(mockResponse);
+
+      await command.parseAsync([
+        "node",
+        "create",
+        "ctx-store",
+        "--contextualization=title",
+      ]);
+
+      expect(mockClient.stores.create).toHaveBeenCalledWith({
+        name: "ctx-store",
+        description: undefined,
+        is_public: undefined,
+        config: { contextualization: { with_metadata: ["title"] } },
+        expires_after: undefined,
+        metadata: undefined,
+      });
+    });
+
+    it("should throw error for empty contextualization fields", async () => {
+      await command.parseAsync([
+        "node",
+        "create",
+        "ctx-store",
+        "--contextualization=,,,",
+      ]);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining("Invalid value for --contextualization")
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it("should combine --public and --contextualization flags", async () => {
+      const mockResponse = {
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "full-store",
+        description: "My store",
+        is_public: true,
+        config: { contextualization: { with_metadata: ["title", "author"] } },
+        expires_after: null,
+        metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
+      };
+
+      mockClient.stores.create.mockResolvedValue(mockResponse);
+
+      await command.parseAsync([
+        "node",
+        "create",
+        "full-store",
+        "--public",
+        "--contextualization=title,author",
+        "--description",
+        "My store",
+      ]);
+
+      expect(mockClient.stores.create).toHaveBeenCalledWith({
+        name: "full-store",
+        description: "My store",
+        is_public: true,
+        config: { contextualization: { with_metadata: ["title", "author"] } },
+        expires_after: undefined,
+        metadata: undefined,
+      });
+    });
+  });
+
   describe("Validation", () => {
     it("should validate expires-after is a positive number", async () => {
       await command.parseAsync([
