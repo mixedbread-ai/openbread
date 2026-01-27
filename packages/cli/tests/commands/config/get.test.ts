@@ -93,7 +93,6 @@ describe("Config Get Command", () => {
           defaults: {
             upload: {
               strategy: "high_quality",
-              contextualization: true,
               parallel: 10,
             },
             search: {
@@ -125,15 +124,6 @@ describe("Config Get Command", () => {
       );
     });
 
-    it("should get boolean values", () => {
-      command.parse(["node", "get", "defaults.upload.contextualization"]);
-
-      expect(console.log).toHaveBeenCalledWith(
-        "defaults.upload.contextualization:",
-        "true"
-      );
-    });
-
     it("should get number values", () => {
       command.parse(["node", "get", "defaults.upload.parallel"]);
 
@@ -151,7 +141,6 @@ describe("Config Get Command", () => {
         JSON.stringify(
           {
             strategy: "high_quality",
-            contextualization: true,
             parallel: 10,
           },
           null,

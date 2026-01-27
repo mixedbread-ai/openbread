@@ -10,16 +10,6 @@ export const UploadDefaultsSchema = z.object({
       error: 'Must be "fast" or "high_quality"',
     })
     .optional(),
-  contextualization: z
-    .preprocess(
-      (val) => {
-        if (val === "true" || val === true) return true;
-        if (val === "false" || val === false) return false;
-        throw new Error('Must be "true" or "false"');
-      },
-      z.boolean({ error: 'Must be "true" or "false"' })
-    )
-    .optional(),
   parallel: z.coerce
     .number({ error: "Must be a number" })
     .int({ error: "Must be an integer" })
@@ -103,7 +93,6 @@ const DEFAULT_CONFIG: CLIConfig = {
   defaults: {
     upload: {
       strategy: "fast",
-      contextualization: false,
       parallel: 100,
     },
     search: {

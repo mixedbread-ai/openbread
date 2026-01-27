@@ -64,22 +64,6 @@ describe("Config Set Command", () => {
       expect(config.defaults?.upload?.strategy).toBe("high_quality");
     });
 
-    it("should set boolean values", () => {
-      mockFs({
-        [configFile]: JSON.stringify({ version: "1.0" }),
-      });
-
-      command.parse([
-        "node",
-        "set",
-        "defaults.upload.contextualization",
-        "true",
-      ]);
-
-      const config = loadConfig();
-      expect(config.defaults?.upload?.contextualization).toBe(true);
-    });
-
     it("should set number values", () => {
       mockFs({
         [configFile]: JSON.stringify({ version: "1.0" }),
@@ -124,23 +108,16 @@ describe("Config Set Command", () => {
           defaults: {
             upload: {
               strategy: "fast",
-              parallel: 100,
             },
           },
         }),
       });
 
-      command.parse([
-        "node",
-        "set",
-        "defaults.upload.contextualization",
-        "true",
-      ]);
+      command.parse(["node", "set", "defaults.upload.parallel", "50"]);
 
       const config = loadConfig();
       expect(config.defaults?.upload?.strategy).toBe("fast");
-      expect(config.defaults?.upload?.parallel).toBe(100);
-      expect(config.defaults?.upload?.contextualization).toBe(true);
+      expect(config.defaults?.upload?.parallel).toBe(50);
     });
   });
 
@@ -164,12 +141,7 @@ describe("Config Set Command", () => {
         [configFile]: JSON.stringify({ version: "1.0" }),
       });
 
-      command.parse([
-        "node",
-        "set",
-        "defaults.upload.contextualization",
-        "maybe",
-      ]);
+      command.parse(["node", "set", "defaults.search.rerank", "maybe"]);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),

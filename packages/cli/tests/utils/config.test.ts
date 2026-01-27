@@ -33,7 +33,6 @@ describe("Config Utils", () => {
         defaults: {
           upload: {
             strategy: "fast",
-            contextualization: false,
             parallel: 100,
           },
           search: {
@@ -447,12 +446,8 @@ describe("Config Utils", () => {
 
   describe("parseConfigValue", () => {
     it("should parse boolean values", () => {
-      expect(
-        parseConfigValue("defaults.upload.contextualization", "true")
-      ).toBe(true);
-      expect(
-        parseConfigValue("defaults.upload.contextualization", "false")
-      ).toBe(false);
+      expect(parseConfigValue("defaults.search.rerank", "true")).toBe(true);
+      expect(parseConfigValue("defaults.search.rerank", "false")).toBe(false);
     });
 
     it("should parse number values", () => {
