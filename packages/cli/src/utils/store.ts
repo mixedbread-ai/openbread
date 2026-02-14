@@ -42,7 +42,7 @@ export async function resolveStore(
   if (interactive) {
     const { selected } = await inquirer.prompt([
       {
-        type: "list",
+        type: "select",
         name: "selected",
         message: "Multiple stores found. Select one:",
         choices: fuzzyMatches.map((store) => ({
