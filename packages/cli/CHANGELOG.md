@@ -4,7 +4,8 @@
 
 ### Patch Changes
 
-- ad3704e: - Changed default `store list` limit from 10 to 100
+- ad3704e:
+  - Changed default `store list` limit from 10 to 100
   - Bumped dependencies
 
 ## 2.2.0
