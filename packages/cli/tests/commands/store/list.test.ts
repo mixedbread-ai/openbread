@@ -106,7 +106,7 @@ describe("Store List Command", () => {
       await command.parseAsync(["node", "list"]);
 
       expect(mockClient.stores.list).toHaveBeenCalledWith({
-        limit: 10,
+        limit: 100,
       });
 
       expect(mockFormatOutput).toHaveBeenCalledWith(

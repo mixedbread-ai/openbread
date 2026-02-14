@@ -40,7 +40,7 @@ export function createListCommand(): Command {
     new Command("list")
       .description("List stores")
       .option("--filter <name>", "Filter by name pattern")
-      .option("--limit <n>", "Maximum number of results", "10")
+      .option("--limit <n>", "Maximum number of results", "100")
   );
 
   command.action(async (options: ListOptions) => {
@@ -56,7 +56,7 @@ export function createListCommand(): Command {
       const client = createClient(parsedOptions);
       spinner = ora("Loading stores...").start();
       const response = await client.stores.list({
-        limit: parsedOptions.limit || 10,
+        limit: parsedOptions.limit || 100,
       });
 
       let stores = response.data;
