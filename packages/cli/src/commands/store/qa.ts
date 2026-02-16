@@ -1,6 +1,6 @@
+import { log, spinner } from "@clack/prompts";
 import chalk from "chalk";
 import { Command } from "commander";
-import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
@@ -54,7 +54,7 @@ export function createQACommand(): Command {
 
   command.action(
     async (nameOrId: string, question: string, options: QAOptions) => {
-      let spinner: Ora;
+      const s = spinner();
 
       try {
         const mergedOptions = mergeCommandOptions(command, options);
@@ -65,7 +65,7 @@ export function createQACommand(): Command {
         });
 
         const client = createClient(parsedOptions);
-        spinner = ora("Processing question...").start();
+        s.start("Processing question...");
         const store = await resolveStore(client, parsedOptions.nameOrId);
         const config = loadConfig();
 
@@ -86,7 +86,7 @@ export function createQACommand(): Command {
           },
         });
 
-        spinner.succeed("Question processed");
+        s.stop("Question processed\n");
 
         // Display the answer
         console.log(chalk.bold(chalk.blue("Answer:")));
@@ -118,12 +118,10 @@ export function createQACommand(): Command {
           formatOutput(sources, parsedOptions.format);
         }
       } catch (error) {
-        spinner?.fail("Failed to process question");
-        if (error instanceof Error) {
-          console.error(chalk.red("\n✗"), error.message);
-        } else {
-          console.error(chalk.red("\n✗"), "Failed to process question");
-        }
+        s.stop();
+        log.error(
+          error instanceof Error ? error.message : "Failed to process question"
+        );
         process.exit(1);
       }
     }

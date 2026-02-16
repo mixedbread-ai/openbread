@@ -15,8 +15,7 @@ const config: JestConfigWithTsJest = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^chalk$": "<rootDir>/tests/__mocks__/chalk.ts",
-    "^ora$": "<rootDir>/tests/__mocks__/ora.ts",
-    "^inquirer$": "<rootDir>/tests/__mocks__/inquirer.ts",
+    "^@clack/prompts$": "<rootDir>/tests/__mocks__/clack-prompts.ts",
     "^glob$": "<rootDir>/tests/__mocks__/glob.ts",
     "^p-limit$": "<rootDir>/tests/__mocks__/p-limit.ts",
   },

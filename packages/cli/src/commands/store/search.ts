@@ -1,7 +1,6 @@
+import { log, spinner } from "@clack/prompts";
 import type Mixedbread from "@mixedbread/sdk";
-import chalk from "chalk";
 import { Command } from "commander";
-import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
@@ -93,7 +92,7 @@ export function createSearchCommand(): Command {
 
   command.action(
     async (nameOrId: string, query: string, options: SearchOptions) => {
-      let spinner: Ora;
+      const s = spinner();
 
       try {
         const mergedOptions = mergeCommandOptions(command, options);
@@ -104,7 +103,7 @@ export function createSearchCommand(): Command {
         });
 
         const client = createClient(parsedOptions);
-        spinner = ora("Searching store...").start();
+        s.start("Searching store...");
         const store = await resolveStore(client, parsedOptions.nameOrId);
         const config = loadConfig();
 
@@ -128,13 +127,12 @@ export function createSearchCommand(): Command {
             });
 
         if (!results.data || results.data.length === 0) {
-          spinner.info("No results found.");
+          s.stop();
+          log.info("No results found.");
           return;
         }
 
-        spinner.succeed(
-          `Found ${formatCountWithSuffix(results.data.length, "result")}`
-        );
+        s.stop(`Found ${formatCountWithSuffix(results.data.length, "result")}`);
 
         const output = results.data.map((result) => {
           const metadata =
@@ -161,12 +159,10 @@ export function createSearchCommand(): Command {
 
         formatOutput(output, parsedOptions.format);
       } catch (error) {
-        spinner?.fail("Search failed");
-        if (error instanceof Error) {
-          console.error(chalk.red("\n✗"), error.message);
-        } else {
-          console.error(chalk.red("\n✗"), "Failed to search store");
-        }
+        s.stop();
+        log.error(
+          error instanceof Error ? error.message : "Failed to search store"
+        );
         process.exit(1);
       }
     }

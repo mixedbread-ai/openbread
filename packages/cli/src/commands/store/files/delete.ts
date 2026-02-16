@@ -1,7 +1,5 @@
-import chalk from "chalk";
+import { confirm, isCancel, log, spinner } from "@clack/prompts";
 import { Command } from "commander";
-import inquirer from "inquirer";
-import ora, { type Ora } from "ora";
 import z from "zod";
 import { createClient } from "../../../utils/client";
 import {
@@ -31,7 +29,7 @@ export function createDeleteCommand(): Command {
 
   deleteCommand.action(
     async (nameOrId: string, fileId: string, options: GlobalOptions) => {
-      let spinner: Ora;
+      const s = spinner();
       try {
         const mergedOptions = mergeCommandOptions(deleteCommand, options);
 
@@ -46,35 +44,28 @@ export function createDeleteCommand(): Command {
 
         // Confirmation prompt unless --yes is used
         if (!parsedOptions.yes) {
-          const { confirmed } = await inquirer.prompt([
-            {
-              type: "confirm",
-              name: "confirmed",
-              message: `Are you sure you want to delete file "${parsedOptions.fileId}" from store "${store.name}" (${store.id})? This action cannot be undone.`,
-              default: false,
-            },
-          ]);
+          const confirmed = await confirm({
+            message: `Are you sure you want to delete file "${parsedOptions.fileId}" from store "${store.name}" (${store.id})? This action cannot be undone.`,
+          });
 
-          if (!confirmed) {
-            console.log(chalk.yellow("Deletion cancelled."));
+          if (isCancel(confirmed) || !confirmed) {
+            log.warn("Deletion cancelled.");
             return;
           }
         }
 
-        spinner = ora("Deleting file...").start();
+        s.start("Deleting file...");
 
         await client.stores.files.delete(parsedOptions.fileId, {
           store_identifier: store.id,
         });
 
-        spinner.succeed(`File ${parsedOptions.fileId} deleted successfully`);
+        s.stop(`File ${parsedOptions.fileId} deleted successfully`);
       } catch (error) {
-        spinner?.fail("Failed to delete file");
-        if (error instanceof Error) {
-          console.error(chalk.red("\n✗"), error.message);
-        } else {
-          console.error(chalk.red("\n✗"), "Failed to delete file");
-        }
+        s.stop();
+        log.error(
+          error instanceof Error ? error.message : "Failed to delete file"
+        );
         process.exit(1);
       }
     }

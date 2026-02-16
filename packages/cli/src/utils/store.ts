@@ -1,11 +1,10 @@
+import { cancel, isCancel, select } from "@clack/prompts";
 import type { Mixedbread } from "@mixedbread/sdk";
 import type {
   FileListParams,
   Store,
   StoreFile,
 } from "@mixedbread/sdk/resources/stores";
-import chalk from "chalk";
-import inquirer from "inquirer";
 import { resolveStoreName } from "./config";
 
 export async function resolveStore(
@@ -29,9 +28,9 @@ export async function resolveStore(
   );
 
   if (fuzzyMatches.length === 0) {
-    console.error(chalk.red("✗"), `Store "${nameOrId}" not found.\n`);
-    console.error("Run 'mxbai store list' to see all stores.");
-    process.exit(1);
+    throw new Error(
+      `Store "${nameOrId}" not found.\nRun 'mxbai store list' to see all stores.`
+    );
   }
 
   if (fuzzyMatches.length === 1) {
@@ -40,26 +39,23 @@ export async function resolveStore(
 
   // Multiple fuzzy matches
   if (interactive) {
-    const { selected } = await inquirer.prompt([
-      {
-        type: "select",
-        name: "selected",
-        message: "Multiple stores found. Select one:",
-        choices: fuzzyMatches.map((store) => ({
-          name: `${store.name} (${store.id})`,
-          value: store,
-        })),
-      },
-    ]);
-    return selected;
-  } else {
-    console.error(chalk.red("✗"), `Store "${nameOrId}" not found.\n`);
-    console.log("Did you mean one of these?");
-    fuzzyMatches.forEach((store) => {
-      console.log(`  • ${store.name}`);
+    const selected = await select({
+      message: "Multiple stores found. Select one:",
+      options: fuzzyMatches.map((store) => ({
+        value: store,
+        label: `${store.name} (${store.id})`,
+      })),
     });
-    console.log("\nRun 'mxbai store list' to see all stores.");
-    process.exit(1);
+    if (isCancel(selected)) {
+      cancel("Operation cancelled.");
+      process.exit(0);
+    }
+    return selected as Store;
+  } else {
+    const suggestions = fuzzyMatches.map((store) => `  • ${store.name}`).join("\n");
+    throw new Error(
+      `Store "${nameOrId}" not found.\nDid you mean one of these?\n${suggestions}\n\nRun 'mxbai store list' to see all stores.`
+    );
   }
 }
 

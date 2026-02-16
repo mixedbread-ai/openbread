@@ -367,10 +367,7 @@ describe("Files Command", () => {
         "file_123",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "File not found"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "File not found");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
   });
@@ -418,10 +415,7 @@ describe("Files Command", () => {
         "--yes",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "API Error: Unauthorized"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "API Error: Unauthorized");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
@@ -437,10 +431,7 @@ describe("Files Command", () => {
         "--yes",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Failed to delete file"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Failed to delete file");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
   });
@@ -529,10 +520,7 @@ describe("Files Command", () => {
 
       await command.parseAsync(["node", "files", "list", "nonexistent-store"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Store not found"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Store not found");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
   });

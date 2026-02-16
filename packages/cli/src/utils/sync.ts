@@ -1,11 +1,11 @@
 import { statSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { log } from "@clack/prompts";
 import type Mixedbread from "@mixedbread/sdk";
 import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { glob } from "glob";
-import ora from "ora";
 import pLimit from "p-limit";
 import { getChangedFiles, normalizeGitPatterns } from "./git";
 import { calculateFileHash, hashesMatch } from "./hash";
@@ -290,21 +290,18 @@ export async function executeSyncChanges(
 
     const deletePromises: Promise<SyncResult>[] = filesToDelete.map((file) =>
       limit(async () => {
-        const deleteSpinner = ora(
-          `Deleting ${path.relative(process.cwd(), file.path)}`
-        ).start();
         try {
           await client.stores.files.delete(file.fileId!, {
             store_identifier: storeIdentifier,
           });
           completed++;
-          deleteSpinner.succeed(
+          log.success(
             `[${completed}/${totalOperations}] Deleted ${path.relative(process.cwd(), file.path)}`
           );
           return { file, success: true };
         } catch (error) {
           completed++;
-          deleteSpinner.fail(
+          log.error(
             `[${completed}/${totalOperations}] Failed to delete ${path.relative(process.cwd(), file.path)}: ${error instanceof Error ? error.message : "Unknown error"}`
           );
           return {
@@ -339,9 +336,6 @@ export async function executeSyncChanges(
 
     const uploadPromises: Promise<SyncResult>[] = filesToUpload.map((file) =>
       limit(async () => {
-        const uploadSpinner = ora(
-          `Uploading ${path.relative(process.cwd(), file.path)}`
-        ).start();
         try {
           // Calculate hash if not already done
           const fileHash =
@@ -364,7 +358,7 @@ export async function executeSyncChanges(
           const stats = statSync(file.path);
           if (stats.size === 0) {
             completed++;
-            uploadSpinner.warn(
+            log.warn(
               `[${completed}/${totalOperations}] Skipped empty file ${path.relative(process.cwd(), file.path)}`
             );
             return { file, success: false, skipped: true };
@@ -378,13 +372,13 @@ export async function executeSyncChanges(
           });
 
           completed++;
-          uploadSpinner.succeed(
+          log.success(
             `[${completed}/${totalOperations}] Uploaded ${path.relative(process.cwd(), file.path)}`
           );
           return { file, success: true };
         } catch (error) {
           completed++;
-          uploadSpinner.fail(
+          log.error(
             `[${completed}/${totalOperations}] Failed to upload ${path.relative(process.cwd(), file.path)}: ${error instanceof Error ? error.message : "Unknown error"}`
           );
           return {

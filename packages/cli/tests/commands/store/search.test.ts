@@ -543,8 +543,8 @@ describe("Store Search Command", () => {
 
       await command.parseAsync(["node", "search", "test-store", "query"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         "API Error: Rate limit exceeded"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -561,10 +561,7 @@ describe("Store Search Command", () => {
         "query",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Store not found"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Store not found");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
@@ -573,10 +570,7 @@ describe("Store Search Command", () => {
 
       await command.parseAsync(["node", "search", "test-store", "query"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Failed to search store"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Failed to search store");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
   });

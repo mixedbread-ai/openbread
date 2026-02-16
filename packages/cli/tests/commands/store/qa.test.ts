@@ -496,8 +496,8 @@ describe("QA Command", () => {
 
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         "API Error: Service unavailable"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -509,10 +509,7 @@ describe("QA Command", () => {
 
       await command.parseAsync(["node", "qa", "nonexistent-store", "question"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Store not found"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Store not found");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
@@ -521,8 +518,8 @@ describe("QA Command", () => {
 
       await command.parseAsync(["node", "qa", "test-store", "question"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         "Failed to process question"
       );
       expect(process.exit).toHaveBeenCalledWith(1);

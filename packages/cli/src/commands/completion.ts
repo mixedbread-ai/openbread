@@ -1,4 +1,5 @@
 import path from "node:path";
+import { log as clackLog, spinner } from "@clack/prompts";
 import {
   getShellFromEnv,
   install,
@@ -8,7 +9,6 @@ import {
 } from "@pnpm/tabtab";
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
 import {
   getCurrentKeyName,
   getStoresForCompletion,
@@ -172,16 +172,19 @@ export function createCompletionCommand(): Command {
     const parsedOptions = parseOptions(BaseGlobalOptionsSchema, {
       ...mergedOptions,
     });
-    const spinner = ora("Refreshing completion cache...").start();
+    const s = spinner();
+    s.start("Refreshing completion cache...");
 
     try {
       await refreshAllCaches(parsedOptions);
-      spinner.succeed("Completion cache refreshed successfully");
+      s.stop("Completion cache refreshed successfully");
     } catch (error) {
-      spinner.fail("Failed to refresh completion cache");
-      if (error instanceof Error) {
-        console.error(chalk.red("✗"), error.message);
-      }
+      s.stop();
+      clackLog.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to refresh completion cache"
+      );
     }
   });
 

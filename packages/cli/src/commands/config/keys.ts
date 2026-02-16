@@ -1,6 +1,6 @@
+import { cancel, confirm, isCancel, log, text } from "@clack/prompts";
 import chalk from "chalk";
 import { Command } from "commander";
-import inquirer from "inquirer";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
@@ -41,7 +41,7 @@ export function createKeysCommand(): Command {
       });
 
       if (!isMxbaiAPIKey(key)) {
-        console.error(chalk.red("✗"), 'API key must start with "mxb_"');
+        log.error('API key must start with "mxb_"');
         return;
       }
 
@@ -49,29 +49,28 @@ export function createKeysCommand(): Command {
 
       // Prompt for name if not provided
       if (!name) {
-        const response = await inquirer.prompt<{ name: string }>({
-          type: "input",
-          name: "name",
+        const nameResult = await text({
           message: "Enter a name for this API key (e.g., 'work', 'personal'):",
-          validate: (input: string) => {
-            if (!input.trim()) {
-              return "Name cannot be empty";
-            }
+          validate: (input) => {
+            if (!input.trim()) return "Name cannot be empty";
             if (config.api_keys?.[input.trim()]) {
               return `API key "${input.trim()}" already exists`;
             }
-            return true;
           },
         });
-        name = response.name.trim();
+        if (isCancel(nameResult)) {
+          cancel("Operation cancelled.");
+          process.exit(0);
+        }
+        name = nameResult.trim();
       } else {
         // Validate name if provided
         if (!name.trim()) {
-          console.error(chalk.red("✗"), "Name cannot be empty");
+          log.error("Name cannot be empty");
           return;
         }
         if (config.api_keys?.[name]) {
-          console.error(chalk.red("✗"), `API key "${name}" already exists`);
+          log.error(`API key "${name}" already exists`);
           return;
         }
       }
@@ -90,10 +89,7 @@ export function createKeysCommand(): Command {
 
       saveConfig(config);
 
-      console.log(
-        chalk.green("✓"),
-        `API key "${name}" saved and set as default`
-      );
+      log.success(`API key "${name}" saved and set as default`);
 
       // Populate completion cache for the new key
       const client = createClient({
@@ -133,10 +129,7 @@ export function createKeysCommand(): Command {
       const config = loadConfig();
 
       if (!config.api_keys?.[parsedOptions.name]) {
-        console.error(
-          chalk.red("✗"),
-          `No API key found with name "${parsedOptions.name}"`
-        );
+        log.error(`No API key found with name "${parsedOptions.name}"`);
 
         if (config.api_keys && Object.keys(config.api_keys).length > 0) {
           console.log("\nAvailable API keys:");
@@ -149,15 +142,12 @@ export function createKeysCommand(): Command {
 
       // Confirm removal unless yes flag is used
       if (!parsedOptions.yes) {
-        const response = await inquirer.prompt<{ confirm: boolean }>({
-          type: "confirm",
-          name: "confirm",
+        const confirmed = await confirm({
           message: `Remove API key "${parsedOptions.name}"${isDefault ? " (currently default)" : ""}?`,
-          default: false,
         });
 
-        if (!response.confirm) {
-          console.log(chalk.yellow("Removal cancelled."));
+        if (isCancel(confirmed) || !confirmed) {
+          log.warn("Removal cancelled.");
           return;
         }
       }
@@ -175,15 +165,9 @@ export function createKeysCommand(): Command {
         }
 
         saveConfig(config);
-        console.log(
-          chalk.green("✓"),
-          `API key "${parsedOptions.name}" removed`
-        );
+        log.success(`API key "${parsedOptions.name}" removed`);
 
-        console.log(
-          chalk.yellow("⚠"),
-          "No default API key set. Set a new default:"
-        );
+        log.warn("No default API key set. Set a new default:");
         if (Object.keys(config.api_keys).length > 0) {
           Object.keys(config.api_keys).forEach((keyName) => {
             console.log(`    mxbai config keys set-default ${keyName}`);
@@ -193,10 +177,7 @@ export function createKeysCommand(): Command {
         }
       } else {
         saveConfig(config);
-        console.log(
-          chalk.green("✓"),
-          `API key "${parsedOptions.name}" removed`
-        );
+        log.success(`API key "${parsedOptions.name}" removed`);
       }
     });
 
@@ -212,7 +193,7 @@ export function createKeysCommand(): Command {
       const config = loadConfig();
 
       if (!config.api_keys?.[name]) {
-        console.error(chalk.red("✗"), `No API key found with name "${name}"`);
+        log.error(`No API key found with name "${name}"`);
 
         if (config.api_keys && Object.keys(config.api_keys).length > 0) {
           console.log("\nAvailable API keys:");
@@ -227,7 +208,7 @@ export function createKeysCommand(): Command {
       config.defaults.api_key = name;
 
       saveConfig(config);
-      console.log(chalk.green("✓"), `"${name}" set as default API key`);
+      log.success(`"${name}" set as default API key`);
 
       // Refresh cache for the newly set default key
       const client = createClient({

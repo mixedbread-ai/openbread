@@ -288,8 +288,8 @@ describe("Store List Command", () => {
 
       await command.parseAsync(["node", "list"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         "API Error: Rate limit exceeded"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -301,10 +301,7 @@ describe("Store List Command", () => {
 
       await command.parseAsync(["node", "list"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "ECONNREFUSED"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "ECONNREFUSED");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
@@ -313,10 +310,7 @@ describe("Store List Command", () => {
 
       await command.parseAsync(["node", "list"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Failed to list stores"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Failed to list stores");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
   });

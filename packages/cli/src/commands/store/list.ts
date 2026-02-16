@@ -1,6 +1,5 @@
-import chalk from "chalk";
+import { log, spinner } from "@clack/prompts";
 import { Command } from "commander";
-import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
@@ -44,7 +43,7 @@ export function createListCommand(): Command {
   );
 
   command.action(async (options: ListOptions) => {
-    let spinner: Ora;
+    const s = spinner();
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);
@@ -54,7 +53,7 @@ export function createListCommand(): Command {
       );
 
       const client = createClient(parsedOptions);
-      spinner = ora("Loading stores...").start();
+      s.start("Loading stores...");
       const response = await client.stores.list({
         limit: parsedOptions.limit || 100,
       });
@@ -70,7 +69,8 @@ export function createListCommand(): Command {
       }
 
       if (stores.length === 0) {
-        spinner.info("No stores found.");
+        s.stop();
+        log.info("No stores found.");
         return;
       }
 
@@ -87,7 +87,7 @@ export function createListCommand(): Command {
         created: new Date(store.created_at).toLocaleDateString(),
       }));
 
-      spinner.succeed(`Found ${formatCountWithSuffix(stores.length, "store")}`);
+      s.stop(`Found ${formatCountWithSuffix(stores.length, "store")}`);
       formatOutput(formattedData, parsedOptions.format);
 
       // Update completion cache with the fetched stores
@@ -96,12 +96,10 @@ export function createListCommand(): Command {
         refreshCacheForKey(keyName, client);
       }
     } catch (error) {
-      spinner?.fail("Failed to load stores");
-      if (error instanceof Error) {
-        console.error(chalk.red("\n✗"), error.message);
-      } else {
-        console.error(chalk.red("\n✗"), "Failed to list stores");
-      }
+      s.stop();
+      log.error(
+        error instanceof Error ? error.message : "Failed to list stores"
+      );
       process.exit(1);
     }
   });

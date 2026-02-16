@@ -1,6 +1,5 @@
-import chalk from "chalk";
+import { log, spinner } from "@clack/prompts";
 import { Command } from "commander";
-import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
@@ -27,7 +26,7 @@ export function createGetCommand(): Command {
   );
 
   command.action(async (nameOrId: string, options: GetOptions) => {
-    let spinner: Ora;
+    const s = spinner();
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);
@@ -38,10 +37,10 @@ export function createGetCommand(): Command {
       });
 
       const client = createClient(parsedOptions);
-      spinner = ora("Loading store details...").start();
+      s.start("Loading store details...");
       const store = await resolveStore(client, parsedOptions.nameOrId);
 
-      spinner.succeed("Store details loaded");
+      s.stop("Store details loaded");
 
       const formattedData = {
         name: store.name,
@@ -68,12 +67,10 @@ export function createGetCommand(): Command {
 
       formatOutput(formattedData, parsedOptions.format);
     } catch (error) {
-      spinner?.fail("Failed to load store details");
-      if (error instanceof Error) {
-        console.error(chalk.red("\n✗"), error.message);
-      } else {
-        console.error(chalk.red("\n✗"), "Failed to get store details");
-      }
+      s.stop();
+      log.error(
+        error instanceof Error ? error.message : "Failed to get store details"
+      );
       process.exit(1);
     }
   });

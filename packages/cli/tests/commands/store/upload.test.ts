@@ -180,6 +180,7 @@ describe("Store Upload Command", () => {
       ]);
 
       expect(console.log).toHaveBeenCalledWith(
+        "⚠",
         expect.stringContaining("No files found matching the patterns")
       );
     });
@@ -187,8 +188,8 @@ describe("Store Upload Command", () => {
     it("should error when no patterns provided", async () => {
       await command.parseAsync(["node", "upload", "test-store"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         "No file patterns provided. Use --manifest for manifest-based uploads."
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -284,7 +285,7 @@ describe("Store Upload Command", () => {
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("✗"),
+        expect.any(String),
         expect.stringContaining("Invalid JSON in metadata option")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -403,8 +404,8 @@ describe("Store Upload Command", () => {
         "--unique",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("✗"),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining("List failed")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -489,10 +490,7 @@ describe("Store Upload Command", () => {
 
       await command.parseAsync(["node", "upload", "invalid-store", "*.md"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Store not found"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Store not found");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 

@@ -258,12 +258,7 @@ describe("Store Update Command", () => {
 
       mockClient.stores.update.mockResolvedValue(updatedStore);
 
-      await command.parseAsync([
-        "node",
-        "update",
-        "test-store",
-        "--public",
-      ]);
+      await command.parseAsync(["node", "update", "test-store", "--public"]);
 
       expect(mockClient.stores.update).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440060",
@@ -386,7 +381,7 @@ describe("Store Update Command", () => {
       ]);
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("✗"),
+        expect.any(String),
         expect.stringContaining("Invalid JSON in metadata option")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -522,8 +517,8 @@ describe("Store Update Command", () => {
     it("should require at least one update field", async () => {
       await command.parseAsync(["node", "update", "test-store"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining(
           "No update fields provided. Use --name, --description, --public, or --metadata"
         )
@@ -555,10 +550,7 @@ describe("Store Update Command", () => {
         "new-name",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "API Error: Unauthorized"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "API Error: Unauthorized");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
@@ -574,10 +566,7 @@ describe("Store Update Command", () => {
         "new-name",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Store not found"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Store not found");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
@@ -592,10 +581,7 @@ describe("Store Update Command", () => {
         "new-name",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Failed to update store"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Failed to update store");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
   });

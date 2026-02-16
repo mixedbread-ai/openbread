@@ -114,18 +114,14 @@ describe("Store Utils", () => {
       );
       mockClient.stores.list.mockResolvedValue({ data: [] });
 
-      await resolveStore(
-        mockClient as unknown as Mixedbread,
-        "550e8400-e29b-41d4-a716-446655440002"
-      );
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining(
-          'Store "550e8400-e29b-41d4-a716-446655440002" not found'
+      await expect(
+        resolveStore(
+          mockClient as unknown as Mixedbread,
+          "550e8400-e29b-41d4-a716-446655440002"
         )
+      ).rejects.toThrow(
+        'Store "550e8400-e29b-41d4-a716-446655440002" not found'
       );
-      expect(process.exit).toHaveBeenCalledWith(1);
     });
 
     it("should handle store not found by name", async () => {
@@ -139,15 +135,12 @@ describe("Store Utils", () => {
         ],
       });
 
-      await resolveStore(
-        mockClient as unknown as Mixedbread,
-        "nonexistent-store"
-      );
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining('Store "nonexistent-store" not found')
-      );
+      await expect(
+        resolveStore(
+          mockClient as unknown as Mixedbread,
+          "nonexistent-store"
+        )
+      ).rejects.toThrow('Store "nonexistent-store" not found');
     });
 
     it("should handle empty store list", async () => {
@@ -156,12 +149,9 @@ describe("Store Utils", () => {
 
       mockClient.stores.list.mockResolvedValue({ data: [] });
 
-      await resolveStore(mockClient as unknown as Mixedbread, "any-store");
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining('Store "any-store" not found')
-      );
+      await expect(
+        resolveStore(mockClient as unknown as Mixedbread, "any-store")
+      ).rejects.toThrow('Store "any-store" not found');
     });
 
     it("should handle API errors when listing", async () => {
@@ -219,10 +209,12 @@ describe("Store Utils", () => {
       mockClient.stores.retrieve.mockRejectedValue(new Error("Not found"));
       mockClient.stores.list.mockResolvedValue({ data: [] });
 
-      await resolveStore(
-        mockClient as unknown as Mixedbread,
-        "550e8400-e29b-41d4-a716-446655440003"
-      );
+      await expect(
+        resolveStore(
+          mockClient as unknown as Mixedbread,
+          "550e8400-e29b-41d4-a716-446655440003"
+        )
+      ).rejects.toThrow();
 
       expect(mockClient.stores.retrieve).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440003"

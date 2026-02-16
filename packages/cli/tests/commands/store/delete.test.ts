@@ -100,10 +100,7 @@ describe("Delete Command", () => {
 
       await command.parseAsync(["node", "delete", "test-store", "--yes"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "API Error: Unauthorized"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "API Error: Unauthorized");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
@@ -118,10 +115,7 @@ describe("Delete Command", () => {
         "--yes",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Store not found"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Store not found");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
@@ -130,10 +124,7 @@ describe("Delete Command", () => {
 
       await command.parseAsync(["node", "delete", "test-store", "--yes"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Failed to delete store"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Failed to delete store");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
   });

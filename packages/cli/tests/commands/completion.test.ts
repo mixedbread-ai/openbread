@@ -35,12 +35,6 @@ jest.mock("chalk", () => ({
   },
 }));
 
-// Mock ora
-jest.mock("ora", () => ({
-  __esModule: true,
-  default: jest.fn(),
-}));
-
 // Mock completion-cache module
 jest.mock("../../src/utils/completion-cache", () => ({
   getCurrentKeyName: jest.fn(() => "test-key"),
@@ -374,28 +368,12 @@ describe("Completion Commands", () => {
       let mockRefreshAllCaches: jest.MockedFunction<
         typeof import("../../src/utils/completion-cache").refreshAllCaches
       >;
-      let mockSpinner: {
-        start: jest.MockedFunction<(text?: string) => unknown>;
-        succeed: jest.MockedFunction<(text?: string) => unknown>;
-        fail: jest.MockedFunction<(text?: string) => unknown>;
-      };
 
       beforeEach(() => {
         const completionCache = jest.mocked(
           require("../../src/utils/completion-cache")
         );
         mockRefreshAllCaches = completionCache.refreshAllCaches;
-
-        // Setup ora mock
-        mockSpinner = {
-          start: jest.fn().mockReturnThis(),
-          succeed: jest.fn().mockReturnThis(),
-          fail: jest.fn().mockReturnThis(),
-        };
-        const ora = require("ora").default;
-        (ora as jest.MockedFunction<typeof ora>).mockImplementation(
-          () => mockSpinner
-        );
       });
 
       it("should refresh completion cache successfully", async () => {
@@ -405,9 +383,8 @@ describe("Completion Commands", () => {
         await parseCommand(command, ["refresh"]);
 
         expect(mockRefreshAllCaches).toHaveBeenCalled();
-        expect(mockSpinner.start).toHaveBeenCalled();
-        expect(mockSpinner.succeed).toHaveBeenCalledWith(
-          "Completion cache refreshed successfully"
+        expect(mockConsoleOutput.logs).toContainEqual(
+          expect.stringContaining("Completion cache refreshed successfully")
         );
       });
 
@@ -418,10 +395,7 @@ describe("Completion Commands", () => {
         const command = createCompletionCommand();
         await parseCommand(command, ["refresh"]);
 
-        expect(mockSpinner.fail).toHaveBeenCalledWith(
-          "Failed to refresh completion cache"
-        );
-        expect(mockConsoleOutput.errors).toContainEqual(
+        expect(mockConsoleOutput.logs).toContainEqual(
           expect.stringContaining(errorMessage)
         );
       });

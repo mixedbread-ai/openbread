@@ -1,6 +1,5 @@
-import chalk from "chalk";
+import { log, spinner } from "@clack/prompts";
 import { Command } from "commander";
-import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../../utils/client";
 import {
@@ -28,7 +27,7 @@ export function createGetCommand(): Command {
 
   getCommand.action(
     async (nameOrId: string, fileId: string, options: GlobalOptions) => {
-      let spinner: Ora;
+      const s = spinner();
 
       try {
         const mergedOptions = mergeCommandOptions(getCommand, options);
@@ -40,14 +39,14 @@ export function createGetCommand(): Command {
         });
 
         const client = createClient(parsedOptions);
-        spinner = ora("Loading file details...").start();
+        s.start("Loading file details...");
         const store = await resolveStore(client, parsedOptions.nameOrId);
 
         const file = await client.stores.files.retrieve(parsedOptions.fileId, {
           store_identifier: store.id,
         });
 
-        spinner.succeed("File details loaded");
+        s.stop("File details loaded");
 
         const formattedData = {
           id: file.id,
@@ -63,12 +62,10 @@ export function createGetCommand(): Command {
 
         formatOutput(formattedData, parsedOptions.format);
       } catch (error) {
-        spinner.fail("Failed to load file details");
-        if (error instanceof Error) {
-          console.error(chalk.red("\n✗"), error.message);
-        } else {
-          console.error(chalk.red("\n✗"), "Failed to get file details");
-        }
+        s.stop();
+        log.error(
+          error instanceof Error ? error.message : "Failed to get file details"
+        );
         process.exit(1);
       }
     }

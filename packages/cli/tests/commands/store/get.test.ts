@@ -226,10 +226,7 @@ describe("Store Get Command", () => {
 
       await command.parseAsync(["node", "get", "nonexistent-store"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Store not found"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Store not found");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
@@ -238,8 +235,8 @@ describe("Store Get Command", () => {
 
       await command.parseAsync(["node", "get", "test-store"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         "Failed to get store details"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
