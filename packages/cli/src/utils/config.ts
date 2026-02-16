@@ -210,7 +210,7 @@ export function getApiKey(options?: {
       throw new Error(
         `${chalk.yellow("Migration Required")}\n` +
           "The API key storage format has changed. Please migrate your existing API key:\n" +
-          `  ${chalk.cyan("  mxbai config keys add <your-current-key> <name>")}\n\n` +
+          `${chalk.cyan("  mxbai config keys add <your-current-key> <name>")}\n\n` +
           "Your current key will not work until migrated."
       );
     }
@@ -231,7 +231,7 @@ export function getApiKey(options?: {
         "Available API keys:\n" +
         formatAvailableKeys(config) +
         "\n\nSet a default API key:\n" +
-        `  ${chalk.cyan("  mxbai config keys set-default <name>")}`
+        `${chalk.cyan("  mxbai config keys set-default <name>")}`
     );
   }
 
