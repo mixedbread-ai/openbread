@@ -197,24 +197,22 @@ export function getApiKey(options?: {
 
   // Check for old format and prompt for migration
   if (existsSync(CONFIG_FILE)) {
+    let rawConfig: Record<string, unknown> | undefined;
     try {
-      const rawConfig = JSON.parse(readFileSync(CONFIG_FILE, "utf-8"));
-      if (
-        rawConfig.api_key &&
-        Object.keys(rawConfig.api_keys || {}).length === 0
-      ) {
-        throw new Error(
-          `${chalk.yellow("Migration Required")}\n` +
-            "The API key storage format has changed. Please migrate your existing API key:\n" +
-            `  ${chalk.cyan("  mxbai config keys add <your-current-key> <name>")}\n\n` +
-            "Your current key will not work until migrated."
-        );
-      }
-    } catch (error) {
-      if (error instanceof Error && error.message.startsWith("Migration")) {
-        throw error;
-      }
+      rawConfig = JSON.parse(readFileSync(CONFIG_FILE, "utf-8"));
+    } catch {
       // If we can't read the config file, continue with normal flow
+    }
+    if (
+      rawConfig?.api_key &&
+      Object.keys(rawConfig.api_keys || {}).length === 0
+    ) {
+      throw new Error(
+        `${chalk.yellow("Migration Required")}\n` +
+          "The API key storage format has changed. Please migrate your existing API key:\n" +
+          `  ${chalk.cyan("  mxbai config keys add <your-current-key> <name>")}\n\n` +
+          "Your current key will not work until migrated."
+      );
     }
   }
 
@@ -316,16 +314,7 @@ export function parseConfigValue(key: string, value: string) {
 }
 
 export function outputAvailableKeys(config?: CLIConfig) {
-  if (!config) {
-    config = loadConfig();
-  }
-
-  Object.keys(config.api_keys).forEach((name) => {
-    const isDefault = config.defaults?.api_key === name;
-    console.log(
-      `  ${isDefault ? "*" : " "} ${name}${isDefault ? " (default)" : ""}`
-    );
-  });
+  console.log(formatAvailableKeys(config ?? loadConfig()));
 }
 
 function truncateApiKey(apiKey: string): string {
