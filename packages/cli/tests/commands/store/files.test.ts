@@ -245,8 +245,8 @@ describe("Files Command", () => {
         "-5",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"limit" must be positive')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -262,8 +262,8 @@ describe("Files Command", () => {
         "invalid",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining(
           '"status" must be one of: all, completed, in_progress, failed'
         )
@@ -440,8 +440,8 @@ describe("Files Command", () => {
     it("should validate required name-or-id argument for list", async () => {
       await command.parseAsync(["node", "files", "list", ""]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"name-or-id" is required')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -450,8 +450,8 @@ describe("Files Command", () => {
     it("should validate required file-id argument for get", async () => {
       await command.parseAsync(["node", "files", "get", "test-store", ""]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"file-id" is required')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -467,8 +467,8 @@ describe("Files Command", () => {
         "--yes",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"file-id" is required')
       );
       expect(process.exit).toHaveBeenCalledWith(1);

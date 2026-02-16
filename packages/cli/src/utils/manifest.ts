@@ -128,7 +128,7 @@ export async function uploadFromManifest(
     }
 
     if (resolvedFiles.length === 0) {
-      log.warn("No files found matching manifest patterns.");
+      console.log(chalk.yellow("No files found matching manifest patterns."));
       return;
     }
 
@@ -209,15 +209,11 @@ export async function uploadFromManifest(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      log.error("Invalid manifest file format:");
-      error.issues.forEach((err) => {
-        console.error(chalk.red(`  - ${err.path.join(".")}: ${err.message}`));
-      });
-    } else if (error instanceof Error) {
-      log.error(error.message);
-    } else {
-      log.error("Failed to process manifest file");
+      const details = error.issues
+        .map((err) => `  - ${err.path.join(".")}: ${err.message}`)
+        .join("\n");
+      throw new Error(`Invalid manifest file format:\n${details}`);
     }
-    process.exit(1);
+    throw error;
   }
 }

@@ -175,8 +175,8 @@ describe("Store Sync Command", () => {
     it("should validate required arguments", async () => {
       await command.parseAsync(["node", "sync"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining("required")
       );
     });

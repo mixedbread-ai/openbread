@@ -380,8 +380,8 @@ describe("Store Update Command", () => {
         "invalid-json",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining("Invalid JSON in metadata option")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -491,8 +491,8 @@ describe("Store Update Command", () => {
         "-5",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"expires-after" must be positive')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -507,8 +507,8 @@ describe("Store Update Command", () => {
         "5.5",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"expires-after" must be an integer')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -529,8 +529,8 @@ describe("Store Update Command", () => {
     it("should validate required name-or-id argument", async () => {
       await command.parseAsync(["node", "update", "", "--name", "new-name"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"name-or-id" is required')
       );
       expect(process.exit).toHaveBeenCalledWith(1);

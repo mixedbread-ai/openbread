@@ -211,8 +211,8 @@ describe("Store List Command", () => {
     it("should validate limit is positive", async () => {
       await command.parseAsync(["node", "list", "--limit", "-5"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"limit" must be positive')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -393,8 +393,8 @@ describe("Store List Command", () => {
         "not-a-valid-url",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"base-url" must be a valid URL')
       );
       expect(process.exit).toHaveBeenCalledWith(1);

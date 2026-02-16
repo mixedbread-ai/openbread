@@ -284,9 +284,9 @@ describe("Store Upload Command", () => {
         "invalid-json",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining("Invalid JSON in metadata option")
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
+        "Invalid JSON in metadata option"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -301,8 +301,8 @@ describe("Store Upload Command", () => {
         "201",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"parallel" must be less than or equal to 200')
       );
       expect(process.exit).toHaveBeenCalledWith(1);

@@ -283,8 +283,8 @@ describe("Store Get Command", () => {
     it("should validate required name-or-id argument", async () => {
       await command.parseAsync(["node", "get", ""]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"name-or-id" is required')
       );
       expect(process.exit).toHaveBeenCalledWith(1);

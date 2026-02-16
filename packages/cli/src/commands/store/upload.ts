@@ -95,12 +95,12 @@ export function createUploadCommand(): Command {
         }
 
         const client = createClient(parsedOptions);
-        const s = spinner();
-        s.start("Initializing upload...");
+        const initializeSpinner = spinner();
+        initializeSpinner.start("Initializing upload...");
         const store = await resolveStore(client, parsedOptions.nameOrId);
         const config = loadConfig();
 
-        s.stop("Upload initialized");
+        initializeSpinner.stop("Upload initialized");
 
         // Handle manifest file upload
         if (parsedOptions.manifest) {

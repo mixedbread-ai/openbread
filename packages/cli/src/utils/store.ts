@@ -1,4 +1,4 @@
-import { cancel, isCancel, select } from "@clack/prompts";
+import { isCancel, select } from "@clack/prompts";
 import type { Mixedbread } from "@mixedbread/sdk";
 import type {
   FileListParams,
@@ -47,12 +47,13 @@ export async function resolveStore(
       })),
     });
     if (isCancel(selected)) {
-      cancel("Operation cancelled.");
-      process.exit(0);
+      throw new Error("Operation cancelled.");
     }
     return selected as Store;
   } else {
-    const suggestions = fuzzyMatches.map((store) => `  • ${store.name}`).join("\n");
+    const suggestions = fuzzyMatches
+      .map((store) => `  • ${store.name}`)
+      .join("\n");
     throw new Error(
       `Store "${nameOrId}" not found.\nDid you mean one of these?\n${suggestions}\n\nRun 'mxbai store list' to see all stores.`
     );

@@ -431,8 +431,8 @@ describe("Store Search Command", () => {
     it("should validate required name-or-id argument", async () => {
       await command.parseAsync(["node", "search", "", "query"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"name-or-id" is required')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -441,8 +441,8 @@ describe("Store Search Command", () => {
     it("should validate required query argument", async () => {
       await command.parseAsync(["node", "search", "test-store", ""]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"query" is required')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -458,8 +458,8 @@ describe("Store Search Command", () => {
         "-5",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"top-k" must be positive')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -475,8 +475,8 @@ describe("Store Search Command", () => {
         "5.5",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"top-k" must be an integer')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -492,8 +492,8 @@ describe("Store Search Command", () => {
         "150",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"top-k" must be less than or equal to 100')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -509,8 +509,8 @@ describe("Store Search Command", () => {
         "-0.1",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining(
           '"threshold" must be greater than or equal to 0'
         )
@@ -528,8 +528,8 @@ describe("Store Search Command", () => {
         "1.5",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"threshold" must be less than or equal to 1')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
