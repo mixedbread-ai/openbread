@@ -1,7 +1,7 @@
+import { confirm, isCancel, log, spinner } from "@clack/prompts";
 import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { Command } from "commander";
-import ora from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { warnContextualizationDeprecated } from "../../utils/deprecation";
@@ -98,18 +98,17 @@ export function createSyncCommand(): Command {
 
         const client = createClient(parsedOptions);
 
-        console.log(chalk.bold.blue("🔄 Starting Store Sync\n"));
+        console.log(chalk.bold.blue("🔄 Starting Store Sync"));
 
         if (parsedOptions.contextualization) {
           warnContextualizationDeprecated("store sync");
         }
 
         // Step 0: Resolve store
-        const resolveSpinner = ora(
-          `Looking up store "${parsedOptions.nameOrId}"...`
-        ).start();
+        const resolveSpinner = spinner();
+        resolveSpinner.start(`Looking up store "${parsedOptions.nameOrId}"...`);
         const store = await resolveStore(client, parsedOptions.nameOrId);
-        resolveSpinner.succeed(`Found store: ${store.name}`);
+        resolveSpinner.stop(`Found store: ${store.name}`);
 
         // Parse metadata if provided
         const additionalMetadata = validateMetadata(parsedOptions.metadata);
@@ -117,45 +116,32 @@ export function createSyncCommand(): Command {
         // Get git info
         const gitInfo = await getGitInfo();
 
-        const spinner = ora("Loading existing files from store...").start();
+        const loadSpinner = spinner();
+        loadSpinner.start("Loading existing files from store...");
 
         const syncedFiles = await getSyncedFiles(client, store.id);
 
-        spinner.succeed(
+        loadSpinner.stop(
           `Found ${formatCountWithSuffix(syncedFiles.size, "existing file")} in store`
         );
 
         const fromGit = parsedOptions.fromGit;
 
         if (parsedOptions.force) {
-          console.log(
-            chalk.green(
-              "✓ Force upload enabled - all files will be re-uploaded"
-            )
-          );
+          log.success("Force upload enabled - all files will be re-uploaded");
         } else if (fromGit && gitInfo.isRepo) {
-          console.log(
-            chalk.green(
-              `✓ Git-based detection enabled (from commit ${fromGit.substring(0, 7)})`
-            )
+          log.success(
+            `Git-based detection enabled (from commit ${fromGit.substring(0, 7)})`
           );
         } else if (fromGit && !gitInfo.isRepo) {
-          console.error(
-            chalk.red("✗"),
-            "--from-git specified but not in a git repository"
-          );
+          log.error("--from-git specified but not in a git repository");
           process.exit(1);
         } else {
-          console.log(
-            chalk.green(
-              "✓ Hash-based detection enabled (comparing file contents)"
-            )
-          );
+          log.success("Hash-based detection enabled (comparing file contents)");
         }
 
-        const analyzeSpinner = ora(
-          "Scanning files and detecting changes..."
-        ).start();
+        const analyzeSpinner = spinner();
+        analyzeSpinner.start("Scanning files and detecting changes...");
         const analysis = await analyzeChanges({
           patterns,
           syncedFiles,
@@ -164,7 +150,7 @@ export function createSyncCommand(): Command {
           forceUpload: parsedOptions.force,
         });
 
-        analyzeSpinner.succeed("Change analysis complete");
+        analyzeSpinner.stop("Change analysis complete");
 
         const totalChanges =
           analysis.added.length +
@@ -172,9 +158,7 @@ export function createSyncCommand(): Command {
           analysis.deleted.length;
 
         if (totalChanges === 0) {
-          console.log(
-            chalk.green("✓ Store is already in sync - no changes needed!")
-          );
+          log.success("Store is already in sync - no changes needed!");
           return;
         }
 
@@ -202,22 +186,16 @@ export function createSyncCommand(): Command {
 
         // Confirm changes unless yes flag is set
         if (!parsedOptions.yes) {
-          const { default: inquirer } = await import("inquirer");
-          const { proceed } = await inquirer.prompt([
-            {
-              type: "confirm",
-              name: "proceed",
-              message: "Apply these changes to the store?",
-              default: false,
-            },
-          ]);
+          const proceed = await confirm({
+            message: "Apply these changes to the store?",
+          });
 
-          if (!proceed) {
-            console.log(chalk.yellow("Sync cancelled by user"));
+          if (isCancel(proceed) || !proceed) {
+            log.warn("Sync cancelled by user");
             return;
           }
         } else if (parsedOptions.yes) {
-          console.log(chalk.green("✓ Auto-proceeding with --yes flag"));
+          log.success("Auto-proceeding with --yes flag");
         }
 
         // Execute changes
@@ -239,9 +217,9 @@ export function createSyncCommand(): Command {
         });
       } catch (error) {
         if (error instanceof Error) {
-          console.error(chalk.red("\n✗"), error.message);
+          log.error(error.message);
         } else {
-          console.error(chalk.red("\n✗"), "Failed to sync store");
+          log.error("Failed to sync store");
         }
         process.exit(1);
       }

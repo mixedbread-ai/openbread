@@ -1,10 +1,8 @@
-import chalk from "chalk";
-
 /**
  * Validates and parses a JSON metadata string
  * @param metadataString The JSON string to parse
  * @returns Parsed metadata object or undefined if input is undefined
- * @throws Exits process with code 1 if JSON is invalid
+ * @throws Error if JSON is invalid
  */
 export function validateMetadata(
   metadataString?: string
@@ -16,7 +14,6 @@ export function validateMetadata(
   try {
     return JSON.parse(metadataString);
   } catch (_error) {
-    console.error(chalk.red("\n✗"), "Invalid JSON in metadata option\n");
-    process.exit(1);
+    throw new Error("Invalid JSON in metadata option");
   }
 }

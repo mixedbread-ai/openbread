@@ -226,10 +226,7 @@ describe("Store Get Command", () => {
 
       await command.parseAsync(["node", "get", "nonexistent-store"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Store not found"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Store not found");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
@@ -238,8 +235,8 @@ describe("Store Get Command", () => {
 
       await command.parseAsync(["node", "get", "test-store"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         "Failed to get store details"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -286,8 +283,8 @@ describe("Store Get Command", () => {
     it("should validate required name-or-id argument", async () => {
       await command.parseAsync(["node", "get", ""]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"name-or-id" is required')
       );
       expect(process.exit).toHaveBeenCalledWith(1);

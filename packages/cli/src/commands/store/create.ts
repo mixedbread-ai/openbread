@@ -1,6 +1,5 @@
-import chalk from "chalk";
+import { log, spinner } from "@clack/prompts";
 import { Command } from "commander";
-import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
@@ -58,7 +57,7 @@ export function createCreateCommand(): Command {
   );
 
   command.action(async (name: string, options: CreateOptions) => {
-    let spinner: Ora;
+    const createSpinner = spinner();
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);
@@ -71,7 +70,7 @@ export function createCreateCommand(): Command {
 
       const metadata = validateMetadata(parsedOptions.metadata);
 
-      spinner = ora("Creating store...").start();
+      createSpinner.start("Creating store...");
 
       const store = await client.stores.create({
         name: parsedOptions.name,
@@ -87,7 +86,7 @@ export function createCreateCommand(): Command {
         metadata,
       });
 
-      spinner.succeed(`Store "${name}" created successfully`);
+      createSpinner.stop(`Store "${name}" created successfully`);
 
       formatOutput(
         {
@@ -111,12 +110,10 @@ export function createCreateCommand(): Command {
         updateCacheAfterCreate(keyName, store.name);
       }
     } catch (error) {
-      spinner?.fail("Failed to create store");
-      if (error instanceof Error) {
-        console.error(chalk.red("\n✗"), error.message);
-      } else {
-        console.error(chalk.red("\n✗"), "Failed to create store");
-      }
+      createSpinner.stop();
+      log.error(
+        error instanceof Error ? error.message : "Failed to create store"
+      );
       process.exit(1);
     }
   });

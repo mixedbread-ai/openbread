@@ -175,22 +175,10 @@ describe("Config Utils", () => {
       expect(apiKey).toBe("mxb_cli123");
     });
 
-    it("should exit with error when --api-key has invalid format", () => {
-      // Mock process.exit to throw an error to stop execution
-      const mockExit = jest.fn().mockImplementation(() => {
-        throw new Error("process.exit called");
-      });
-      process.exit = mockExit as never;
-
+    it("should throw error when --api-key has invalid format", () => {
       expect(() => {
         getApiKey({ apiKey: "invalid_key_format" });
-      }).toThrow("process.exit called");
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Invalid API key format. API keys must start with 'mxb_'."
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      }).toThrow("Invalid API key format. API keys must start with 'mxb_'.");
     });
 
     it("should resolve API key name from --saved-key option", () => {
@@ -248,7 +236,7 @@ describe("Config Utils", () => {
       expect(apiKey).toBe("mxb_work123");
     });
 
-    it("should prompt for migration when old format detected", () => {
+    it("should throw error for migration when old format detected", () => {
       delete process.env.MXBAI_API_KEY;
       mockFs({
         [configFile]: JSON.stringify({
@@ -258,15 +246,12 @@ describe("Config Utils", () => {
         }),
       });
 
-      getApiKey();
-
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("⚠  Migration Required")
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(() => {
+        getApiKey();
+      }).toThrow("Migration Required");
     });
 
-    it("should show available keys when no default set", () => {
+    it("should throw error with available keys when no default set", () => {
       delete process.env.MXBAI_API_KEY;
       mockFs({
         [configFile]: JSON.stringify({
@@ -278,17 +263,12 @@ describe("Config Utils", () => {
         }),
       });
 
-      getApiKey();
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "No default API key set.\n"
-      );
-      expect(console.log).toHaveBeenCalledWith("Available API keys:");
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(() => {
+        getApiKey();
+      }).toThrow("No default API key set.");
     });
 
-    it("should exit with error when saved API key name not found", () => {
+    it("should throw error when saved API key name not found", () => {
       mockFs({
         [configFile]: JSON.stringify({
           version: "1.0",
@@ -298,24 +278,12 @@ describe("Config Utils", () => {
         }),
       });
 
-      // Mock process.exit to throw an error to stop execution
-      const mockExit = jest.fn().mockImplementation(() => {
-        throw new Error("process.exit called");
-      });
-      process.exit = mockExit as never;
-
       expect(() => {
         getApiKey({ savedKey: "nonexistent" });
-      }).toThrow("process.exit called");
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        'No saved API key found with name "nonexistent".'
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      }).toThrow('No saved API key found with name "nonexistent".');
     });
 
-    it("should exit with error when no API key found", () => {
+    it("should throw error when no API key found", () => {
       delete process.env.MXBAI_API_KEY;
       mockFs({
         [configFile]: JSON.stringify({
@@ -324,13 +292,9 @@ describe("Config Utils", () => {
         }),
       });
 
-      getApiKey();
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "No API key found.\n"
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(() => {
+        getApiKey();
+      }).toThrow("No API key found.");
     });
   });
 
@@ -472,51 +436,27 @@ describe("Config Utils", () => {
     });
 
     it("should validate URL format", () => {
-      parseConfigValue("base_url", "invalid_url");
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining("Invalid value for base_url:")
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(() => {
+        parseConfigValue("base_url", "invalid_url");
+      }).toThrow("Invalid value for base_url:");
     });
 
     it("should validate enum constraints", () => {
-      parseConfigValue("defaults.upload.strategy", "invalid_strategy");
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining("Invalid value for defaults.upload.strategy:")
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(() => {
+        parseConfigValue("defaults.upload.strategy", "invalid_strategy");
+      }).toThrow("Invalid value for defaults.upload.strategy:");
     });
 
     it("should validate number constraints", () => {
-      parseConfigValue("defaults.upload.parallel", "-5");
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining("Invalid value for defaults.upload.parallel:")
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(() => {
+        parseConfigValue("defaults.upload.parallel", "-5");
+      }).toThrow("Invalid value for defaults.upload.parallel:");
     });
 
     it("should handle unknown config keys", () => {
-      // Mock process.exit to throw an error to stop execution
-      const mockExit = jest.fn().mockImplementation(() => {
-        throw new Error("process.exit called");
-      });
-      process.exit = mockExit as never;
-
       expect(() => {
         parseConfigValue("unknown.key", "value");
-      }).toThrow("process.exit called");
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining("Unknown config key: unknown.key")
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      }).toThrow("Unknown config key: unknown.key");
     });
   });
 });

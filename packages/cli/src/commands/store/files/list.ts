@@ -1,7 +1,6 @@
+import { log, spinner } from "@clack/prompts";
 import type { StoreFile } from "@mixedbread/sdk/resources/stores";
-import chalk from "chalk";
 import { Command } from "commander";
-import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../../utils/client";
 import {
@@ -48,7 +47,7 @@ export function createListCommand(): Command {
   );
 
   listCommand.action(async (nameOrId: string, options: FilesOptions) => {
-    let spinner: Ora;
+    const listSpinner = spinner();
 
     try {
       const mergedOptions = mergeCommandOptions(listCommand, options);
@@ -58,7 +57,7 @@ export function createListCommand(): Command {
       });
 
       const client = createClient(parsedOptions);
-      spinner = ora("Loading files...").start();
+      listSpinner.start("Loading files...");
       const store = await resolveStore(client, parsedOptions.nameOrId);
 
       const response = await client.stores.files.list(store.id, {
@@ -75,11 +74,12 @@ export function createListCommand(): Command {
       }
 
       if (files.length === 0) {
-        spinner.info("No files found.");
+        listSpinner.stop();
+        log.info("No files found.");
         return;
       }
 
-      spinner.succeed(`Found ${formatCountWithSuffix(files.length, "file")}`);
+      listSpinner.stop(`Found ${formatCountWithSuffix(files.length, "file")}`);
 
       // Format data for output
       const formattedData = files.map((file) => ({
@@ -96,12 +96,10 @@ export function createListCommand(): Command {
 
       formatOutput(formattedData, parsedOptions.format);
     } catch (error) {
-      spinner.fail("Failed to load files");
-      if (error instanceof Error) {
-        console.error(chalk.red("\n✗"), error.message);
-      } else {
-        console.error(chalk.red("\n✗"), "Failed to list files");
-      }
+      listSpinner.stop();
+      log.error(
+        error instanceof Error ? error.message : "Failed to list files"
+      );
       process.exit(1);
     }
   });

@@ -201,9 +201,9 @@ describe("Store Create Command", () => {
         "invalid-json",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("✗"),
-        expect.stringContaining("Invalid JSON in metadata option")
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
+        "Invalid JSON in metadata option"
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -304,10 +304,7 @@ describe("Store Create Command", () => {
 
       await command.parseAsync(["node", "create", "test-store"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "API Error: Unauthorized"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "API Error: Unauthorized");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
@@ -317,10 +314,7 @@ describe("Store Create Command", () => {
 
       await command.parseAsync(["node", "create", "test-store"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Network error"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Network error");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
 
@@ -329,10 +323,7 @@ describe("Store Create Command", () => {
 
       await command.parseAsync(["node", "create", "test-store"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        "Failed to create store"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Failed to create store");
       expect(process.exit).toHaveBeenCalledWith(1);
     });
   });
@@ -512,8 +503,8 @@ describe("Store Create Command", () => {
         "--contextualization=,,,",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining("Invalid value for --contextualization")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -565,8 +556,8 @@ describe("Store Create Command", () => {
         "-5",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"expires-after" must be positive')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -581,8 +572,8 @@ describe("Store Create Command", () => {
         "5.5",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"expires-after" must be an integer')
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -591,8 +582,8 @@ describe("Store Create Command", () => {
     it("should validate name is not empty", async () => {
       await command.parseAsync(["node", "create", ""]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         expect.stringContaining('"name" is required')
       );
       expect(process.exit).toHaveBeenCalledWith(1);

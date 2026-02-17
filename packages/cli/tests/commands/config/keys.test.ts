@@ -13,20 +13,21 @@ import { createKeysCommand } from "../../../src/commands/config/keys";
 import { loadConfig } from "../../../src/utils/config";
 import { getTestConfigDir } from "../../helpers/test-utils";
 
-// Mock inquirer
-jest.mock("inquirer");
+// Mock @clack/prompts
+jest.mock("@clack/prompts");
 
 describe("Config Keys Command", () => {
   const configDir = getTestConfigDir();
   const configFile = join(configDir, "config.json");
   let command: Command;
-  let mockInquirer: jest.Mocked<typeof import("inquirer").default>;
+  let mockClack: jest.Mocked<typeof import("@clack/prompts")>;
 
   beforeEach(async () => {
     command = createKeysCommand();
-    mockInquirer = (await import("inquirer")).default as jest.Mocked<
-      typeof import("inquirer").default
+    mockClack = (await import("@clack/prompts")) as unknown as jest.Mocked<
+      typeof import("@clack/prompts")
     >;
+    mockClack.isCancel.mockReturnValue(false);
     jest.clearAllMocks();
   });
 
@@ -47,7 +48,7 @@ describe("Config Keys Command", () => {
       expect(config.api_keys?.work).toBe("mxb_test123");
       expect(config.defaults?.api_key).toBe("work");
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("✓"),
+        "✓",
         expect.stringContaining('API key "work" saved and set as default')
       );
     });
@@ -57,16 +58,14 @@ describe("Config Keys Command", () => {
         [configFile]: JSON.stringify({ version: "1.0", api_keys: {} }),
       });
 
-      mockInquirer.prompt.mockResolvedValue({ name: "personal" });
+      mockClack.text.mockResolvedValue("personal");
 
       await command.parseAsync(["node", "keys", "add", "mxb_test123"]);
 
       const config = loadConfig();
       expect(config.api_keys?.personal).toBe("mxb_test123");
       expect(config.defaults?.api_key).toBe("personal");
-      expect(mockInquirer.prompt).toHaveBeenCalledWith({
-        type: "input",
-        name: "name",
+      expect(mockClack.text).toHaveBeenCalledWith({
         message: expect.stringContaining("Enter a name for this API key"),
         validate: expect.any(Function),
       });
@@ -79,8 +78,8 @@ describe("Config Keys Command", () => {
 
       command.parse(["node", "keys", "add", "invalid_key", "test"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("✗"),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         'API key must start with "mxb_"'
       );
     });
@@ -92,10 +91,7 @@ describe("Config Keys Command", () => {
 
       command.parse(["node", "keys", "add", "mxb_test123", "   "]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("✗"),
-        "Name cannot be empty"
-      );
+      expect(console.log).toHaveBeenCalledWith("✗", "Name cannot be empty");
     });
 
     it("should check for duplicate names", () => {
@@ -108,8 +104,8 @@ describe("Config Keys Command", () => {
 
       command.parse(["node", "keys", "add", "mxb_test123", "work"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("✗"),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         'API key "work" already exists'
       );
     });
@@ -122,17 +118,17 @@ describe("Config Keys Command", () => {
         }),
       });
 
-      mockInquirer.prompt.mockResolvedValue({ name: "new" });
+      mockClack.text.mockResolvedValue("new");
 
       await command.parseAsync(["node", "keys", "add", "mxb_test123"]);
 
-      const promptCall = mockInquirer.prompt.mock.calls[0][0] as any;
+      const promptCall = mockClack.text.mock.calls[0][0] as any;
       const validate = promptCall.validate;
 
       expect(validate("")).toBe("Name cannot be empty");
       expect(validate("  ")).toBe("Name cannot be empty");
       expect(validate("existing")).toBe('API key "existing" already exists');
-      expect(validate("different")).toBe(true);
+      expect(validate("different")).toBeUndefined();
     });
   });
 
@@ -191,17 +187,14 @@ describe("Config Keys Command", () => {
         }),
       });
 
-      mockInquirer.prompt.mockResolvedValue({ confirm: true });
+      mockClack.confirm.mockResolvedValue(true);
 
       await command.parseAsync(["node", "keys", "remove", "work"]);
 
       const config = loadConfig();
       expect(config.api_keys?.work).toBeUndefined();
       expect(config.api_keys?.personal).toBe("mxb_personal123");
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("✓"),
-        'API key "work" removed'
-      );
+      expect(console.log).toHaveBeenCalledWith("✓", 'API key "work" removed');
     });
 
     it("should warn when removing default API key", async () => {
@@ -218,14 +211,14 @@ describe("Config Keys Command", () => {
         }),
       });
 
-      mockInquirer.prompt.mockResolvedValue({ confirm: true });
+      mockClack.confirm.mockResolvedValue(true);
 
       await command.parseAsync(["node", "keys", "remove", "work"]);
 
       const config = loadConfig();
       expect(config.defaults?.api_key).toBeUndefined();
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("⚠"),
+        "⚠",
         "No default API key set. Set a new default:"
       );
       expect(console.log).toHaveBeenCalledWith(
@@ -243,13 +236,14 @@ describe("Config Keys Command", () => {
         }),
       });
 
-      mockInquirer.prompt.mockResolvedValue({ confirm: false });
+      mockClack.confirm.mockResolvedValue(false);
 
       await command.parseAsync(["node", "keys", "remove", "work"]);
 
       const config = loadConfig();
       expect(config.api_keys?.work).toBe("mxb_work123");
       expect(console.log).toHaveBeenCalledWith(
+        "⚠",
         expect.stringContaining("Removal cancelled.")
       );
     });
@@ -266,8 +260,8 @@ describe("Config Keys Command", () => {
 
       await command.parseAsync(["node", "keys", "remove", "nonexistent"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("✗"),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         'No API key found with name "nonexistent"'
       );
     });
@@ -288,12 +282,9 @@ describe("Config Keys Command", () => {
       const config = loadConfig();
       expect(config.api_keys?.work).toBeUndefined();
       expect(config.api_keys?.personal).toBe("mxb_personal123");
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("✓"),
-        'API key "work" removed'
-      );
-      // Should not call inquirer.prompt when using --yes
-      expect(mockInquirer.prompt).not.toHaveBeenCalled();
+      expect(console.log).toHaveBeenCalledWith("✓", 'API key "work" removed');
+      // Should not call confirm when using --yes
+      expect(mockClack.confirm).not.toHaveBeenCalled();
     });
 
     it("should remove default API key with --yes flag without confirmation", async () => {
@@ -315,16 +306,13 @@ describe("Config Keys Command", () => {
       const config = loadConfig();
       expect(config.api_keys?.work).toBeUndefined();
       expect(config.defaults?.api_key).toBeUndefined();
+      expect(console.log).toHaveBeenCalledWith("✓", 'API key "work" removed');
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("✓"),
-        'API key "work" removed'
-      );
-      expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("⚠"),
+        "⚠",
         "No default API key set. Set a new default:"
       );
-      // Should not call inquirer.prompt when using --yes
-      expect(mockInquirer.prompt).not.toHaveBeenCalled();
+      // Should not call confirm when using --yes
+      expect(mockClack.confirm).not.toHaveBeenCalled();
     });
 
     it("should handle --yes flag with non-existent key", async () => {
@@ -345,12 +333,12 @@ describe("Config Keys Command", () => {
         "--yes",
       ]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("✗"),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         'No API key found with name "nonexistent"'
       );
-      // Should not call inquirer.prompt even with --yes when key doesn't exist
-      expect(mockInquirer.prompt).not.toHaveBeenCalled();
+      // Should not call confirm even with --yes when key doesn't exist
+      expect(mockClack.confirm).not.toHaveBeenCalled();
     });
   });
 
@@ -374,7 +362,7 @@ describe("Config Keys Command", () => {
       const config = loadConfig();
       expect(config.defaults?.api_key).toBe("personal");
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining("✓"),
+        "✓",
         '"personal" set as default API key'
       );
     });
@@ -391,8 +379,8 @@ describe("Config Keys Command", () => {
 
       command.parse(["node", "keys", "set-default", "nonexistent"]);
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining("✗"),
+      expect(console.log).toHaveBeenCalledWith(
+        "✗",
         'No API key found with name "nonexistent"'
       );
       expect(console.log).toHaveBeenCalledWith("\nAvailable API keys:");

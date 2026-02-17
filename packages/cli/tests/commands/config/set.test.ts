@@ -131,6 +131,7 @@ describe("Config Set Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
+        "Failed to set configuration:",
         expect.stringContaining("Invalid value for defaults.upload.strategy:")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -165,6 +166,7 @@ describe("Config Set Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
+        "Failed to set configuration:",
         expect.stringContaining("Invalid value for defaults.upload.parallel:")
       );
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -179,6 +181,7 @@ describe("Config Set Command", () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.any(String),
+        "Failed to set configuration:",
         expect.stringContaining("Unknown config key: unknown.key")
       );
       expect(process.exit).toHaveBeenCalledWith(1);

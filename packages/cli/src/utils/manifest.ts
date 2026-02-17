@@ -1,8 +1,8 @@
 import { readFileSync, statSync } from "node:fs";
+import { log, spinner } from "@clack/prompts";
 import type { Mixedbread } from "@mixedbread/sdk";
 import chalk from "chalk";
 import { glob } from "glob";
-import ora from "ora";
 import { parse } from "yaml";
 import { z } from "zod";
 import type { UploadOptions } from "../commands/store/upload";
@@ -172,7 +172,8 @@ export async function uploadFromManifest(
     // Handle --unique flag: check for existing files
     let existingFiles: Map<string, string> = new Map();
     if (options.unique) {
-      const spinner = ora("Checking for existing files...").start();
+      const checkSpinner = spinner();
+      checkSpinner.start("Checking for existing files...");
       try {
         const storeFiles = await getStoreFiles(client, storeIdentifier);
         existingFiles = new Map(
@@ -190,11 +191,12 @@ export async function uploadFromManifest(
             )
             .map((f) => [(f.metadata as { file_path: string }).file_path, f.id])
         );
-        spinner.succeed(
+        checkSpinner.stop(
           `Found ${formatCountWithSuffix(existingFiles.size, "existing file")}`
         );
       } catch (error) {
-        spinner.fail("Failed to check existing files");
+        checkSpinner.stop();
+        log.error("Failed to check existing files");
         throw error;
       }
     }
@@ -207,15 +209,11 @@ export async function uploadFromManifest(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error(chalk.red("✗"), "Invalid manifest file format:");
-      error.issues.forEach((err) => {
-        console.error(chalk.red(`  - ${err.path.join(".")}: ${err.message}`));
-      });
-    } else if (error instanceof Error) {
-      console.error(chalk.red("✗"), error.message);
-    } else {
-      console.error(chalk.red("✗"), "Failed to process manifest file");
+      const details = error.issues
+        .map((err) => `  - ${err.path.join(".")}: ${err.message}`)
+        .join("\n");
+      throw new Error(`Invalid manifest file format:\n${details}`);
     }
-    process.exit(1);
+    throw error;
   }
 }

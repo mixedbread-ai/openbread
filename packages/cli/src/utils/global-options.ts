@@ -1,4 +1,3 @@
-import chalk from "chalk";
 import type { Command } from "commander";
 import { z } from "zod";
 
@@ -100,11 +99,7 @@ export function parseOptions<T>(
   const parsed = schema.safeParse(options);
 
   if (!parsed.success) {
-    console.error(
-      chalk.red("\n✗"),
-      parsed.error.issues.map((i) => i.message).join(", ")
-    );
-    process.exit(1);
+    throw new Error(parsed.error.issues.map((i) => i.message).join(", "));
   }
 
   return parsed.data;

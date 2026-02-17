@@ -171,15 +171,9 @@ describe("Global Options", () => {
         savedKey: "work",
       };
 
-      parseOptions(GlobalOptionsSchema, options);
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining(
-          "Cannot specify both --api-key and --saved-key options"
-        )
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(() => {
+        parseOptions(GlobalOptionsSchema, options);
+      }).toThrow("Cannot specify both --api-key and --saved-key options");
     });
 
     it("should allow optional fields to be undefined", () => {
@@ -214,15 +208,9 @@ describe("Global Options", () => {
         format: "invalid",
       };
 
-      parseOptions(GlobalOptionsSchema, options);
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining(
-          '"format" must be either "table", "json", or "csv"'
-        )
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(() => {
+        parseOptions(GlobalOptionsSchema, options);
+      }).toThrow('"format" must be either "table", "json", or "csv"');
     });
 
     it("should handle validation errors for format", () => {
@@ -231,15 +219,9 @@ describe("Global Options", () => {
         format: "invalid",
       };
 
-      parseOptions(GlobalOptionsSchema, options);
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining(
-          '"format" must be either "table", "json", or "csv"'
-        )
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(() => {
+        parseOptions(GlobalOptionsSchema, options);
+      }).toThrow('"format" must be either "table", "json", or "csv"');
     });
 
     it("should parse custom schemas", () => {
@@ -269,15 +251,9 @@ describe("Global Options", () => {
         customField: "test",
       };
 
-      parseOptions(customSchema, options);
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringContaining(
-          "Cannot specify both --api-key and --saved-key options"
-        )
-      );
-      expect(process.exit).toHaveBeenCalledWith(1);
+      expect(() => {
+        parseOptions(customSchema, options);
+      }).toThrow("Cannot specify both --api-key and --saved-key options");
     });
   });
 });

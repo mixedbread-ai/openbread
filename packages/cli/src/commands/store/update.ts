@@ -1,7 +1,6 @@
+import { log, spinner } from "@clack/prompts";
 import type { StoreUpdateParams } from "@mixedbread/sdk/resources/index";
-import chalk from "chalk";
 import { Command } from "commander";
-import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
@@ -59,7 +58,7 @@ export function createUpdateCommand(): Command {
   );
 
   command.action(async (nameOrId: string, options: UpdateOptions) => {
-    let spinner: Ora;
+    const updateSpinner = spinner();
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);
@@ -89,18 +88,17 @@ export function createUpdateCommand(): Command {
         };
 
       if (Object.keys(updateData).length === 0) {
-        console.error(
-          chalk.red("✗"),
+        log.error(
           "No update fields provided. Use --name, --description, --public, or --metadata"
         );
         process.exit(1);
       }
 
-      spinner = ora("Updating store...").start();
+      updateSpinner.start("Updating store...");
 
       const updatedStore = await client.stores.update(store.id, updateData);
 
-      spinner.succeed(`Store "${store.name}" updated successfully`);
+      updateSpinner.stop(`Store "${store.name}" updated successfully`);
 
       formatOutput(
         {
@@ -132,12 +130,10 @@ export function createUpdateCommand(): Command {
         }
       }
     } catch (error) {
-      spinner?.fail("Failed to update store");
-      if (error instanceof Error) {
-        console.error(chalk.red("\n✗"), error.message);
-      } else {
-        console.error(chalk.red("\n✗"), "Failed to update store");
-      }
+      updateSpinner.stop();
+      log.error(
+        error instanceof Error ? error.message : "Failed to update store"
+      );
       process.exit(1);
     }
   });

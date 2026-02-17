@@ -1,7 +1,5 @@
-import chalk from "chalk";
+import { confirm, isCancel, log, spinner } from "@clack/prompts";
 import { Command } from "commander";
-import inquirer from "inquirer";
-import ora, { type Ora } from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
@@ -36,7 +34,7 @@ export function createDeleteCommand(): Command {
   );
 
   command.action(async (nameOrId: string, options: DeleteOptions) => {
-    let spinner: Ora;
+    const deleteSpinner = spinner();
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);
@@ -51,26 +49,22 @@ export function createDeleteCommand(): Command {
 
       // Confirmation prompt unless --yes is used
       if (!parsedOptions.yes) {
-        const { confirmed } = await inquirer.prompt([
-          {
-            type: "confirm",
-            name: "confirmed",
-            message: `Are you sure you want to delete store "${store.name}" (${store.id})? This action cannot be undone.`,
-            default: false,
-          },
-        ]);
+        const confirmed = await confirm({
+          message: `Are you sure you want to delete store "${store.name}" (${store.id})? This action cannot be undone.`,
+          initialValue: false,
+        });
 
-        if (!confirmed) {
-          console.log(chalk.yellow("Deletion cancelled."));
+        if (isCancel(confirmed) || !confirmed) {
+          log.warn("Deletion cancelled.");
           return;
         }
       }
 
-      spinner = ora("Deleting store...").start();
+      deleteSpinner.start("Deleting store...");
 
       await client.stores.delete(store.id);
 
-      spinner.succeed(`Store "${store.name}" deleted successfully`);
+      deleteSpinner.stop(`Store "${store.name}" deleted successfully`);
 
       // Update completion cache by removing the deleted store
       const keyName = getCurrentKeyName();
@@ -78,12 +72,10 @@ export function createDeleteCommand(): Command {
         updateCacheAfterDelete(keyName, store.name);
       }
     } catch (error) {
-      spinner?.fail("Failed to delete store");
-      if (error instanceof Error) {
-        console.error(chalk.red("\n✗"), error.message);
-      } else {
-        console.error(chalk.red("\n✗"), "Failed to delete store");
-      }
+      deleteSpinner.stop();
+      log.error(
+        error instanceof Error ? error.message : "Failed to delete store"
+      );
       process.exit(1);
     }
   });

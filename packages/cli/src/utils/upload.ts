@@ -1,10 +1,10 @@
 import { readFileSync, statSync } from "node:fs";
 import { basename, relative } from "node:path";
+import { log } from "@clack/prompts";
 import type Mixedbread from "@mixedbread/sdk";
 import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { lookup } from "mime-types";
-import ora from "ora";
 import { formatBytes, formatCountWithSuffix } from "./output";
 
 export const UPLOAD_TIMEOUT = 1000 * 60 * 10; // 10 minutes
@@ -137,13 +137,10 @@ export async function uploadFilesInBatch(
   for (let i = 0; i < files.length; i += parallel) {
     const batch = files.slice(i, i + parallel);
     const promises = batch.map(async (file) => {
-      const spinner = ora(
-        `Uploading ${relative(process.cwd(), file.path)}...`
-      ).start();
+      const relativePath = relative(process.cwd(), file.path);
 
       try {
         // Delete existing file if using --unique
-        const relativePath = relative(process.cwd(), file.path);
         if (unique && existingFiles.has(relativePath)) {
           const existingFileId = existingFiles.get(relativePath);
           await client.stores.files.delete(existingFileId, {
@@ -160,9 +157,7 @@ export async function uploadFilesInBatch(
         // Check if file is empty
         const stats = statSync(file.path);
         if (stats.size === 0) {
-          spinner.warn(
-            `${relative(process.cwd(), file.path)} - Empty file skipped`
-          );
+          log.warn(`${relativePath} - Empty file skipped`);
           results.skipped++;
           return;
         }
@@ -196,18 +191,18 @@ export async function uploadFilesInBatch(
 
         results.successfulSize += stats.size;
 
-        let successMessage = `${relative(process.cwd(), file.path)} (${formatBytes(stats.size)})`;
+        let successMessage = `${relativePath} (${formatBytes(stats.size)})`;
 
         if (isManifestUpload) {
           successMessage += ` [${file.strategy}]`;
         }
 
-        spinner.succeed(successMessage);
+        log.success(successMessage);
       } catch (error) {
         results.failed++;
         const errorMsg =
           error instanceof Error ? error.message : "Unknown error";
-        spinner.fail(`${relative(process.cwd(), file.path)} - ${errorMsg}`);
+        log.error(`${relativePath} - ${errorMsg}`);
       }
     });
 
@@ -218,9 +213,8 @@ export async function uploadFilesInBatch(
   console.log(`\n${chalk.bold("Upload Summary:")}`);
   if (results.uploaded > 0) {
     console.log(
-      chalk.green(
-        `✓ ${formatCountWithSuffix(results.uploaded, "file")} uploaded successfully`
-      )
+      chalk.green("✓"),
+      `${formatCountWithSuffix(results.uploaded, "file")} uploaded successfully`
     );
   }
   if (results.updated > 0) {
@@ -230,14 +224,14 @@ export async function uploadFilesInBatch(
   }
   if (results.skipped > 0) {
     console.log(
-      chalk.yellow(
-        `⚠ ${formatCountWithSuffix(results.skipped, "file")} skipped`
-      )
+      chalk.yellow("⚠"),
+      `${formatCountWithSuffix(results.skipped, "file")} skipped`
     );
   }
   if (results.failed > 0) {
     console.log(
-      chalk.red(`✗ ${formatCountWithSuffix(results.failed, "file")} failed`)
+      chalk.red("✗"),
+      `${formatCountWithSuffix(results.failed, "file")} failed`
     );
   }
 

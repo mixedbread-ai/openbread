@@ -1,9 +1,9 @@
 import { statSync } from "node:fs";
+import { log, spinner } from "@clack/prompts";
 import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { Command } from "commander";
 import { glob } from "glob";
-import ora from "ora";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { loadConfig } from "../../utils/config";
@@ -95,11 +95,12 @@ export function createUploadCommand(): Command {
         }
 
         const client = createClient(parsedOptions);
-        const spinner = ora("Initializing upload...").start();
+        const initializeSpinner = spinner();
+        initializeSpinner.start("Initializing upload...");
         const store = await resolveStore(client, parsedOptions.nameOrId);
         const config = loadConfig();
 
-        spinner.succeed("Upload initialized");
+        initializeSpinner.stop("Upload initialized");
 
         // Handle manifest file upload
         if (parsedOptions.manifest) {
@@ -112,8 +113,7 @@ export function createUploadCommand(): Command {
         }
 
         if (!parsedOptions.patterns || parsedOptions.patterns.length === 0) {
-          console.error(
-            chalk.red("✗"),
+          log.error(
             "No file patterns provided. Use --manifest for manifest-based uploads."
           );
           process.exit(1);
@@ -141,7 +141,7 @@ export function createUploadCommand(): Command {
 
         if (parsedOptions.patterns) {
           if (uniqueFiles.length === 0) {
-            console.log(chalk.yellow("No files found matching the patterns."));
+            log.warn("No files found matching the patterns.");
             return;
           }
 
@@ -181,7 +181,8 @@ export function createUploadCommand(): Command {
         // Handle --unique flag: check for existing files
         let existingFiles: Map<string, string> = new Map();
         if (parsedOptions.unique) {
-          const spinner = ora("Checking for existing files...").start();
+          const uniqueSpinner = spinner();
+          uniqueSpinner.start("Checking for existing files...");
           try {
             const storeFiles = await getStoreFiles(client, store.id);
             existingFiles = new Map(
@@ -200,11 +201,12 @@ export function createUploadCommand(): Command {
                   f.id,
                 ])
             );
-            spinner.succeed(
+            uniqueSpinner.stop(
               `Found ${formatCountWithSuffix(existingFiles.size, "existing file")}`
             );
           } catch (error) {
-            spinner.fail("Failed to check existing files");
+            uniqueSpinner.stop();
+            log.error("Failed to check existing files");
             throw error;
           }
         }
@@ -224,9 +226,9 @@ export function createUploadCommand(): Command {
         });
       } catch (error) {
         if (error instanceof Error) {
-          console.error(chalk.red("\n✗"), error.message);
+          log.error(error.message);
         } else {
-          console.error(chalk.red("\n✗"), "Failed to upload files");
+          log.error("Failed to upload files");
         }
         process.exit(1);
       }
