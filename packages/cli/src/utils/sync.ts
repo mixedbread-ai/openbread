@@ -1,7 +1,5 @@
-import { statSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { log } from "@clack/prompts";
 import type Mixedbread from "@mixedbread/sdk";
 import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
@@ -9,6 +7,7 @@ import { glob } from "glob";
 import pLimit from "p-limit";
 import { getChangedFiles, normalizeGitPatterns } from "./git";
 import { calculateFileHash, hashesMatch } from "./hash";
+import { log } from "./logger";
 import { formatBytes, formatCountWithSuffix } from "./output";
 import { buildFileSyncMetadata, type SyncedFileByPath } from "./sync-state";
 import { uploadFile } from "./upload";
@@ -355,7 +354,7 @@ export async function executeSyncChanges(
           };
 
           // Check if file is empty
-          const stats = statSync(file.path);
+          const stats = await fs.stat(file.path);
           if (stats.size === 0) {
             completed++;
             log.warn(

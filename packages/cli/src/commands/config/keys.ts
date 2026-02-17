@@ -1,4 +1,4 @@
-import { cancel, confirm, isCancel, log, text } from "@clack/prompts";
+import { cancel, confirm, isCancel, text } from "@clack/prompts";
 import chalk from "chalk";
 import { Command } from "commander";
 import { z } from "zod";
@@ -16,10 +16,9 @@ import {
 import {
   addGlobalOptions,
   BaseGlobalOptionsSchema,
-  type GlobalOptions,
-  mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
+import { log } from "../../utils/logger";
 
 const RemoveKeySchema = z.object({
   name: z.string().min(1, { error: '"name" is required' }),
@@ -34,8 +33,8 @@ export function createKeysCommand(): Command {
   keysCommand
     .command("add <key> [name]")
     .description("Add a new API key")
-    .action(async (key: string, name?: string, options?: GlobalOptions) => {
-      const mergedOptions = mergeCommandOptions(keysCommand, options);
+    .action(async (key: string, name?: string) => {
+      const mergedOptions = keysCommand.optsWithGlobals();
       const parsedOptions = parseOptions(BaseGlobalOptionsSchema, {
         ...mergedOptions,
       });
@@ -185,8 +184,8 @@ export function createKeysCommand(): Command {
   keysCommand
     .command("set-default <name>")
     .description("Set the default API key")
-    .action(async (name: string, options: GlobalOptions) => {
-      const mergedOptions = mergeCommandOptions(keysCommand, options);
+    .action(async (name: string) => {
+      const mergedOptions = keysCommand.optsWithGlobals();
       const parsedOptions = parseOptions(BaseGlobalOptionsSchema, {
         ...mergedOptions,
       });

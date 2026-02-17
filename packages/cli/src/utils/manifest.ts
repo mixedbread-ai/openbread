@@ -1,5 +1,5 @@
-import { readFileSync, statSync } from "node:fs";
-import { log, spinner } from "@clack/prompts";
+import { readFileSync } from "node:fs";
+import { stat } from "node:fs/promises";
 import type { Mixedbread } from "@mixedbread/sdk";
 import chalk from "chalk";
 import { glob } from "glob";
@@ -8,9 +8,10 @@ import { z } from "zod";
 import type { UploadOptions } from "../commands/store/upload";
 import { loadConfig } from "./config";
 import { warnContextualizationDeprecated } from "./deprecation";
+import { log, spinner } from "./logger";
 import { validateMetadata } from "./metadata";
 import { formatBytes, formatCountWithSuffix } from "./output";
-import { getStoreFiles } from "./store";
+import { checkExistingFiles } from "./store";
 import { type FileToUpload, uploadFilesInBatch } from "./upload";
 
 // Manifest file schema
@@ -139,13 +140,14 @@ export async function uploadFromManifest(
     }
     const uniqueFiles = Array.from(uniqueFilesMap.values());
 
-    const totalSize = uniqueFiles.reduce((sum, file) => {
+    let totalSize = 0;
+    for (const file of uniqueFiles) {
       try {
-        return sum + statSync(file.path).size;
+        totalSize += (await stat(file.path)).size;
       } catch {
-        return sum;
+        // File may not exist
       }
-    }, 0);
+    }
 
     console.log(
       `Found ${formatCountWithSuffix(uniqueFiles.length, "file")} matching the patterns (${formatBytes(totalSize)})`
@@ -153,9 +155,9 @@ export async function uploadFromManifest(
 
     if (options.dryRun) {
       console.log(chalk.blue("\nDry run - files that would be uploaded:"));
-      uniqueFiles.forEach((file) => {
+      for (const file of uniqueFiles) {
         try {
-          const stats = statSync(file.path);
+          const stats = await stat(file.path);
           console.log(`  \n${file.path} (${formatBytes(stats.size)})`);
           console.log(`    Strategy: ${file.strategy}`);
 
@@ -165,7 +167,7 @@ export async function uploadFromManifest(
         } catch (_error) {
           console.log(`  ${file.path} (${chalk.red("✗ File not found")})`);
         }
-      });
+      }
       return;
     }
 
@@ -175,21 +177,11 @@ export async function uploadFromManifest(
       const checkSpinner = spinner();
       checkSpinner.start("Checking for existing files...");
       try {
-        const storeFiles = await getStoreFiles(client, storeIdentifier);
-        existingFiles = new Map(
-          storeFiles
-            .filter((f) =>
-              uniqueFiles.some((file) => {
-                const filePath =
-                  typeof f.metadata === "object" &&
-                  f.metadata &&
-                  "file_path" in f.metadata &&
-                  f.metadata.file_path;
-
-                return filePath && filePath === file.path;
-              })
-            )
-            .map((f) => [(f.metadata as { file_path: string }).file_path, f.id])
+        const localPaths = uniqueFiles.map((file) => file.path);
+        existingFiles = await checkExistingFiles(
+          client,
+          storeIdentifier,
+          localPaths
         );
         checkSpinner.stop(
           `Found ${formatCountWithSuffix(existingFiles.size, "existing file")}`

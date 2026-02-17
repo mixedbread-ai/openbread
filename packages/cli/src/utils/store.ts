@@ -94,6 +94,26 @@ export function buildStoreConfig(
   return { contextualization: true };
 }
 
+export async function checkExistingFiles(
+  client: Mixedbread,
+  storeIdentifier: string,
+  localPaths: string[]
+): Promise<Map<string, string>> {
+  const storeFiles = await getStoreFiles(client, storeIdentifier);
+  return new Map(
+    storeFiles
+      .filter((f) => {
+        const filePath =
+          typeof f.metadata === "object" &&
+          f.metadata &&
+          "file_path" in f.metadata &&
+          (f.metadata.file_path as string);
+        return filePath && localPaths.includes(filePath);
+      })
+      .map((f) => [(f.metadata as { file_path: string }).file_path, f.id])
+  );
+}
+
 export async function getStoreFiles(
   client: Mixedbread,
   storeIdentifier: string

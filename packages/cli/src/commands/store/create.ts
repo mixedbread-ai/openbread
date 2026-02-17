@@ -1,4 +1,3 @@
-import { log, spinner } from "@clack/prompts";
 import { Command } from "commander";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
@@ -9,10 +8,9 @@ import {
 import {
   addGlobalOptions,
   extendGlobalOptions,
-  type GlobalOptions,
-  mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
+import { log, spinner } from "../../utils/logger";
 import { validateMetadata } from "../../utils/metadata";
 import { formatOutput } from "../../utils/output";
 import { buildStoreConfig, parsePublicFlag } from "../../utils/store";
@@ -29,14 +27,6 @@ const CreateStoreSchema = extendGlobalOptions({
     .optional(),
   metadata: z.string().optional(),
 });
-
-interface CreateOptions extends GlobalOptions {
-  description?: string;
-  public?: boolean | string;
-  contextualization?: boolean | string;
-  expiresAfter?: number;
-  metadata?: string;
-}
 
 export function createCreateCommand(): Command {
   const command = addGlobalOptions(
@@ -56,11 +46,11 @@ export function createCreateCommand(): Command {
       .option("--metadata <json>", "Additional metadata as JSON string")
   );
 
-  command.action(async (name: string, options: CreateOptions) => {
+  command.action(async (name: string) => {
     const createSpinner = spinner();
 
     try {
-      const mergedOptions = mergeCommandOptions(command, options);
+      const mergedOptions = command.optsWithGlobals();
       const client = createClient(mergedOptions);
 
       const parsedOptions = parseOptions(CreateStoreSchema, {

@@ -1,10 +1,9 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
 import { Command } from "commander";
 import { z } from "zod";
 import {
   BaseGlobalOptionsSchema,
   GlobalOptionsSchema,
-  mergeCommandOptions,
   parseOptions,
   setupGlobalOptions,
 } from "../../src/utils/global-options";
@@ -62,74 +61,6 @@ describe("Global Options", () => {
       hookCallback({ opts: () => ({ debug: false }) }, command);
 
       expect(process.env.MXBAI_DEBUG).toBe("true");
-
-      // Cleanup
-      if (originalDebug) {
-        process.env.MXBAI_DEBUG = originalDebug;
-      } else {
-        delete process.env.MXBAI_DEBUG;
-      }
-    });
-  });
-
-  describe("mergeCommandOptions", () => {
-    let parentCommand: Command;
-    let childCommand: Command;
-
-    beforeEach(() => {
-      parentCommand = new Command();
-      parentCommand.opts = jest
-        .fn<() => Record<string, unknown>>()
-        .mockReturnValue({ apiKey: "parent_key", format: "json" }) as any;
-
-      childCommand = new Command();
-      childCommand.parent = parentCommand;
-    });
-
-    it("should merge parent and child options", () => {
-      const options = { debug: true };
-      const merged = mergeCommandOptions(childCommand, options);
-
-      expect(merged).toEqual({
-        apiKey: "parent_key",
-        format: "json",
-        debug: true,
-      });
-    });
-
-    it("should prioritize child options over parent", () => {
-      const options = { apiKey: "child_key", format: "csv" };
-      const merged = mergeCommandOptions(childCommand, options);
-
-      expect(merged).toEqual({
-        apiKey: "child_key",
-        format: "csv",
-      });
-    });
-
-    it("should handle commands without parent", () => {
-      const command = new Command();
-      const options = { apiKey: "test_key" };
-      const merged = mergeCommandOptions(command, options);
-
-      expect(merged).toEqual({ apiKey: "test_key" });
-    });
-
-    it("should log options in debug mode", () => {
-      const originalDebug = process.env.MXBAI_DEBUG;
-      process.env.MXBAI_DEBUG = "true";
-
-      const options = { debug: true };
-      mergeCommandOptions(childCommand, options);
-
-      expect(console.log).toHaveBeenCalledWith(
-        "\nCommand hierarchy options:",
-        expect.any(Array)
-      );
-      expect(console.log).toHaveBeenCalledWith(
-        "Merged options:",
-        expect.any(Object)
-      );
 
       // Cleanup
       if (originalDebug) {

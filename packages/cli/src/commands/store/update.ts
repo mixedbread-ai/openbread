@@ -1,4 +1,3 @@
-import { log, spinner } from "@clack/prompts";
 import type { StoreUpdateParams } from "@mixedbread/sdk/resources/index";
 import { Command } from "commander";
 import { z } from "zod";
@@ -10,10 +9,9 @@ import {
 import {
   addGlobalOptions,
   extendGlobalOptions,
-  type GlobalOptions,
-  mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
+import { log, spinner } from "../../utils/logger";
 import { validateMetadata } from "../../utils/metadata";
 import { formatOutput } from "../../utils/output";
 import { parsePublicFlag, resolveStore } from "../../utils/store";
@@ -30,14 +28,6 @@ const UpdateStoreSchema = extendGlobalOptions({
     .optional(),
   metadata: z.string().optional(),
 });
-
-interface UpdateOptions extends GlobalOptions {
-  name?: string;
-  description?: string;
-  public?: boolean | string;
-  expiresAfter?: number;
-  metadata?: string;
-}
 
 export function createUpdateCommand(): Command {
   const command = addGlobalOptions(
@@ -57,11 +47,11 @@ export function createUpdateCommand(): Command {
       )
   );
 
-  command.action(async (nameOrId: string, options: UpdateOptions) => {
+  command.action(async (nameOrId: string) => {
     const updateSpinner = spinner();
 
     try {
-      const mergedOptions = mergeCommandOptions(command, options);
+      const mergedOptions = command.optsWithGlobals();
 
       const parsedOptions = parseOptions(UpdateStoreSchema, {
         ...mergedOptions,

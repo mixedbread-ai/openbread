@@ -65,33 +65,6 @@ export function addGlobalOptions(command: Command): Command {
     .option("--format <format>", "Output format (table|json|csv)");
 }
 
-export function mergeCommandOptions<T>(command: Command, options: T): T {
-  // Traverse up the command hierarchy to collect all options
-  const allOptions: T[] = [];
-  let currentCommand: Command | null = command;
-
-  // Collect options from all parent commands up to the root
-  while (currentCommand) {
-    if (currentCommand.parent) {
-      allOptions.unshift(currentCommand.parent.opts());
-    }
-    currentCommand = currentCommand.parent;
-  }
-
-  // Add the current command's options last (highest priority)
-  allOptions.push(options);
-
-  // Merge all options, with later options taking priority
-  const merged = Object.assign({}, ...allOptions);
-
-  if (process.env.MXBAI_DEBUG === "true") {
-    console.log("\nCommand hierarchy options:", allOptions);
-    console.log("Merged options:", merged);
-  }
-
-  return merged;
-}
-
 export function parseOptions<T>(
   schema: z.ZodSchema<T>,
   options: Record<string, unknown>

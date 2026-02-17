@@ -1,22 +1,18 @@
-import { log, spinner } from "@clack/prompts";
 import { Command } from "commander";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
 import {
   addGlobalOptions,
   extendGlobalOptions,
-  type GlobalOptions,
-  mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
+import { log, spinner } from "../../utils/logger";
 import { formatBytes, formatOutput } from "../../utils/output";
 import { resolveStore } from "../../utils/store";
 
 const GetStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
 });
-
-interface GetOptions extends GlobalOptions {}
 
 export function createGetCommand(): Command {
   const command = addGlobalOptions(
@@ -25,11 +21,11 @@ export function createGetCommand(): Command {
       .argument("<name-or-id>", "Name or ID of the store")
   );
 
-  command.action(async (nameOrId: string, options: GetOptions) => {
+  command.action(async (nameOrId: string) => {
     const getSpinner = spinner();
 
     try {
-      const mergedOptions = mergeCommandOptions(command, options);
+      const mergedOptions = command.optsWithGlobals();
 
       const parsedOptions = parseOptions(GetStoreSchema, {
         ...mergedOptions,

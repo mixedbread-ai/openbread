@@ -37,9 +37,10 @@ const mockCreateClient = clientUtils.createClient as jest.MockedFunction<
 const mockResolveStore = storeUtils.resolveStore as jest.MockedFunction<
   typeof storeUtils.resolveStore
 >;
-const mockGetStoreFiles = storeUtils.getStoreFiles as jest.MockedFunction<
-  typeof storeUtils.getStoreFiles
->;
+const mockCheckExistingFiles =
+  storeUtils.checkExistingFiles as jest.MockedFunction<
+    typeof storeUtils.checkExistingFiles
+  >;
 const mockLoadConfig = configUtils.loadConfig as jest.MockedFunction<
   typeof configUtils.loadConfig
 >;
@@ -352,14 +353,9 @@ describe("Store Upload Command", () => {
         "test.md",
       ]);
 
-      mockGetStoreFiles.mockResolvedValue([
-        {
-          id: "existing_file_id",
-          store_id: "550e8400-e29b-41d4-a716-446655440130",
-          created_at: "2021-02-18T12:00:00Z",
-          metadata: { file_path: "test.md" },
-        },
-      ]);
+      mockCheckExistingFiles.mockResolvedValue(
+        new Map([["test.md", "existing_file_id"]])
+      );
 
       mockClient.stores.files.delete.mockResolvedValue({});
 
@@ -371,9 +367,10 @@ describe("Store Upload Command", () => {
         "--unique",
       ]);
 
-      expect(mockGetStoreFiles).toHaveBeenCalledWith(
+      expect(mockCheckExistingFiles).toHaveBeenCalledWith(
         expect.any(Object),
-        "550e8400-e29b-41d4-a716-446655440130"
+        "550e8400-e29b-41d4-a716-446655440130",
+        ["test.md"]
       );
       expect(mockUploadFilesInBatch).toHaveBeenCalledWith(
         expect.any(Object),
@@ -394,7 +391,7 @@ describe("Store Upload Command", () => {
       (glob as unknown as jest.MockedFunction<typeof glob>).mockResolvedValue([
         "test.md",
       ]);
-      mockGetStoreFiles.mockRejectedValue(new Error("List failed"));
+      mockCheckExistingFiles.mockRejectedValue(new Error("List failed"));
 
       await command.parseAsync([
         "node",
@@ -604,14 +601,9 @@ describe("Store Upload Command", () => {
         "empty.md",
       ]);
 
-      mockGetStoreFiles.mockResolvedValue([
-        {
-          id: "existing_file_id",
-          store_id: "550e8400-e29b-41d4-a716-446655440130",
-          created_at: "2021-02-18T12:00:00Z",
-          metadata: { file_path: "existing.md" },
-        },
-      ]);
+      mockCheckExistingFiles.mockResolvedValue(
+        new Map([["existing.md", "existing_file_id"]])
+      );
 
       // Mock uploadFilesInBatch to return updated and skipped
       mockUploadFilesInBatch.mockResolvedValue({

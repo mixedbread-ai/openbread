@@ -1,4 +1,3 @@
-import { log, spinner } from "@clack/prompts";
 import chalk from "chalk";
 import { Command } from "commander";
 import { z } from "zod";
@@ -7,10 +6,9 @@ import { loadConfig } from "../../utils/config";
 import {
   addGlobalOptions,
   extendGlobalOptions,
-  type GlobalOptions,
-  mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
+import { log, spinner } from "../../utils/logger";
 import { formatOutput } from "../../utils/output";
 import { resolveStore } from "../../utils/store";
 
@@ -33,14 +31,6 @@ const QAStoreSchema = extendGlobalOptions({
   returnMetadata: z.boolean().optional(),
 });
 
-interface QAOptions extends GlobalOptions {
-  topK?: number;
-  threshold?: number;
-  cite?: boolean;
-  multimodal?: boolean;
-  returnMetadata?: boolean;
-}
-
 export function createQACommand(): Command {
   const command = addGlobalOptions(
     new Command("qa")
@@ -52,80 +42,78 @@ export function createQACommand(): Command {
       .option("--return-metadata", "Return source metadata")
   );
 
-  command.action(
-    async (nameOrId: string, question: string, options: QAOptions) => {
-      const qaSpinner = spinner();
+  command.action(async (nameOrId: string, question: string) => {
+    const qaSpinner = spinner();
 
-      try {
-        const mergedOptions = mergeCommandOptions(command, options);
-        const parsedOptions = parseOptions(QAStoreSchema, {
-          ...mergedOptions,
-          nameOrId,
-          question,
+    try {
+      const mergedOptions = command.optsWithGlobals();
+      const parsedOptions = parseOptions(QAStoreSchema, {
+        ...mergedOptions,
+        nameOrId,
+        question,
+      });
+
+      const client = createClient(parsedOptions);
+      qaSpinner.start("Processing question...");
+      const store = await resolveStore(client, parsedOptions.nameOrId);
+      const config = loadConfig();
+
+      // Get default values from config
+      const topK = parsedOptions.topK || config.defaults?.search?.top_k || 10;
+
+      const response = await client.stores.questionAnswering({
+        query: parsedOptions.question,
+        store_identifiers: [store.id],
+        top_k: topK,
+        search_options: {
+          score_threshold: parsedOptions.threshold
+            ? parsedOptions.threshold
+            : undefined,
+          return_metadata: parsedOptions.returnMetadata
+            ? parsedOptions.returnMetadata
+            : undefined,
+        },
+      });
+
+      qaSpinner.stop("Question processed");
+
+      // Display the answer
+      console.log(chalk.bold(chalk.blue("\nAnswer:")));
+      console.log(response.answer);
+
+      // Display sources if available
+      if (response.sources && response.sources.length > 0) {
+        console.log(chalk.bold(chalk.blue("\nSources:")));
+
+        const sources = response.sources.map((source) => {
+          const metadata =
+            parsedOptions.format === "table"
+              ? JSON.stringify(source.metadata, null, 2)
+              : source.metadata;
+
+          const output: Record<string, unknown> = {
+            filename: source.filename,
+            score: source.score.toFixed(2),
+            chunk_index: source.chunk_index,
+          };
+
+          if (parsedOptions.returnMetadata) {
+            output.metadata = metadata;
+          }
+
+          return output;
         });
 
-        const client = createClient(parsedOptions);
-        qaSpinner.start("Processing question...");
-        const store = await resolveStore(client, parsedOptions.nameOrId);
-        const config = loadConfig();
-
-        // Get default values from config
-        const topK = parsedOptions.topK || config.defaults?.search?.top_k || 10;
-
-        const response = await client.stores.questionAnswering({
-          query: parsedOptions.question,
-          store_identifiers: [store.id],
-          top_k: topK,
-          search_options: {
-            score_threshold: parsedOptions.threshold
-              ? parsedOptions.threshold
-              : undefined,
-            return_metadata: parsedOptions.returnMetadata
-              ? parsedOptions.returnMetadata
-              : undefined,
-          },
-        });
-
-        qaSpinner.stop("Question processed");
-
-        // Display the answer
-        console.log(chalk.bold(chalk.blue("\nAnswer:")));
-        console.log(response.answer);
-
-        // Display sources if available
-        if (response.sources && response.sources.length > 0) {
-          console.log(chalk.bold(chalk.blue("\nSources:")));
-
-          const sources = response.sources.map((source) => {
-            const metadata =
-              parsedOptions.format === "table"
-                ? JSON.stringify(source.metadata, null, 2)
-                : source.metadata;
-
-            const output: Record<string, unknown> = {
-              filename: source.filename,
-              score: source.score.toFixed(2),
-              chunk_index: source.chunk_index,
-            };
-
-            if (parsedOptions.returnMetadata) {
-              output.metadata = metadata;
-            }
-
-            return output;
-          });
-
-          formatOutput(sources, parsedOptions.format);
-        }
-      } catch (error) {
-        qaSpinner.stop();
-        log.error(
-          error instanceof Error ? error.message : "Failed to process question"
-        );
-        process.exit(1);
+        formatOutput(sources, parsedOptions.format);
       }
+    } catch (error) {
+      qaSpinner.stop();
+      log.error(
+        error instanceof Error ? error.message : "Failed to process question"
+      );
+      process.exit(1);
     }
-  );
+  });
 
   return command;
 }
