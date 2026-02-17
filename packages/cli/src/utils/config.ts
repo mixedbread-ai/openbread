@@ -1,4 +1,12 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { homedir, platform } from "node:os";
 import { join } from "node:path";
 import chalk from "chalk";
@@ -99,7 +107,7 @@ const DEFAULT_CONFIG: CLIConfig = {
       top_k: 10,
       rerank: false,
     },
-    api_key: null,
+    api_key: undefined,
   },
   aliases: {},
 };
@@ -142,7 +150,19 @@ export function saveConfig(config: CLIConfig): void {
     mkdirSync(CONFIG_DIR, { recursive: true });
   }
 
-  writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+  // Atomic write: write to temp file, then rename
+  const tempFile = `${CONFIG_FILE}.${randomBytes(6).toString("hex")}.tmp`;
+  try {
+    writeFileSync(tempFile, JSON.stringify(config, null, 2));
+    renameSync(tempFile, CONFIG_FILE);
+  } catch (error) {
+    try {
+      unlinkSync(tempFile);
+    } catch {
+      // Ignore cleanup errors
+    }
+    throw error;
+  }
 }
 
 function formatAvailableKeys(config: CLIConfig): string {

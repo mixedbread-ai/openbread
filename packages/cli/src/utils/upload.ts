@@ -104,14 +104,11 @@ export async function uploadFilesInBatch(
     unique: boolean;
     existingFiles: Map<string, string>;
     parallel: number;
+    showStrategyPerFile?: boolean;
   }
 ): Promise<UploadResults> {
-  const { unique, existingFiles, parallel } = options;
-
-  // Detect if this is a manifest upload
-  const isManifestUpload = files.some(
-    (file) => file.metadata?.manifest_entry === true
-  );
+  const { unique, existingFiles, parallel, showStrategyPerFile = false } =
+    options;
 
   console.log(
     `\nUploading ${formatCountWithSuffix(files.length, "file")} to store...`
@@ -193,7 +190,7 @@ export async function uploadFilesInBatch(
 
         let successMessage = `${relativePath} (${formatBytes(stats.size)})`;
 
-        if (isManifestUpload) {
+        if (showStrategyPerFile) {
           successMessage += ` [${file.strategy}]`;
         }
 
@@ -235,7 +232,7 @@ export async function uploadFilesInBatch(
     );
   }
 
-  if (!isManifestUpload && files.length > 0) {
+  if (!showStrategyPerFile && files.length > 0) {
     const firstFile = files[0];
     console.log(chalk.gray(`Strategy: ${firstFile.strategy}`));
   }

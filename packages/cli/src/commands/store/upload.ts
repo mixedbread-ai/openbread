@@ -139,26 +139,24 @@ export function createUploadCommand(): Command {
         // Remove duplicates
         const uniqueFiles = [...new Set(files)];
 
-        if (parsedOptions.patterns) {
-          if (uniqueFiles.length === 0) {
-            log.warn("No files found matching the patterns.");
-            return;
-          }
-
-          const totalSize = uniqueFiles.reduce((sum, file) => {
-            try {
-              return sum + statSync(file).size;
-            } catch {
-              return sum;
-            }
-          }, 0);
-
-          console.log(
-            `Found ${formatCountWithSuffix(uniqueFiles.length, "file")} matching the ${
-              patterns.length > 1 ? "patterns" : "pattern"
-            } (${formatBytes(totalSize)})`
-          );
+        if (uniqueFiles.length === 0) {
+          log.warn("No files found matching the patterns.");
+          return;
         }
+
+        const totalSize = uniqueFiles.reduce((sum, file) => {
+          try {
+            return sum + statSync(file).size;
+          } catch {
+            return sum;
+          }
+        }, 0);
+
+        console.log(
+          `Found ${formatCountWithSuffix(uniqueFiles.length, "file")} matching the ${
+            patterns.length > 1 ? "patterns" : "pattern"
+          } (${formatBytes(totalSize)})`
+        );
 
         if (parsedOptions.dryRun) {
           console.log(chalk.blue("Dry run - files that would be uploaded:"));

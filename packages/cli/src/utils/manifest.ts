@@ -206,6 +206,7 @@ export async function uploadFromManifest(
       unique: options.unique || false,
       existingFiles,
       parallel: options.parallel ?? config.defaults.upload.parallel ?? 100,
+      showStrategyPerFile: true,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

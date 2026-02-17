@@ -96,13 +96,8 @@ function escapeCsv(value: string): string {
 }
 
 export function formatBytes(bytes: number | undefined): string {
-  if (
-    bytes === 0 ||
-    bytes === undefined ||
-    bytes === null ||
-    Number.isNaN(bytes)
-  )
-    return "0 B";
+  if (bytes === undefined || bytes === null || Number.isNaN(bytes)) return "-";
+  if (bytes === 0) return "0 B";
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(Math.abs(bytes)) / Math.log(k));
