@@ -74,6 +74,7 @@ export function createSyncCommand(): Command {
   );
 
   command.action(async (nameOrId: string, patterns: string[]) => {
+    let activeSpinner: ReturnType<typeof spinner> | null = null;
     try {
       const mergedOptions = command.optsWithGlobals();
       const parsedOptions = parseOptions(SyncStoreSchema, {
@@ -91,10 +92,10 @@ export function createSyncCommand(): Command {
       }
 
       // Step 0: Resolve store
-      const resolveSpinner = spinner();
-      resolveSpinner.start(`Looking up store "${parsedOptions.nameOrId}"...`);
+      activeSpinner = spinner();
+      activeSpinner.start(`Looking up store "${parsedOptions.nameOrId}"...`);
       const store = await resolveStore(client, parsedOptions.nameOrId);
-      resolveSpinner.stop(`Found store: ${store.name}`);
+      activeSpinner.stop(`Found store: ${store.name}`);
 
       // Parse metadata if provided
       const additionalMetadata = validateMetadata(parsedOptions.metadata);
@@ -102,12 +103,12 @@ export function createSyncCommand(): Command {
       // Get git info
       const gitInfo = await getGitInfo();
 
-      const loadSpinner = spinner();
-      loadSpinner.start("Loading existing files from store...");
+      activeSpinner = spinner();
+      activeSpinner.start("Loading existing files from store...");
 
       const syncedFiles = await getSyncedFiles(client, store.id);
 
-      loadSpinner.stop(
+      activeSpinner.stop(
         `Found ${formatCountWithSuffix(syncedFiles.size, "existing file")} in store`
       );
 
@@ -126,8 +127,8 @@ export function createSyncCommand(): Command {
         log.success("Hash-based detection enabled (comparing file contents)");
       }
 
-      const analyzeSpinner = spinner();
-      analyzeSpinner.start("Scanning files and detecting changes...");
+      activeSpinner = spinner();
+      activeSpinner.start("Scanning files and detecting changes...");
       const analysis = await analyzeChanges({
         patterns,
         syncedFiles,
@@ -136,7 +137,7 @@ export function createSyncCommand(): Command {
         forceUpload: parsedOptions.force,
       });
 
-      analyzeSpinner.stop("Change analysis complete");
+      activeSpinner.stop("Change analysis complete");
 
       const totalChanges =
         analysis.added.length +
@@ -197,6 +198,7 @@ export function createSyncCommand(): Command {
         strategy: parsedOptions.strategy,
       });
     } catch (error) {
+      activeSpinner?.stop();
       if (error instanceof Error) {
         log.error(error.message);
       } else {

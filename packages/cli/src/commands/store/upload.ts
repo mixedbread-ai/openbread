@@ -79,6 +79,7 @@ export function createUploadCommand(): Command {
   );
 
   command.action(async (nameOrId: string, patterns: string[]) => {
+    let activeSpinner: ReturnType<typeof spinner> | null = null;
     try {
       const mergedOptions = command.optsWithGlobals();
 
@@ -93,12 +94,12 @@ export function createUploadCommand(): Command {
       }
 
       const client = createClient(parsedOptions);
-      const initializeSpinner = spinner();
-      initializeSpinner.start("Initializing upload...");
+      activeSpinner = spinner();
+      activeSpinner.start("Initializing upload...");
       const store = await resolveStore(client, parsedOptions.nameOrId);
       const config = loadConfig();
 
-      initializeSpinner.stop("Upload initialized");
+      activeSpinner.stop("Upload initialized");
 
       // Handle manifest file upload
       if (parsedOptions.manifest) {
@@ -178,19 +179,19 @@ export function createUploadCommand(): Command {
       // Handle --unique flag: check for existing files
       let existingFiles: Map<string, string> = new Map();
       if (parsedOptions.unique) {
-        const uniqueSpinner = spinner();
-        uniqueSpinner.start("Checking for existing files...");
+        activeSpinner = spinner();
+        activeSpinner.start("Checking for existing files...");
         try {
           existingFiles = await checkExistingFiles(
             client,
             store.id,
             uniqueFiles
           );
-          uniqueSpinner.stop(
+          activeSpinner.stop(
             `Found ${formatCountWithSuffix(existingFiles.size, "existing file")}`
           );
         } catch (error) {
-          uniqueSpinner.stop();
+          activeSpinner.stop();
           log.error("Failed to check existing files");
           throw error;
         }
@@ -210,6 +211,7 @@ export function createUploadCommand(): Command {
         parallel,
       });
     } catch (error) {
+      activeSpinner?.stop();
       if (error instanceof Error) {
         log.error(error.message);
       } else {
