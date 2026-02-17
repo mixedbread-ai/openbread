@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.2
+
+### Patch Changes
+
+- a824f1f: Replaced ora and inquirer with clack for improved terminal UI
+
 ## 2.2.1
 
 ### Patch Changes
