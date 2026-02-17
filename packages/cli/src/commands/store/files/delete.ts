@@ -29,7 +29,7 @@ export function createDeleteCommand(): Command {
 
   deleteCommand.action(
     async (nameOrId: string, fileId: string, options: GlobalOptions) => {
-      const s = spinner();
+      const deleteSpinner = spinner();
       try {
         const mergedOptions = mergeCommandOptions(deleteCommand, options);
 
@@ -46,6 +46,7 @@ export function createDeleteCommand(): Command {
         if (!parsedOptions.yes) {
           const confirmed = await confirm({
             message: `Are you sure you want to delete file "${parsedOptions.fileId}" from store "${store.name}" (${store.id})? This action cannot be undone.`,
+            initialValue: false,
           });
 
           if (isCancel(confirmed) || !confirmed) {
@@ -54,15 +55,15 @@ export function createDeleteCommand(): Command {
           }
         }
 
-        s.start("Deleting file...");
+        deleteSpinner.start("Deleting file...");
 
         await client.stores.files.delete(parsedOptions.fileId, {
           store_identifier: store.id,
         });
 
-        s.stop(`File ${parsedOptions.fileId} deleted successfully`);
+        deleteSpinner.stop(`File ${parsedOptions.fileId} deleted successfully`);
       } catch (error) {
-        s.stop();
+        deleteSpinner.stop();
         log.error(
           error instanceof Error ? error.message : "Failed to delete file"
         );

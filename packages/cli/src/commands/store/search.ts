@@ -92,7 +92,7 @@ export function createSearchCommand(): Command {
 
   command.action(
     async (nameOrId: string, query: string, options: SearchOptions) => {
-      const s = spinner();
+      const searchSpinner = spinner();
 
       try {
         const mergedOptions = mergeCommandOptions(command, options);
@@ -103,7 +103,7 @@ export function createSearchCommand(): Command {
         });
 
         const client = createClient(parsedOptions);
-        s.start("Searching store...");
+        searchSpinner.start("Searching store...");
         const store = await resolveStore(client, parsedOptions.nameOrId);
         const config = loadConfig();
 
@@ -127,12 +127,12 @@ export function createSearchCommand(): Command {
             });
 
         if (!results.data || results.data.length === 0) {
-          s.stop();
+          searchSpinner.stop();
           log.info("No results found.");
           return;
         }
 
-        s.stop(`Found ${formatCountWithSuffix(results.data.length, "result")}`);
+        searchSpinner.stop(`Found ${formatCountWithSuffix(results.data.length, "result")}`);
 
         const output = results.data.map((result) => {
           const metadata =
@@ -159,7 +159,7 @@ export function createSearchCommand(): Command {
 
         formatOutput(output, parsedOptions.format);
       } catch (error) {
-        s.stop();
+        searchSpinner.stop();
         log.error(
           error instanceof Error ? error.message : "Failed to search store"
         );

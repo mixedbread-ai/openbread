@@ -49,7 +49,7 @@ export async function resolveStore(
     if (isCancel(selected)) {
       throw new Error("Operation cancelled.");
     }
-    return selected as Store;
+    return selected;
   } else {
     const suggestions = fuzzyMatches
       .map((store) => `  • ${store.name}`)

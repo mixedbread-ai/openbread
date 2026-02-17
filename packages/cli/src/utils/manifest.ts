@@ -172,8 +172,8 @@ export async function uploadFromManifest(
     // Handle --unique flag: check for existing files
     let existingFiles: Map<string, string> = new Map();
     if (options.unique) {
-      const s = spinner();
-      s.start("Checking for existing files...");
+      const checkSpinner = spinner();
+      checkSpinner.start("Checking for existing files...");
       try {
         const storeFiles = await getStoreFiles(client, storeIdentifier);
         existingFiles = new Map(
@@ -191,11 +191,11 @@ export async function uploadFromManifest(
             )
             .map((f) => [(f.metadata as { file_path: string }).file_path, f.id])
         );
-        s.stop(
+        checkSpinner.stop(
           `Found ${formatCountWithSuffix(existingFiles.size, "existing file")}`
         );
       } catch (error) {
-        s.stop();
+        checkSpinner.stop();
         log.error("Failed to check existing files");
         throw error;
       }

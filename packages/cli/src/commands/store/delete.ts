@@ -34,7 +34,7 @@ export function createDeleteCommand(): Command {
   );
 
   command.action(async (nameOrId: string, options: DeleteOptions) => {
-    const s = spinner();
+    const deleteSpinner = spinner();
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);
@@ -51,6 +51,7 @@ export function createDeleteCommand(): Command {
       if (!parsedOptions.yes) {
         const confirmed = await confirm({
           message: `Are you sure you want to delete store "${store.name}" (${store.id})? This action cannot be undone.`,
+          initialValue: false,
         });
 
         if (isCancel(confirmed) || !confirmed) {
@@ -59,11 +60,11 @@ export function createDeleteCommand(): Command {
         }
       }
 
-      s.start("Deleting store...");
+      deleteSpinner.start("Deleting store...");
 
       await client.stores.delete(store.id);
 
-      s.stop(`Store "${store.name}" deleted successfully`);
+      deleteSpinner.stop(`Store "${store.name}" deleted successfully`);
 
       // Update completion cache by removing the deleted store
       const keyName = getCurrentKeyName();
@@ -71,7 +72,7 @@ export function createDeleteCommand(): Command {
         updateCacheAfterDelete(keyName, store.name);
       }
     } catch (error) {
-      s.stop();
+      deleteSpinner.stop();
       log.error(
         error instanceof Error ? error.message : "Failed to delete store"
       );

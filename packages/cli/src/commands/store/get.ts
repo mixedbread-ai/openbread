@@ -26,7 +26,7 @@ export function createGetCommand(): Command {
   );
 
   command.action(async (nameOrId: string, options: GetOptions) => {
-    const s = spinner();
+    const getSpinner = spinner();
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);
@@ -37,10 +37,10 @@ export function createGetCommand(): Command {
       });
 
       const client = createClient(parsedOptions);
-      s.start("Loading store details...");
+      getSpinner.start("Loading store details...");
       const store = await resolveStore(client, parsedOptions.nameOrId);
 
-      s.stop("Store details loaded");
+      getSpinner.stop("Store details loaded");
 
       const formattedData = {
         name: store.name,
@@ -67,7 +67,7 @@ export function createGetCommand(): Command {
 
       formatOutput(formattedData, parsedOptions.format);
     } catch (error) {
-      s.stop();
+      getSpinner.stop();
       log.error(
         error instanceof Error ? error.message : "Failed to get store details"
       );

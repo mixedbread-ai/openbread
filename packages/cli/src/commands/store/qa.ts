@@ -54,7 +54,7 @@ export function createQACommand(): Command {
 
   command.action(
     async (nameOrId: string, question: string, options: QAOptions) => {
-      const s = spinner();
+      const qaSpinner = spinner();
 
       try {
         const mergedOptions = mergeCommandOptions(command, options);
@@ -65,7 +65,7 @@ export function createQACommand(): Command {
         });
 
         const client = createClient(parsedOptions);
-        s.start("Processing question...");
+        qaSpinner.start("Processing question...");
         const store = await resolveStore(client, parsedOptions.nameOrId);
         const config = loadConfig();
 
@@ -86,10 +86,10 @@ export function createQACommand(): Command {
           },
         });
 
-        s.stop("Question processed\n");
+        qaSpinner.stop("Question processed");
 
         // Display the answer
-        console.log(chalk.bold(chalk.blue("Answer:")));
+        console.log(chalk.bold(chalk.blue("\nAnswer:")));
         console.log(response.answer);
 
         // Display sources if available
@@ -118,7 +118,7 @@ export function createQACommand(): Command {
           formatOutput(sources, parsedOptions.format);
         }
       } catch (error) {
-        s.stop();
+        qaSpinner.stop();
         log.error(
           error instanceof Error ? error.message : "Failed to process question"
         );

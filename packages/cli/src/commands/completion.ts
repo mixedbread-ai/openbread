@@ -172,14 +172,14 @@ export function createCompletionCommand(): Command {
     const parsedOptions = parseOptions(BaseGlobalOptionsSchema, {
       ...mergedOptions,
     });
-    const s = spinner();
-    s.start("Refreshing completion cache...");
+    const refreshSpinner = spinner();
+    refreshSpinner.start("Refreshing completion cache...");
 
     try {
       await refreshAllCaches(parsedOptions);
-      s.stop("Completion cache refreshed successfully");
+      refreshSpinner.stop("Completion cache refreshed successfully");
     } catch (error) {
-      s.stop();
+      refreshSpinner.stop();
       clackLog.error(
         error instanceof Error
           ? error.message

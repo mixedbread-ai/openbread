@@ -58,7 +58,7 @@ export function createUpdateCommand(): Command {
   );
 
   command.action(async (nameOrId: string, options: UpdateOptions) => {
-    const s = spinner();
+    const updateSpinner = spinner();
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);
@@ -94,11 +94,11 @@ export function createUpdateCommand(): Command {
         process.exit(1);
       }
 
-      s.start("Updating store...");
+      updateSpinner.start("Updating store...");
 
       const updatedStore = await client.stores.update(store.id, updateData);
 
-      s.stop(`Store "${store.name}" updated successfully`);
+      updateSpinner.stop(`Store "${store.name}" updated successfully`);
 
       formatOutput(
         {
@@ -130,7 +130,7 @@ export function createUpdateCommand(): Command {
         }
       }
     } catch (error) {
-      s.stop();
+      updateSpinner.stop();
       log.error(
         error instanceof Error ? error.message : "Failed to update store"
       );

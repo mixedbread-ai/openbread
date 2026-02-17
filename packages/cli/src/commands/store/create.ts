@@ -57,7 +57,7 @@ export function createCreateCommand(): Command {
   );
 
   command.action(async (name: string, options: CreateOptions) => {
-    const s = spinner();
+    const createSpinner = spinner();
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);
@@ -70,7 +70,7 @@ export function createCreateCommand(): Command {
 
       const metadata = validateMetadata(parsedOptions.metadata);
 
-      s.start("Creating store...");
+      createSpinner.start("Creating store...");
 
       const store = await client.stores.create({
         name: parsedOptions.name,
@@ -86,7 +86,7 @@ export function createCreateCommand(): Command {
         metadata,
       });
 
-      s.stop(`Store "${name}" created successfully`);
+      createSpinner.stop(`Store "${name}" created successfully`);
 
       formatOutput(
         {
@@ -110,7 +110,7 @@ export function createCreateCommand(): Command {
         updateCacheAfterCreate(keyName, store.name);
       }
     } catch (error) {
-      s.stop();
+      createSpinner.stop();
       log.error(
         error instanceof Error ? error.message : "Failed to create store"
       );

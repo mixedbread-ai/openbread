@@ -98,7 +98,7 @@ export function createSyncCommand(): Command {
 
         const client = createClient(parsedOptions);
 
-        console.log(chalk.bold.blue("🔄 Starting Store Sync\n"));
+        console.log(chalk.bold.blue("🔄 Starting Store Sync"));
 
         if (parsedOptions.contextualization) {
           warnContextualizationDeprecated("store sync");

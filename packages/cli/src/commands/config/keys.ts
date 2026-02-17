@@ -144,6 +144,7 @@ export function createKeysCommand(): Command {
       if (!parsedOptions.yes) {
         const confirmed = await confirm({
           message: `Remove API key "${parsedOptions.name}"${isDefault ? " (currently default)" : ""}?`,
+          initialValue: false,
         });
 
         if (isCancel(confirmed) || !confirmed) {

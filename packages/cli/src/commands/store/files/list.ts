@@ -47,7 +47,7 @@ export function createListCommand(): Command {
   );
 
   listCommand.action(async (nameOrId: string, options: FilesOptions) => {
-    const s = spinner();
+    const listSpinner = spinner();
 
     try {
       const mergedOptions = mergeCommandOptions(listCommand, options);
@@ -57,7 +57,7 @@ export function createListCommand(): Command {
       });
 
       const client = createClient(parsedOptions);
-      s.start("Loading files...");
+      listSpinner.start("Loading files...");
       const store = await resolveStore(client, parsedOptions.nameOrId);
 
       const response = await client.stores.files.list(store.id, {
@@ -74,12 +74,12 @@ export function createListCommand(): Command {
       }
 
       if (files.length === 0) {
-        s.stop();
+        listSpinner.stop();
         log.info("No files found.");
         return;
       }
 
-      s.stop(`Found ${formatCountWithSuffix(files.length, "file")}`);
+      listSpinner.stop(`Found ${formatCountWithSuffix(files.length, "file")}`);
 
       // Format data for output
       const formattedData = files.map((file) => ({
@@ -96,7 +96,7 @@ export function createListCommand(): Command {
 
       formatOutput(formattedData, parsedOptions.format);
     } catch (error) {
-      s.stop();
+      listSpinner.stop();
       log.error(
         error instanceof Error ? error.message : "Failed to list files"
       );

@@ -43,7 +43,7 @@ export function createListCommand(): Command {
   );
 
   command.action(async (options: ListOptions) => {
-    const s = spinner();
+    const listSpinner = spinner();
 
     try {
       const mergedOptions = mergeCommandOptions(command, options);
@@ -53,7 +53,7 @@ export function createListCommand(): Command {
       );
 
       const client = createClient(parsedOptions);
-      s.start("Loading stores...");
+      listSpinner.start("Loading stores...");
       const response = await client.stores.list({
         limit: parsedOptions.limit || 100,
       });
@@ -69,7 +69,7 @@ export function createListCommand(): Command {
       }
 
       if (stores.length === 0) {
-        s.stop();
+        listSpinner.stop();
         log.info("No stores found.");
         return;
       }
@@ -87,7 +87,7 @@ export function createListCommand(): Command {
         created: new Date(store.created_at).toLocaleDateString(),
       }));
 
-      s.stop(`Found ${formatCountWithSuffix(stores.length, "store")}`);
+      listSpinner.stop(`Found ${formatCountWithSuffix(stores.length, "store")}`);
       formatOutput(formattedData, parsedOptions.format);
 
       // Update completion cache with the fetched stores
@@ -96,7 +96,7 @@ export function createListCommand(): Command {
         refreshCacheForKey(keyName, client);
       }
     } catch (error) {
-      s.stop();
+      listSpinner.stop();
       log.error(
         error instanceof Error ? error.message : "Failed to list stores"
       );
