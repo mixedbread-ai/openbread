@@ -493,7 +493,7 @@ describe("Store List Command", () => {
         name: "store1",
         status: "active",
         files: undefined,
-        usage: "0 B",
+        usage: "-",
         created: "1/1/2024",
       });
     });

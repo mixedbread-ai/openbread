@@ -1,14 +1,14 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
 import { join } from "node:path";
 import chalk from "chalk";
+import { getConfigDir } from "./config";
 
 interface UpdateCheckCache {
   lastCheck: number;
   latestVersion: string;
 }
 
-const CACHE_DIR = join(homedir(), ".config", "mxbai");
+const CACHE_DIR = getConfigDir();
 const CACHE_FILE = join(CACHE_DIR, "update-check.json");
 const CHECK_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
 const REGISTRY_URL = "https://registry.npmjs.org/@mixedbread/cli/latest";
@@ -104,13 +104,15 @@ function stripAnsi(str: string): string {
 }
 
 /**
- * Check for updates and display notification if available
- * This runs asynchronously and doesn't block command execution
+ * Check for updates and return a notification banner if available.
+ * Returns the banner string if an update is available, or null otherwise.
  */
-export async function checkForUpdates(currentVersion: string): Promise<void> {
+export async function checkForUpdates(
+  currentVersion: string
+): Promise<string | null> {
   // Skip in CI or non-TTY environments
   if (process.env.CI || !process.stdout.isTTY) {
-    return;
+    return null;
   }
 
   try {
@@ -127,10 +129,11 @@ export async function checkForUpdates(currentVersion: string): Promise<void> {
     }
 
     if (isVersionLessThan(currentVersion, latestVersion)) {
-      console.log(formatUpdateBanner(currentVersion, latestVersion));
-      console.log(); // Add spacing after banner
+      return formatUpdateBanner(currentVersion, latestVersion);
     }
   } catch {
     // Silently fail - update checks should never break the CLI
   }
+
+  return null;
 }

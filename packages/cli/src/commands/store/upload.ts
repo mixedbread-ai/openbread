@@ -1,5 +1,4 @@
-import { statSync } from "node:fs";
-import { log, spinner } from "@clack/prompts";
+import { stat } from "node:fs/promises";
 import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { Command } from "commander";
@@ -12,13 +11,13 @@ import {
   addGlobalOptions,
   extendGlobalOptions,
   type GlobalOptions,
-  mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
+import { log, spinner } from "../../utils/logger";
 import { uploadFromManifest } from "../../utils/manifest";
 import { validateMetadata } from "../../utils/metadata";
 import { formatBytes, formatCountWithSuffix } from "../../utils/output";
-import { getStoreFiles, resolveStore } from "../../utils/store";
+import { checkExistingFiles, resolveStore } from "../../utils/store";
 import { type FileToUpload, uploadFilesInBatch } from "../../utils/upload";
 
 const UploadStoreSchema = extendGlobalOptions({
@@ -45,7 +44,7 @@ const UploadStoreSchema = extendGlobalOptions({
 });
 
 export interface UploadOptions extends GlobalOptions {
-  strategy?: FileCreateParams.Experimental["parsing_strategy"];
+  strategy?: FileCreateParams.Config["parsing_strategy"];
   contextualization?: boolean;
   metadata?: string;
   dryRun?: boolean;
@@ -79,161 +78,151 @@ export function createUploadCommand(): Command {
       .option("--manifest <file>", "Upload using manifest file")
   );
 
-  command.action(
-    async (nameOrId: string, patterns: string[], options: UploadOptions) => {
-      try {
-        const mergedOptions = mergeCommandOptions(command, options);
+  command.action(async (nameOrId: string, patterns: string[]) => {
+    let activeSpinner: ReturnType<typeof spinner> | null = null;
+    try {
+      const mergedOptions = command.optsWithGlobals();
 
-        const parsedOptions = parseOptions(UploadStoreSchema, {
-          ...mergedOptions,
-          nameOrId,
-          patterns,
-        });
+      const parsedOptions = parseOptions(UploadStoreSchema, {
+        ...mergedOptions,
+        nameOrId,
+        patterns,
+      });
 
-        if (parsedOptions.contextualization) {
-          warnContextualizationDeprecated("store upload");
-        }
+      if (parsedOptions.contextualization) {
+        warnContextualizationDeprecated("store upload");
+      }
 
-        const client = createClient(parsedOptions);
-        const initializeSpinner = spinner();
-        initializeSpinner.start("Initializing upload...");
-        const store = await resolveStore(client, parsedOptions.nameOrId);
-        const config = loadConfig();
+      const client = createClient(parsedOptions);
+      activeSpinner = spinner();
+      activeSpinner.start("Initializing upload...");
+      const store = await resolveStore(client, parsedOptions.nameOrId);
+      const config = loadConfig();
 
-        initializeSpinner.stop("Upload initialized");
+      activeSpinner.stop("Upload initialized");
+      activeSpinner = null;
 
-        // Handle manifest file upload
-        if (parsedOptions.manifest) {
-          return await uploadFromManifest(
-            client,
-            store.id,
-            parsedOptions.manifest,
-            parsedOptions
-          );
-        }
+      // Handle manifest file upload
+      if (parsedOptions.manifest) {
+        return await uploadFromManifest(
+          client,
+          store.id,
+          parsedOptions.manifest,
+          parsedOptions
+        );
+      }
 
-        if (!parsedOptions.patterns || parsedOptions.patterns.length === 0) {
-          log.error(
-            "No file patterns provided. Use --manifest for manifest-based uploads."
-          );
-          process.exit(1);
-        }
-
-        // Get configuration values with precedence: command-line > config defaults > built-in defaults
-        const strategy =
-          parsedOptions.strategy ?? config.defaults?.upload?.strategy ?? "fast";
-        const parallel =
-          parsedOptions.parallel ?? config.defaults?.upload?.parallel ?? 100;
-
-        const metadata = validateMetadata(parsedOptions.metadata);
-
-        // Collect all files matching patterns
-        const files: string[] = [];
-        for (const pattern of parsedOptions.patterns) {
-          const matches = await glob(pattern, {
-            nodir: true,
-            absolute: false,
-          });
-          files.push(...matches);
-        }
-        // Remove duplicates
-        const uniqueFiles = [...new Set(files)];
-
-        if (parsedOptions.patterns) {
-          if (uniqueFiles.length === 0) {
-            log.warn("No files found matching the patterns.");
-            return;
-          }
-
-          const totalSize = uniqueFiles.reduce((sum, file) => {
-            try {
-              return sum + statSync(file).size;
-            } catch {
-              return sum;
-            }
-          }, 0);
-
-          console.log(
-            `Found ${formatCountWithSuffix(uniqueFiles.length, "file")} matching the ${
-              patterns.length > 1 ? "patterns" : "pattern"
-            } (${formatBytes(totalSize)})`
-          );
-        }
-
-        if (parsedOptions.dryRun) {
-          console.log(chalk.blue("Dry run - files that would be uploaded:"));
-          uniqueFiles.forEach((file) => {
-            try {
-              const stats = statSync(file);
-              console.log(`  \n${file} (${formatBytes(stats.size)})`);
-              console.log(`    Strategy: ${strategy}`);
-
-              if (metadata && Object.keys(metadata).length > 0) {
-                console.log(`    Metadata: ${JSON.stringify(metadata)}`);
-              }
-            } catch (_error) {
-              console.log(`  ${file} (${chalk.red("✗ File not found")})`);
-            }
-          });
-          return;
-        }
-
-        // Handle --unique flag: check for existing files
-        let existingFiles: Map<string, string> = new Map();
-        if (parsedOptions.unique) {
-          const uniqueSpinner = spinner();
-          uniqueSpinner.start("Checking for existing files...");
-          try {
-            const storeFiles = await getStoreFiles(client, store.id);
-            existingFiles = new Map(
-              storeFiles
-                .filter((f) => {
-                  const filePath =
-                    typeof f.metadata === "object" &&
-                    f.metadata &&
-                    "file_path" in f.metadata &&
-                    (f.metadata.file_path as string);
-
-                  return filePath && files.includes(filePath);
-                })
-                .map((f) => [
-                  (f.metadata as { file_path: string }).file_path,
-                  f.id,
-                ])
-            );
-            uniqueSpinner.stop(
-              `Found ${formatCountWithSuffix(existingFiles.size, "existing file")}`
-            );
-          } catch (error) {
-            uniqueSpinner.stop();
-            log.error("Failed to check existing files");
-            throw error;
-          }
-        }
-
-        // Transform files to shared format
-        const filesToUpload: FileToUpload[] = uniqueFiles.map((filePath) => ({
-          path: filePath,
-          strategy,
-          metadata,
-        }));
-
-        // Upload files with progress tracking
-        await uploadFilesInBatch(client, store.id, filesToUpload, {
-          unique: parsedOptions.unique || false,
-          existingFiles,
-          parallel,
-        });
-      } catch (error) {
-        if (error instanceof Error) {
-          log.error(error.message);
-        } else {
-          log.error("Failed to upload files");
-        }
+      if (!parsedOptions.patterns || parsedOptions.patterns.length === 0) {
+        log.error(
+          "No file patterns provided. Use --manifest for manifest-based uploads."
+        );
         process.exit(1);
       }
+
+      // Get configuration values with precedence: command-line > config defaults > built-in defaults
+      const strategy =
+        parsedOptions.strategy ?? config.defaults?.upload?.strategy ?? "fast";
+      const parallel =
+        parsedOptions.parallel ?? config.defaults?.upload?.parallel ?? 100;
+
+      const metadata = validateMetadata(parsedOptions.metadata);
+
+      // Collect all files matching patterns
+      const files: string[] = [];
+      for (const pattern of parsedOptions.patterns) {
+        const matches = await glob(pattern, {
+          nodir: true,
+          absolute: false,
+        });
+        files.push(...matches);
+      }
+      // Remove duplicates
+      const uniqueFiles = [...new Set(files)];
+
+      if (uniqueFiles.length === 0) {
+        log.warn("No files found matching the patterns.");
+        return;
+      }
+
+      let totalSize = 0;
+      for (const file of uniqueFiles) {
+        try {
+          totalSize += (await stat(file)).size;
+        } catch {
+          // File may not exist
+        }
+      }
+
+      console.log(
+        `Found ${formatCountWithSuffix(uniqueFiles.length, "file")} matching the ${
+          patterns.length > 1 ? "patterns" : "pattern"
+        } (${formatBytes(totalSize)})`
+      );
+
+      if (parsedOptions.dryRun) {
+        console.log(chalk.blue("Dry run - files that would be uploaded:"));
+        for (const file of uniqueFiles) {
+          try {
+            const stats = await stat(file);
+            console.log(`  \n${file} (${formatBytes(stats.size)})`);
+            console.log(`    Strategy: ${strategy}`);
+
+            if (metadata && Object.keys(metadata).length > 0) {
+              console.log(`    Metadata: ${JSON.stringify(metadata)}`);
+            }
+          } catch (_error) {
+            console.log(`  ${file} (${chalk.red("✗ File not found")})`);
+          }
+        }
+        return;
+      }
+
+      // Handle --unique flag: check for existing files
+      let existingFiles: Map<string, string> = new Map();
+      if (parsedOptions.unique) {
+        activeSpinner = spinner();
+        activeSpinner.start("Checking for existing files...");
+        try {
+          existingFiles = await checkExistingFiles(
+            client,
+            store.id,
+            uniqueFiles
+          );
+          activeSpinner.stop(
+            `Found ${formatCountWithSuffix(existingFiles.size, "existing file")}`
+          );
+          activeSpinner = null;
+        } catch (error) {
+          activeSpinner.stop();
+          activeSpinner = null;
+          log.error("Failed to check existing files");
+          throw error;
+        }
+      }
+
+      // Transform files to shared format
+      const filesToUpload: FileToUpload[] = uniqueFiles.map((filePath) => ({
+        path: filePath,
+        strategy,
+        metadata,
+      }));
+
+      // Upload files with progress tracking
+      await uploadFilesInBatch(client, store.id, filesToUpload, {
+        unique: parsedOptions.unique || false,
+        existingFiles,
+        parallel,
+      });
+    } catch (error) {
+      activeSpinner?.stop();
+      if (error instanceof Error) {
+        log.error(error.message);
+      } else {
+        log.error("Failed to upload files");
+      }
+      process.exit(1);
     }
-  );
+  });
 
   return command;
 }

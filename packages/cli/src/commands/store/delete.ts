@@ -1,4 +1,4 @@
-import { confirm, isCancel, log, spinner } from "@clack/prompts";
+import { confirm, isCancel } from "@clack/prompts";
 import { Command } from "commander";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
@@ -9,20 +9,15 @@ import {
 import {
   addGlobalOptions,
   extendGlobalOptions,
-  type GlobalOptions,
-  mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
+import { log, spinner } from "../../utils/logger";
 import { resolveStore } from "../../utils/store";
 
 const DeleteStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
   yes: z.boolean().optional(),
 });
-
-interface DeleteOptions extends GlobalOptions {
-  yes?: boolean;
-}
 
 export function createDeleteCommand(): Command {
   const command = addGlobalOptions(
@@ -33,11 +28,10 @@ export function createDeleteCommand(): Command {
       .option("-y, --yes", "Skip confirmation prompt")
   );
 
-  command.action(async (nameOrId: string, options: DeleteOptions) => {
+  command.action(async (nameOrId: string) => {
     const deleteSpinner = spinner();
-
     try {
-      const mergedOptions = mergeCommandOptions(command, options);
+      const mergedOptions = command.optsWithGlobals();
 
       const parsedOptions = parseOptions(DeleteStoreSchema, {
         ...mergedOptions,

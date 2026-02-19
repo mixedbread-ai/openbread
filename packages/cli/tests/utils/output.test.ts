@@ -30,6 +30,11 @@ describe("Output Utils", () => {
       expect(formatBytes(-1048576)).toBe("-1 MB");
     });
 
+    it("should return dash for undefined, null, and NaN", () => {
+      expect(formatBytes(undefined)).toBe("-");
+      expect(formatBytes(NaN)).toBe("-");
+    });
+
     it("should round to two decimal places", () => {
       expect(formatBytes(1126)).toBe("1.1 KB");
       expect(formatBytes(1229)).toBe("1.2 KB");

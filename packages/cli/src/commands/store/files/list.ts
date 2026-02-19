@@ -1,4 +1,3 @@
-import { log, spinner } from "@clack/prompts";
 import type { StoreFile } from "@mixedbread/sdk/resources/stores";
 import { Command } from "commander";
 import { z } from "zod";
@@ -6,16 +5,15 @@ import { createClient } from "../../../utils/client";
 import {
   addGlobalOptions,
   extendGlobalOptions,
-  mergeCommandOptions,
   parseOptions,
 } from "../../../utils/global-options";
+import { log, spinner } from "../../../utils/logger";
 import {
   formatBytes,
   formatCountWithSuffix,
   formatOutput,
 } from "../../../utils/output";
 import { resolveStore } from "../../../utils/store";
-import type { FilesOptions } from ".";
 
 const ListFilesSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
@@ -46,11 +44,11 @@ export function createListCommand(): Command {
       .option("--limit <n>", "Maximum number of results", "10")
   );
 
-  listCommand.action(async (nameOrId: string, options: FilesOptions) => {
+  listCommand.action(async (nameOrId: string) => {
     const listSpinner = spinner();
 
     try {
-      const mergedOptions = mergeCommandOptions(listCommand, options);
+      const mergedOptions = listCommand.optsWithGlobals();
       const parsedOptions = parseOptions(ListFilesSchema, {
         ...mergedOptions,
         nameOrId,

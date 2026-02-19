@@ -15,25 +15,19 @@ import { setupGlobalOptions } from "../utils/global-options";
 import { checkForUpdates } from "../utils/update-checker";
 
 // Find package.json relative to the compiled file location
-// In the published package, from bin/mxbai.js, package.json is one level up
+const VERSION_PATHS = [
+  join(__dirname, "..", "package.json"),
+  join(__dirname, "..", "..", "package.json"),
+];
 let version = "0.0.0";
-try {
-  // First try one level up (for published package)
-  const packageJsonPath = join(__dirname, "..", "package.json");
-  const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
-  version = packageJson.version;
-} catch (_error) {
+for (const pkgPath of VERSION_PATHS) {
   try {
-    // Fallback to two levels up (for development/build environment)
-    const packageJsonPath = join(__dirname, "..", "..", "package.json");
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
-    version = packageJson.version;
-  } catch (_error2) {
-    // Final fallback if package.json is not found
-    console.warn(
-      "Warning: Could not read package.json for version information"
-    );
-  }
+    version = JSON.parse(readFileSync(pkgPath, "utf-8")).version;
+    break;
+  } catch {}
+}
+if (version === "0.0.0") {
+  console.warn("Warning: Could not read package.json for version information");
 }
 
 const program = new Command();
@@ -76,7 +70,7 @@ program.on("command:*", () => {
 // Parse arguments
 async function main() {
   try {
-    await checkForUpdates(version);
+    const updateCheck = checkForUpdates(version);
 
     // Show help if no arguments provided
     if (process.argv.length === 2) {
@@ -84,6 +78,11 @@ async function main() {
     }
 
     await program.parseAsync(process.argv);
+
+    const banner = await updateCheck;
+    if (banner) {
+      console.error(banner);
+    }
   } catch (error) {
     if (error instanceof Error) {
       console.error(chalk.red("\n✗"), error.message);

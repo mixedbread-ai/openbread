@@ -1,4 +1,3 @@
-import { log, spinner } from "@clack/prompts";
 import { Command } from "commander";
 import { z } from "zod";
 import { createClient } from "../../utils/client";
@@ -9,10 +8,9 @@ import {
 import {
   addGlobalOptions,
   extendGlobalOptions,
-  type GlobalOptions,
-  mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
+import { log, spinner } from "../../utils/logger";
 import {
   formatBytes,
   formatCountWithSuffix,
@@ -29,11 +27,6 @@ const ListStoreSchema = extendGlobalOptions({
     .optional(),
 });
 
-interface ListOptions extends GlobalOptions {
-  filter?: string;
-  limit?: number;
-}
-
 export function createListCommand(): Command {
   const command = addGlobalOptions(
     new Command("list")
@@ -42,11 +35,11 @@ export function createListCommand(): Command {
       .option("--limit <n>", "Maximum number of results", "100")
   );
 
-  command.action(async (options: ListOptions) => {
+  command.action(async () => {
     const listSpinner = spinner();
 
     try {
-      const mergedOptions = mergeCommandOptions(command, options);
+      const mergedOptions = command.optsWithGlobals();
       const parsedOptions = parseOptions(
         ListStoreSchema,
         mergedOptions as Record<string, unknown>
@@ -87,7 +80,9 @@ export function createListCommand(): Command {
         created: new Date(store.created_at).toLocaleDateString(),
       }));
 
-      listSpinner.stop(`Found ${formatCountWithSuffix(stores.length, "store")}`);
+      listSpinner.stop(
+        `Found ${formatCountWithSuffix(stores.length, "store")}`
+      );
       formatOutput(formattedData, parsedOptions.format);
 
       // Update completion cache with the fetched stores

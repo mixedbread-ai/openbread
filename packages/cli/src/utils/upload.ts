@@ -1,10 +1,11 @@
-import { readFileSync, statSync } from "node:fs";
+import { readFile, stat } from "node:fs/promises";
 import { basename, relative } from "node:path";
-import { log } from "@clack/prompts";
 import type Mixedbread from "@mixedbread/sdk";
 import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { lookup } from "mime-types";
+import pLimit from "p-limit";
+import { log } from "./logger";
 import { formatBytes, formatCountWithSuffix } from "./output";
 
 export const UPLOAD_TIMEOUT = 1000 * 60 * 10; // 10 minutes
@@ -72,7 +73,7 @@ export async function uploadFile(
   const { metadata = {}, strategy, externalId } = options;
 
   // Read file content
-  const fileContent = readFileSync(filePath);
+  const fileContent = await readFile(filePath);
   const fileName = basename(filePath);
   const mimeType = lookup(filePath) || "application/octet-stream";
   const file = fixMimeTypes(
@@ -104,14 +105,15 @@ export async function uploadFilesInBatch(
     unique: boolean;
     existingFiles: Map<string, string>;
     parallel: number;
+    showStrategyPerFile?: boolean;
   }
 ): Promise<UploadResults> {
-  const { unique, existingFiles, parallel } = options;
-
-  // Detect if this is a manifest upload
-  const isManifestUpload = files.some(
-    (file) => file.metadata?.manifest_entry === true
-  );
+  const {
+    unique,
+    existingFiles,
+    parallel,
+    showStrategyPerFile = false,
+  } = options;
 
   console.log(
     `\nUploading ${formatCountWithSuffix(files.length, "file")} to store...`
@@ -125,89 +127,83 @@ export async function uploadFilesInBatch(
     successfulSize: 0,
   };
 
-  const totalBatches = Math.ceil(files.length / parallel);
+  console.log(chalk.gray(`Processing with concurrency ${parallel}...`));
 
-  console.log(
-    chalk.gray(
-      `Processing ${totalBatches} batch${totalBatches > 1 ? "es" : ""} (${formatCountWithSuffix(parallel, "file")} per batch)...`
+  // Process files with sliding-window concurrency
+  const limit = pLimit(parallel);
+  await Promise.allSettled(
+    files.map((file) =>
+      limit(async () => {
+        const relativePath = relative(process.cwd(), file.path);
+
+        try {
+          // Delete existing file if using --unique
+          if (unique && existingFiles.has(relativePath)) {
+            const existingFileId = existingFiles.get(relativePath);
+            await client.stores.files.delete(existingFileId, {
+              store_identifier: storeIdentifier,
+            });
+          }
+
+          const fileMetadata = {
+            file_path: relativePath,
+            uploaded_at: new Date().toISOString(),
+            ...file.metadata,
+          };
+
+          // Check if file is empty
+          const stats = await stat(file.path);
+          if (stats.size === 0) {
+            log.warn(`${relativePath} - Empty file skipped`);
+            results.skipped++;
+            return;
+          }
+
+          const fileContent = await readFile(file.path);
+          const fileName = basename(file.path);
+          const mimeType = lookup(file.path) || "application/octet-stream";
+          const fileToUpload = fixMimeTypes(
+            new File([fileContent], fileName, {
+              type: mimeType,
+            })
+          );
+
+          await client.stores.files.upload(
+            storeIdentifier,
+            fileToUpload,
+            {
+              metadata: fileMetadata,
+              config: {
+                parsing_strategy: file.strategy,
+              },
+            },
+            { timeout: UPLOAD_TIMEOUT }
+          );
+
+          if (unique && existingFiles.has(relativePath)) {
+            results.updated++;
+          } else {
+            results.uploaded++;
+          }
+
+          results.successfulSize += stats.size;
+
+          let successMessage = `${relativePath} (${formatBytes(stats.size)})`;
+
+          if (showStrategyPerFile) {
+            successMessage += ` [${file.strategy}]`;
+          }
+
+          log.success(successMessage);
+        } catch (error) {
+          results.failed++;
+          const errorMsg =
+            error instanceof Error ? error.message : "Unknown error";
+          log.error(`${relativePath} - ${errorMsg}`);
+        }
+      })
     )
   );
-
-  // Process files in batches
-  for (let i = 0; i < files.length; i += parallel) {
-    const batch = files.slice(i, i + parallel);
-    const promises = batch.map(async (file) => {
-      const relativePath = relative(process.cwd(), file.path);
-
-      try {
-        // Delete existing file if using --unique
-        if (unique && existingFiles.has(relativePath)) {
-          const existingFileId = existingFiles.get(relativePath);
-          await client.stores.files.delete(existingFileId, {
-            store_identifier: storeIdentifier,
-          });
-        }
-
-        const fileMetadata = {
-          file_path: relativePath,
-          uploaded_at: new Date().toISOString(),
-          ...file.metadata,
-        };
-
-        // Check if file is empty
-        const stats = statSync(file.path);
-        if (stats.size === 0) {
-          log.warn(`${relativePath} - Empty file skipped`);
-          results.skipped++;
-          return;
-        }
-
-        const fileContent = readFileSync(file.path);
-        const fileName = basename(file.path);
-        const mimeType = lookup(file.path) || "application/octet-stream";
-        const fileToUpload = fixMimeTypes(
-          new File([fileContent], fileName, {
-            type: mimeType,
-          })
-        );
-
-        await client.stores.files.upload(
-          storeIdentifier,
-          fileToUpload,
-          {
-            metadata: fileMetadata,
-            config: {
-              parsing_strategy: file.strategy,
-            },
-          },
-          { timeout: UPLOAD_TIMEOUT }
-        );
-
-        if (unique && existingFiles.has(relativePath)) {
-          results.updated++;
-        } else {
-          results.uploaded++;
-        }
-
-        results.successfulSize += stats.size;
-
-        let successMessage = `${relativePath} (${formatBytes(stats.size)})`;
-
-        if (isManifestUpload) {
-          successMessage += ` [${file.strategy}]`;
-        }
-
-        log.success(successMessage);
-      } catch (error) {
-        results.failed++;
-        const errorMsg =
-          error instanceof Error ? error.message : "Unknown error";
-        log.error(`${relativePath} - ${errorMsg}`);
-      }
-    });
-
-    await Promise.all(promises);
-  }
 
   // Summary
   console.log(`\n${chalk.bold("Upload Summary:")}`);
@@ -235,7 +231,7 @@ export async function uploadFilesInBatch(
     );
   }
 
-  if (!isManifestUpload && files.length > 0) {
+  if (!showStrategyPerFile && files.length > 0) {
     const firstFile = files[0];
     console.log(chalk.gray(`Strategy: ${firstFile.strategy}`));
   }

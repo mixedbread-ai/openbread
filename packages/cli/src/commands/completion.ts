@@ -1,10 +1,9 @@
 import path from "node:path";
-import { log as clackLog, spinner } from "@clack/prompts";
 import {
   getShellFromEnv,
   install,
-  log,
   parseEnv,
+  log as tabtabLog,
   uninstall,
 } from "@pnpm/tabtab";
 import chalk from "chalk";
@@ -17,10 +16,9 @@ import {
 import {
   addGlobalOptions,
   BaseGlobalOptionsSchema,
-  type GlobalOptions,
-  mergeCommandOptions,
   parseOptions,
 } from "../utils/global-options";
+import { log, spinner } from "../utils/logger";
 
 const SUPPORTED_SHELLS = ["bash", "zsh", "fish", "pwsh"] as const;
 export type SupportedShell = (typeof SUPPORTED_SHELLS)[number];
@@ -141,6 +139,7 @@ export function createCompletionCommand(): Command {
         }
       } catch (error) {
         console.error(chalk.red("✗"), "Error installing completion:", error);
+        process.exit(1);
       }
     });
 
@@ -158,6 +157,7 @@ export function createCompletionCommand(): Command {
         );
       } catch (error) {
         console.error(chalk.red("✗"), "Error uninstalling completion:", error);
+        process.exit(1);
       }
     });
 
@@ -167,8 +167,8 @@ export function createCompletionCommand(): Command {
     )
   );
 
-  refreshCommand.action(async (options: GlobalOptions) => {
-    const mergedOptions = mergeCommandOptions(refreshCommand, options);
+  refreshCommand.action(async () => {
+    const mergedOptions = refreshCommand.optsWithGlobals();
     const parsedOptions = parseOptions(BaseGlobalOptionsSchema, {
       ...mergedOptions,
     });
@@ -180,11 +180,12 @@ export function createCompletionCommand(): Command {
       refreshSpinner.stop("Completion cache refreshed successfully");
     } catch (error) {
       refreshSpinner.stop();
-      clackLog.error(
+      log.error(
         error instanceof Error
           ? error.message
           : "Failed to refresh completion cache"
       );
+      process.exit(1);
     }
   });
 
@@ -215,7 +216,7 @@ export function createCompletionServerCommand(): Command {
 
       // Root level completions - "mxbai " (when no previous command)
       if (env.words === 1) {
-        return log(
+        return tabtabLog(
           ["config", "store", "completion", "--help", "--version"],
           shell,
           console.log
@@ -241,7 +242,7 @@ export function createCompletionServerCommand(): Command {
           if (keyName) {
             const stores = getStoresForCompletion(keyName);
             if (stores.length > 0) {
-              return log(stores, shell, console.log);
+              return tabtabLog(stores, shell, console.log);
             }
           }
         }
@@ -249,7 +250,7 @@ export function createCompletionServerCommand(): Command {
 
       // Store completions
       if (env.prev === "store") {
-        return log(
+        return tabtabLog(
           [
             "create",
             "delete",
@@ -272,7 +273,7 @@ export function createCompletionServerCommand(): Command {
         // Check if we're in "mxbai store files " context
         const words = env.line.trim().split(/\s+/);
         if (words.length >= 3 && words[1] === "store") {
-          return log(["list", "get", "delete"], shell, console.log);
+          return tabtabLog(["list", "get", "delete"], shell, console.log);
         }
       }
 
@@ -291,7 +292,7 @@ export function createCompletionServerCommand(): Command {
           if (keyName) {
             const stores = getStoresForCompletion(keyName);
             if (stores.length > 0) {
-              return log(stores, shell, console.log);
+              return tabtabLog(stores, shell, console.log);
             }
           }
         }
@@ -299,14 +300,14 @@ export function createCompletionServerCommand(): Command {
 
       // Config completions
       if (env.prev === "config") {
-        return log(["get", "set", "keys"], shell, console.log);
+        return tabtabLog(["get", "set", "keys"], shell, console.log);
       }
 
       if (env.prev === "keys") {
         // Check if we're in "mxbai config keys " context
         const words = env.line.trim().split(/\s+/);
         if (words.length >= 3 && words[1] === "config") {
-          return log(
+          return tabtabLog(
             ["list", "add", "remove", "set-default"],
             shell,
             console.log
@@ -316,7 +317,11 @@ export function createCompletionServerCommand(): Command {
 
       // Completion completions
       if (env.prev === "completion") {
-        return log(["install", "uninstall", "refresh"], shell, console.log);
+        return tabtabLog(
+          ["install", "uninstall", "refresh"],
+          shell,
+          console.log
+        );
       }
     });
 

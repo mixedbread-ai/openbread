@@ -1,4 +1,3 @@
-import { log, spinner } from "@clack/prompts";
 import type Mixedbread from "@mixedbread/sdk";
 import { Command } from "commander";
 import { z } from "zod";
@@ -7,10 +6,9 @@ import { loadConfig } from "../../utils/config";
 import {
   addGlobalOptions,
   extendGlobalOptions,
-  type GlobalOptions,
-  mergeCommandOptions,
   parseOptions,
 } from "../../utils/global-options";
+import { log, spinner } from "../../utils/logger";
 import { formatCountWithSuffix, formatOutput } from "../../utils/output";
 import { resolveStore } from "../../utils/store";
 
@@ -69,14 +67,6 @@ async function searchStoreChunks(
   });
 }
 
-interface SearchOptions extends GlobalOptions {
-  topK?: number;
-  threshold?: number;
-  returnMetadata?: boolean;
-  rerank?: boolean;
-  fileSearch?: boolean;
-}
-
 export function createSearchCommand(): Command {
   const command = addGlobalOptions(
     new Command("search")
@@ -90,83 +80,83 @@ export function createSearchCommand(): Command {
       .option("--file-search", "Search files instead of chunks", false)
   );
 
-  command.action(
-    async (nameOrId: string, query: string, options: SearchOptions) => {
-      const searchSpinner = spinner();
+  command.action(async (nameOrId: string, query: string) => {
+    const searchSpinner = spinner();
 
-      try {
-        const mergedOptions = mergeCommandOptions(command, options);
-        const parsedOptions = parseOptions(SearchStoreSchema, {
-          ...mergedOptions,
-          nameOrId,
-          query,
-        });
+    try {
+      const mergedOptions = command.optsWithGlobals();
+      const parsedOptions = parseOptions(SearchStoreSchema, {
+        ...mergedOptions,
+        nameOrId,
+        query,
+      });
 
-        const client = createClient(parsedOptions);
-        searchSpinner.start("Searching store...");
-        const store = await resolveStore(client, parsedOptions.nameOrId);
-        const config = loadConfig();
+      const client = createClient(parsedOptions);
+      searchSpinner.start("Searching store...");
+      const store = await resolveStore(client, parsedOptions.nameOrId);
+      const config = loadConfig();
 
-        // Get default values from config
-        const topK = parsedOptions.topK || config.defaults?.search?.top_k || 10;
-        const rerank =
-          parsedOptions.rerank ?? config.defaults?.search?.rerank ?? false;
+      // Get default values from config
+      const topK = parsedOptions.topK || config.defaults?.search?.top_k || 10;
+      const rerank =
+        parsedOptions.rerank ?? config.defaults?.search?.rerank ?? false;
 
-        const results = parsedOptions.fileSearch
-          ? await searchStoreFiles(client, {
-              ...parsedOptions,
-              storeIdentifier: store.id,
-              topK,
-              rerank,
-            })
-          : await searchStoreChunks(client, {
-              ...parsedOptions,
-              storeIdentifier: store.id,
-              topK,
-              rerank,
-            });
+      const results = parsedOptions.fileSearch
+        ? await searchStoreFiles(client, {
+            ...parsedOptions,
+            storeIdentifier: store.id,
+            topK,
+            rerank,
+          })
+        : await searchStoreChunks(client, {
+            ...parsedOptions,
+            storeIdentifier: store.id,
+            topK,
+            rerank,
+          });
 
-        if (!results.data || results.data.length === 0) {
-          searchSpinner.stop();
-          log.info("No results found.");
-          return;
+      if (!results.data || results.data.length === 0) {
+        searchSpinner.stop();
+        log.info("No results found.");
+        return;
+      }
+
+      searchSpinner.stop(
+        `Found ${formatCountWithSuffix(results.data.length, "result")}`
+      );
+
+      const output = results.data.map((result) => {
+        const metadata =
+          parsedOptions.format === "table"
+            ? JSON.stringify(result.metadata, null, 2)
+            : result.metadata;
+
+        const output: Record<string, unknown> = {
+          filename: result.filename,
+          score: result.score.toFixed(2),
+          store_id: result.store_id,
+        };
+
+        if (!parsedOptions.fileSearch) {
+          output.chunk_index = result.chunk_index;
         }
 
-        searchSpinner.stop(`Found ${formatCountWithSuffix(results.data.length, "result")}`);
+        if (parsedOptions.returnMetadata) {
+          output.metadata = metadata;
+        }
 
-        const output = results.data.map((result) => {
-          const metadata =
-            parsedOptions.format === "table"
-              ? JSON.stringify(result.metadata, null, 2)
-              : result.metadata;
+        return output;
+      });
 
-          const output: Record<string, unknown> = {
-            filename: result.filename,
-            score: result.score.toFixed(2),
-            store_id: result.store_id,
-          };
-
-          if (!parsedOptions.fileSearch) {
-            output.chunk_index = result.chunk_index;
-          }
-
-          if (parsedOptions.returnMetadata) {
-            output.metadata = metadata;
-          }
-
-          return output;
-        });
-
-        formatOutput(output, parsedOptions.format);
-      } catch (error) {
-        searchSpinner.stop();
-        log.error(
-          error instanceof Error ? error.message : "Failed to search store"
-        );
-        process.exit(1);
-      }
+      formatOutput(output, parsedOptions.format);
+    } catch (error) {
+      searchSpinner.stop();
+      log.error(
+        error instanceof Error ? error.message : "Failed to search store"
+      );
+      process.exit(1);
     }
-  );
+  });
 
   return command;
 }
