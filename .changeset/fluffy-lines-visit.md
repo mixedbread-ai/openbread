@@ -11,3 +11,4 @@ Improved CLI I/O, concurrency, and code deduplication
 - Extracted shared `checkExistingFiles` utility
 - Fixed missing `process.exit(1)` in completion command error handlers
 - Fixed spinners not being stopped in catch blocks for sync and upload commands
+- Changed `formatBytes` to return `"-"` instead of `"0 B"` for undefined/NaN values

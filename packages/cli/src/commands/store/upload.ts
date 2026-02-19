@@ -100,6 +100,7 @@ export function createUploadCommand(): Command {
       const config = loadConfig();
 
       activeSpinner.stop("Upload initialized");
+      activeSpinner = null;
 
       // Handle manifest file upload
       if (parsedOptions.manifest) {
@@ -190,8 +191,10 @@ export function createUploadCommand(): Command {
           activeSpinner.stop(
             `Found ${formatCountWithSuffix(existingFiles.size, "existing file")}`
           );
+          activeSpinner = null;
         } catch (error) {
           activeSpinner.stop();
+          activeSpinner = null;
           log.error("Failed to check existing files");
           throw error;
         }

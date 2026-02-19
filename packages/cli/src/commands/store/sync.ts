@@ -96,6 +96,7 @@ export function createSyncCommand(): Command {
       activeSpinner.start(`Looking up store "${parsedOptions.nameOrId}"...`);
       const store = await resolveStore(client, parsedOptions.nameOrId);
       activeSpinner.stop(`Found store: ${store.name}`);
+      activeSpinner = null;
 
       // Parse metadata if provided
       const additionalMetadata = validateMetadata(parsedOptions.metadata);
@@ -111,6 +112,7 @@ export function createSyncCommand(): Command {
       activeSpinner.stop(
         `Found ${formatCountWithSuffix(syncedFiles.size, "existing file")} in store`
       );
+      activeSpinner = null;
 
       const fromGit = parsedOptions.fromGit;
 
@@ -138,6 +140,7 @@ export function createSyncCommand(): Command {
       });
 
       activeSpinner.stop("Change analysis complete");
+      activeSpinner = null;
 
       const totalChanges =
         analysis.added.length +

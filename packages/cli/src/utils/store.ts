@@ -99,6 +99,7 @@ export async function checkExistingFiles(
   storeIdentifier: string,
   localPaths: string[]
 ): Promise<Map<string, string>> {
+  const pathSet = new Set(localPaths);
   const storeFiles = await getStoreFiles(client, storeIdentifier);
   return new Map(
     storeFiles
@@ -108,7 +109,7 @@ export async function checkExistingFiles(
           f.metadata &&
           "file_path" in f.metadata &&
           (f.metadata.file_path as string);
-        return filePath && localPaths.includes(filePath);
+        return filePath && pathSet.has(filePath);
       })
       .map((f) => [(f.metadata as { file_path: string }).file_path, f.id])
   );

@@ -26,6 +26,9 @@ for (const pkgPath of VERSION_PATHS) {
     break;
   } catch {}
 }
+if (version === "0.0.0") {
+  console.warn("Warning: Could not read package.json for version information");
+}
 
 const program = new Command();
 
@@ -78,7 +81,7 @@ async function main() {
 
     const banner = await updateCheck;
     if (banner) {
-      console.log(banner);
+      console.error(banner);
     }
   } catch (error) {
     if (error instanceof Error) {
