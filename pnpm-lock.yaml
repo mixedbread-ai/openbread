@@ -30,8 +30,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       '@mixedbread/sdk':
-        specifier: ^0.51.0
-        version: 0.51.0
+        specifier: https://pkg.stainless.com/s/mixedbread-typescript/8f4a498c448b4beeb4d609bcc7b296bd7c3e0316
+        version: https://pkg.stainless.com/s/mixedbread-typescript/8f4a498c448b4beeb4d609bcc7b296bd7c3e0316
       '@pnpm/tabtab':
         specifier: ^0.5.4
         version: 0.5.4
@@ -759,8 +759,9 @@ packages:
     resolution: {integrity: sha512-B0Un0thpz4UKN69QVmgdVsCIgiz+jR4V+nxuCOgdm/P0Iie1NctqY092VQ/iobY/FSMzhHJofXij086y/9E5rg==}
     hasBin: true
 
-  '@mixedbread/sdk@0.51.0':
-    resolution: {integrity: sha512-hkM4x4SecFGM54uIqev4jU7Uzx1mDqMlJM83mdVBFRWO3aiVNeb9cq1hKEIKTVh3Hju/58tLnWE7ETRHYIZIxQ==}
+  '@mixedbread/sdk@https://pkg.stainless.com/s/mixedbread-typescript/8f4a498c448b4beeb4d609bcc7b296bd7c3e0316':
+    resolution: {tarball: https://pkg.stainless.com/s/mixedbread-typescript/8f4a498c448b4beeb4d609bcc7b296bd7c3e0316}
+    version: 0.56.0
     hasBin: true
 
   '@napi-rs/wasm-runtime@0.2.12':
@@ -4104,7 +4105,7 @@ snapshots:
 
   '@mixedbread/sdk@0.26.0': {}
 
-  '@mixedbread/sdk@0.51.0': {}
+  '@mixedbread/sdk@https://pkg.stainless.com/s/mixedbread-typescript/8f4a498c448b4beeb4d609bcc7b296bd7c3e0316': {}
 
   '@napi-rs/wasm-runtime@0.2.12':
     dependencies:
