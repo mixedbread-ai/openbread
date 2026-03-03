@@ -134,13 +134,27 @@ export function createUploadCommand(): Command {
       activeSpinner.stop("Upload initialized");
       activeSpinner = null;
 
+      const MB = 1024 * 1024;
+      const multipartUpload: MultipartUploadOptions = {
+        ...(parsedOptions.multipartThreshold != null && {
+          threshold: parsedOptions.multipartThreshold * MB,
+        }),
+        ...(parsedOptions.multipartPartSize != null && {
+          partSize: parsedOptions.multipartPartSize * MB,
+        }),
+        ...(parsedOptions.multipartConcurrency != null && {
+          concurrency: parsedOptions.multipartConcurrency,
+        }),
+      };
+
       // Handle manifest file upload
       if (parsedOptions.manifest) {
         return await uploadFromManifest(
           client,
           store.id,
           parsedOptions.manifest,
-          parsedOptions
+          parsedOptions,
+          multipartUpload
         );
       }
 
@@ -156,19 +170,6 @@ export function createUploadCommand(): Command {
         parsedOptions.strategy ?? config.defaults?.upload?.strategy ?? "fast";
       const parallel =
         parsedOptions.parallel ?? config.defaults?.upload?.parallel ?? 100;
-
-      const MB = 1024 * 1024;
-      const multipartUpload: MultipartUploadOptions = {
-        ...(parsedOptions.multipartThreshold != null && {
-          threshold: parsedOptions.multipartThreshold * MB,
-        }),
-        ...(parsedOptions.multipartPartSize != null && {
-          partSize: parsedOptions.multipartPartSize * MB,
-        }),
-        ...(parsedOptions.multipartConcurrency != null && {
-          concurrency: parsedOptions.multipartConcurrency,
-        }),
-      };
 
       const metadata = validateMetadata(parsedOptions.metadata);
 

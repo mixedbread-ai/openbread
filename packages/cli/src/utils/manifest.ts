@@ -12,7 +12,11 @@ import { log, spinner } from "./logger";
 import { validateMetadata } from "./metadata";
 import { formatBytes, formatCountWithSuffix } from "./output";
 import { checkExistingFiles } from "./store";
-import { type FileToUpload, uploadFilesInBatch } from "./upload";
+import {
+  type FileToUpload,
+  type MultipartUploadOptions,
+  uploadFilesInBatch,
+} from "./upload";
 
 // Manifest file schema
 const ManifestFileEntrySchema = z.object({
@@ -42,7 +46,8 @@ export async function uploadFromManifest(
   client: Mixedbread,
   storeIdentifier: string,
   manifestPath: string,
-  options: UploadOptions
+  options: UploadOptions,
+  multipartUpload?: MultipartUploadOptions
 ) {
   console.log(chalk.bold(`Loading manifest from: ${manifestPath}`));
 
@@ -199,6 +204,7 @@ export async function uploadFromManifest(
       existingFiles,
       parallel: options.parallel ?? config.defaults.upload.parallel ?? 100,
       showStrategyPerFile: true,
+      multipartUpload,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
