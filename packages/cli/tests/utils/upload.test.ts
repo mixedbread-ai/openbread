@@ -58,12 +58,17 @@ describe("Upload Utils", () => {
       );
 
       expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
-        "test-store",
-        expect.any(File),
         expect.objectContaining({
-          config: { parsing_strategy: undefined },
-        }),
-        { timeout: UPLOAD_TIMEOUT }
+          storeIdentifier: "test-store",
+          file: expect.any(File),
+          body: expect.objectContaining({
+            config: { parsing_strategy: undefined },
+          }),
+          options: { timeout: UPLOAD_TIMEOUT },
+          multipartUpload: expect.objectContaining({
+            onPartUpload: expect.any(Function),
+          }),
+        })
       );
       expect(mockConsoleWarn).not.toHaveBeenCalled();
     });
@@ -81,12 +86,14 @@ describe("Upload Utils", () => {
 
       // uploadFile doesn't have empty file checking, so it will upload
       expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
-        "test-store",
-        expect.any(File),
         expect.objectContaining({
-          config: { parsing_strategy: undefined },
-        }),
-        { timeout: UPLOAD_TIMEOUT }
+          storeIdentifier: "test-store",
+          file: expect.any(File),
+          body: expect.objectContaining({
+            config: { parsing_strategy: undefined },
+          }),
+          options: { timeout: UPLOAD_TIMEOUT },
+        })
       );
       expect(mockConsoleWarn).not.toHaveBeenCalled();
     });
@@ -109,13 +116,15 @@ describe("Upload Utils", () => {
       );
 
       expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
-        "test-store",
-        expect.any(File),
         expect.objectContaining({
-          metadata: { author: "test" },
-          config: { parsing_strategy: "high_quality" },
-        }),
-        { timeout: UPLOAD_TIMEOUT }
+          storeIdentifier: "test-store",
+          file: expect.any(File),
+          body: expect.objectContaining({
+            metadata: { author: "test" },
+            config: { parsing_strategy: "high_quality" },
+          }),
+          options: { timeout: UPLOAD_TIMEOUT },
+        })
       );
       expect(mockConsoleWarn).not.toHaveBeenCalled();
     });
@@ -134,13 +143,13 @@ describe("Upload Utils", () => {
       );
 
       expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
-        "test-store",
         expect.objectContaining({
-          name: "test.ts",
-          type: "text/typescript",
-        }),
-        expect.any(Object),
-        { timeout: UPLOAD_TIMEOUT }
+          storeIdentifier: "test-store",
+          file: expect.objectContaining({
+            name: "test.ts",
+            type: "text/typescript",
+          }),
+        })
       );
     });
 
@@ -158,13 +167,13 @@ describe("Upload Utils", () => {
       );
 
       expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
-        "test-store",
         expect.objectContaining({
-          name: "script.py",
-          type: "text/x-python",
-        }),
-        expect.any(Object),
-        { timeout: UPLOAD_TIMEOUT }
+          storeIdentifier: "test-store",
+          file: expect.objectContaining({
+            name: "script.py",
+            type: "text/x-python",
+          }),
+        })
       );
     });
 
@@ -182,13 +191,13 @@ describe("Upload Utils", () => {
       );
 
       expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
-        "test-store",
         expect.objectContaining({
-          name: "content.mdx",
-          type: "text/mdx",
-        }),
-        expect.any(Object),
-        { timeout: UPLOAD_TIMEOUT }
+          storeIdentifier: "test-store",
+          file: expect.objectContaining({
+            name: "content.mdx",
+            type: "text/mdx",
+          }),
+        })
       );
     });
   });
@@ -444,46 +453,62 @@ describe("Upload Utils", () => {
 
       // Verify TypeScript file mime type was fixed
       expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
-        "test-store",
         expect.objectContaining({
-          name: "app.ts",
-          type: "text/typescript",
-        }),
-        expect.objectContaining({ config: { parsing_strategy: "fast" } }),
-        { timeout: UPLOAD_TIMEOUT }
+          storeIdentifier: "test-store",
+          file: expect.objectContaining({
+            name: "app.ts",
+            type: "text/typescript",
+          }),
+          body: expect.objectContaining({
+            config: { parsing_strategy: "fast" },
+          }),
+          options: { timeout: UPLOAD_TIMEOUT },
+        })
       );
 
       // Verify Python file mime type was fixed
       expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
-        "test-store",
         expect.objectContaining({
-          name: "utils.py",
-          type: "text/x-python",
-        }),
-        expect.objectContaining({ config: { parsing_strategy: "fast" } }),
-        { timeout: UPLOAD_TIMEOUT }
+          storeIdentifier: "test-store",
+          file: expect.objectContaining({
+            name: "utils.py",
+            type: "text/x-python",
+          }),
+          body: expect.objectContaining({
+            config: { parsing_strategy: "fast" },
+          }),
+          options: { timeout: UPLOAD_TIMEOUT },
+        })
       );
 
       // Verify MDX file mime type was fixed
       expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
-        "test-store",
         expect.objectContaining({
-          name: "page.mdx",
-          type: "text/mdx",
-        }),
-        expect.objectContaining({ config: { parsing_strategy: "fast" } }),
-        { timeout: UPLOAD_TIMEOUT }
+          storeIdentifier: "test-store",
+          file: expect.objectContaining({
+            name: "page.mdx",
+            type: "text/mdx",
+          }),
+          body: expect.objectContaining({
+            config: { parsing_strategy: "fast" },
+          }),
+          options: { timeout: UPLOAD_TIMEOUT },
+        })
       );
 
       // Verify regular markdown file kept its original mime type
       expect(mockClient.stores.files.upload).toHaveBeenCalledWith(
-        "test-store",
         expect.objectContaining({
-          name: "readme.md",
-          type: "text/markdown",
-        }),
-        expect.objectContaining({ config: { parsing_strategy: "fast" } }),
-        { timeout: UPLOAD_TIMEOUT }
+          storeIdentifier: "test-store",
+          file: expect.objectContaining({
+            name: "readme.md",
+            type: "text/markdown",
+          }),
+          body: expect.objectContaining({
+            config: { parsing_strategy: "fast" },
+          }),
+          options: { timeout: UPLOAD_TIMEOUT },
+        })
       );
     });
   });

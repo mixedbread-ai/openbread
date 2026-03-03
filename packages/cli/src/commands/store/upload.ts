@@ -18,7 +18,11 @@ import { uploadFromManifest } from "../../utils/manifest";
 import { validateMetadata } from "../../utils/metadata";
 import { formatBytes, formatCountWithSuffix } from "../../utils/output";
 import { checkExistingFiles, resolveStore } from "../../utils/store";
-import { type FileToUpload, uploadFilesInBatch } from "../../utils/upload";
+import {
+  type FileToUpload,
+  type MultipartUploadOptions,
+  uploadFilesInBatch,
+} from "../../utils/upload";
 
 const UploadStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
@@ -41,6 +45,19 @@ const UploadStoreSchema = extendGlobalOptions({
     .optional(),
   unique: z.boolean().optional(),
   manifest: z.string().optional(),
+  multipartThreshold: z.coerce
+    .number({ error: '"multipart-threshold" must be a number' })
+    .min(5, { error: '"multipart-threshold" must be at least 5 MB' })
+    .optional(),
+  multipartPartSize: z.coerce
+    .number({ error: '"multipart-part-size" must be a number' })
+    .min(5, { error: '"multipart-part-size" must be at least 5 MB' })
+    .optional(),
+  multipartConcurrency: z.coerce
+    .number({ error: '"multipart-concurrency" must be a number' })
+    .int({ error: '"multipart-concurrency" must be an integer' })
+    .min(1, { error: '"multipart-concurrency" must be at least 1' })
+    .optional(),
 });
 
 export interface UploadOptions extends GlobalOptions {
@@ -51,6 +68,9 @@ export interface UploadOptions extends GlobalOptions {
   parallel?: number;
   unique?: boolean;
   manifest?: string;
+  multipartThreshold?: number;
+  multipartPartSize?: number;
+  multipartConcurrency?: number;
 }
 
 export function createUploadCommand(): Command {
@@ -76,6 +96,18 @@ export function createUploadCommand(): Command {
         false
       )
       .option("--manifest <file>", "Upload using manifest file")
+      .option(
+        "--multipart-threshold <mb>",
+        "File size threshold in MB to trigger multipart upload",
+      )
+      .option(
+        "--multipart-part-size <mb>",
+        "Size of each part in MB for multipart upload",
+      )
+      .option(
+        "--multipart-concurrency <n>",
+        "Number of concurrent part uploads for multipart upload",
+      )
   );
 
   command.action(async (nameOrId: string, patterns: string[]) => {
@@ -124,6 +156,19 @@ export function createUploadCommand(): Command {
         parsedOptions.strategy ?? config.defaults?.upload?.strategy ?? "fast";
       const parallel =
         parsedOptions.parallel ?? config.defaults?.upload?.parallel ?? 100;
+
+      const MB = 1024 * 1024;
+      const multipartUpload: MultipartUploadOptions = {
+        ...(parsedOptions.multipartThreshold != null && {
+          threshold: parsedOptions.multipartThreshold * MB,
+        }),
+        ...(parsedOptions.multipartPartSize != null && {
+          partSize: parsedOptions.multipartPartSize * MB,
+        }),
+        ...(parsedOptions.multipartConcurrency != null && {
+          concurrency: parsedOptions.multipartConcurrency,
+        }),
+      };
 
       const metadata = validateMetadata(parsedOptions.metadata);
 
@@ -212,6 +257,7 @@ export function createUploadCommand(): Command {
         unique: parsedOptions.unique || false,
         existingFiles,
         parallel,
+        multipartUpload,
       });
     } catch (error) {
       activeSpinner?.stop();

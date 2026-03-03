@@ -10,7 +10,7 @@ import { calculateFileHash, hashesMatch } from "./hash";
 import { log } from "./logger";
 import { formatBytes, formatCountWithSuffix } from "./output";
 import { buildFileSyncMetadata, type SyncedFileByPath } from "./sync-state";
-import { uploadFile } from "./upload";
+import { type MultipartUploadOptions, uploadFile } from "./upload";
 
 interface FileChange {
   path: string;
@@ -264,6 +264,7 @@ export async function executeSyncChanges(
     metadata?: Record<string, unknown>;
     gitInfo?: { commit: string; branch: string };
     parallel?: number;
+    multipartUpload?: MultipartUploadOptions;
   }
 ): Promise<SyncResults> {
   const parallel = options.parallel ?? 100;
@@ -368,6 +369,7 @@ export async function executeSyncChanges(
             metadata: finalMetadata,
             strategy: options.strategy,
             externalId: file.path,
+            multipartUpload: options.multipartUpload,
           });
 
           completed++;
