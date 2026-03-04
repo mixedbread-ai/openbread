@@ -274,8 +274,6 @@ export async function executeSyncChanges(
   const parallel = options.parallel ?? 100;
   const limit = pLimit(parallel);
   const { filesToUpload, filesToDelete } = buildSyncPlan(analysis);
-  const totalOperations = filesToUpload.length + filesToDelete.length;
-  let completed = 0;
 
   console.log(chalk.bold("\nSyncing changes..."));
 
@@ -299,14 +297,12 @@ export async function executeSyncChanges(
           await client.stores.files.delete(file.fileId!, {
             store_identifier: storeIdentifier,
           });
-          completed++;
           deleteCompleted++;
           deleteSpinner.message(
             `Deleting ${deleteCompleted}/${deleteTotal} files...`
           );
           return { file, success: true };
         } catch (error) {
-          completed++;
           deleteCompleted++;
           deleteSpinner.message(
             `Deleting ${deleteCompleted}/${deleteTotal} files...`
@@ -324,7 +320,6 @@ export async function executeSyncChanges(
     );
 
     const deleteResults = await Promise.allSettled(deletePromises);
-    deleteSpinner.stop(`Deleted ${deleteTotal} files`);
 
     deleteResults.forEach((result) => {
       if (result.status === "fulfilled") {
@@ -336,6 +331,13 @@ export async function executeSyncChanges(
         }
       }
     });
+
+    const deletedOk = results.deletions.successful.length;
+    deleteSpinner.stop(
+      deletedOk === deleteTotal
+        ? `Deleted ${deleteTotal} files`
+        : `Deleted ${deletedOk}/${deleteTotal} files (${results.deletions.failed.length} failed)`
+    );
   }
 
   // Upload new and modified files
@@ -372,7 +374,6 @@ export async function executeSyncChanges(
           // Check if file is empty
           const stats = await fs.stat(file.path);
           if (stats.size === 0) {
-            completed++;
             uploadCompleted++;
             uploadSpinner.message(
               `Uploading ${uploadCompleted}/${uploadTotal} files...`
@@ -393,14 +394,12 @@ export async function executeSyncChanges(
             },
           });
 
-          completed++;
           uploadCompleted++;
           uploadSpinner.message(
             `Uploading ${uploadCompleted}/${uploadTotal} files...`
           );
           return { file, success: true };
         } catch (error) {
-          completed++;
           uploadCompleted++;
           uploadSpinner.message(
             `Uploading ${uploadCompleted}/${uploadTotal} files...`
@@ -418,7 +417,6 @@ export async function executeSyncChanges(
     );
 
     const uploadResults = await Promise.allSettled(uploadPromises);
-    uploadSpinner.stop(`Uploaded ${uploadTotal} files`);
 
     uploadResults.forEach((result) => {
       if (result.status === "fulfilled") {
@@ -430,6 +428,13 @@ export async function executeSyncChanges(
         }
       }
     });
+
+    const uploadedOk = results.uploads.successful.length;
+    uploadSpinner.stop(
+      uploadedOk === uploadTotal
+        ? `Uploaded ${uploadTotal} files`
+        : `Uploaded ${uploadedOk}/${uploadTotal} files (${results.uploads.failed.length} failed)`
+    );
   }
 
   return results;

@@ -354,7 +354,12 @@ export async function uploadFilesInBatch(
     )
   );
 
-  uploadSpinner.stop(`Uploaded ${total} files`);
+  const successCount = results.uploaded + results.updated;
+  uploadSpinner.stop(
+    successCount === total
+      ? `Uploaded ${total} files`
+      : `Uploaded ${successCount}/${total} files (${results.failed} failed, ${results.skipped} skipped)`
+  );
 
   // Summary
   console.log(`\n${chalk.bold("Upload Summary:")}`);
