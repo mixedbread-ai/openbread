@@ -48,9 +48,13 @@ export function resolveMultipartConfig(
 
   partSize = Math.max(partSize, MIN_PART_SIZE);
 
-  // Apply user override before computing concurrency so the memory budget
-  // accounts for the actual part size that will be used.
-  const finalPartSize = overrides?.partSize ?? partSize;
+  // Apply user override, then re-enforce the MAX_PARTS guard so a small
+  // user-specified part size can't produce more parts than the backend allows.
+  let finalPartSize = overrides?.partSize ?? partSize;
+  if (fileSize > 0 && Math.ceil(fileSize / finalPartSize) > MAX_PARTS) {
+    finalPartSize = Math.ceil(fileSize / MAX_PARTS);
+  }
+  finalPartSize = Math.max(finalPartSize, MIN_PART_SIZE);
 
   // Concurrency: bounded by CPU cores and available memory
   const cores = cpus().length;

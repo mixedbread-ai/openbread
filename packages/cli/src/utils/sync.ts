@@ -430,11 +430,19 @@ export async function executeSyncChanges(
     });
 
     const uploadedOk = results.uploads.successful.length;
-    uploadSpinner.stop(
-      uploadedOk === uploadTotal
-        ? `Uploaded ${uploadTotal} files`
-        : `Uploaded ${uploadedOk}/${uploadTotal} files (${results.uploads.failed.length} failed)`
-    );
+    const skippedCount = results.uploads.failed.filter((r) => r.skipped).length;
+    const failedCount = results.uploads.failed.length - skippedCount;
+
+    if (uploadedOk === uploadTotal) {
+      uploadSpinner.stop(`Uploaded ${uploadTotal} files`);
+    } else {
+      const parts: string[] = [];
+      if (failedCount > 0) parts.push(`${failedCount} failed`);
+      if (skippedCount > 0) parts.push(`${skippedCount} skipped`);
+      uploadSpinner.stop(
+        `Uploaded ${uploadedOk}/${uploadTotal} files (${parts.join(", ")})`
+      );
+    }
   }
 
   return results;
