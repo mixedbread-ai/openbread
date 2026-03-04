@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Prerelease tag (e.g., beta, alpha, rc)'
+        description: "Prerelease tag (e.g., beta, alpha, rc)"
         required: true
-        default: 'beta'
+        default: "beta"
         type: choice
         options:
           - beta
@@ -37,8 +37,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'pnpm'
-          registry-url: 'https://registry.npmjs.org'
+          cache: "pnpm"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -60,7 +60,7 @@ jobs:
           git commit -m "chore: version packages for ${{ inputs.tag }} release" || echo "No changes to commit"
 
       - name: Publish prerelease packages
-        run: pnpm changeset publish --tag ${{ inputs.tag }}
+        run: pnpm changeset publish
         env:
           NPM_CONFIG_PROVENANCE: true
 
@@ -73,3 +73,4 @@ jobs:
           git add .
           git commit -m "chore: exit prerelease mode" || echo "No changes to commit"
           git push || echo "No changes to push"
+
