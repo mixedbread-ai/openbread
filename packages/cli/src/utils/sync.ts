@@ -7,10 +7,14 @@ import { glob } from "glob";
 import pLimit from "p-limit";
 import { getChangedFiles, normalizeGitPatterns } from "./git";
 import { calculateFileHash, hashesMatch } from "./hash";
-import { log } from "./logger";
+import { log, spinner } from "./logger";
 import { formatBytes, formatCountWithSuffix } from "./output";
 import { buildFileSyncMetadata, type SyncedFileByPath } from "./sync-state";
-import { type MultipartUploadOptions, uploadFile } from "./upload";
+import {
+  type MultipartUploadOptions,
+  type UploadProgress,
+  uploadFile,
+} from "./upload";
 
 interface FileChange {
   path: string;
@@ -282,10 +286,11 @@ export async function executeSyncChanges(
 
   // Delete legacy modified files and removed files
   if (filesToDelete.length > 0) {
-    console.log(
-      chalk.yellow(
-        `\nDeleting ${formatCountWithSuffix(filesToDelete.length, "file")}...`
-      )
+    const deleteTotal = filesToDelete.length;
+    let deleteCompleted = 0;
+    const deleteSpinner = spinner();
+    deleteSpinner.start(
+      `Deleting 0/${deleteTotal} files...`
     );
 
     const deletePromises: Promise<SyncResult>[] = filesToDelete.map((file) =>
@@ -295,14 +300,19 @@ export async function executeSyncChanges(
             store_identifier: storeIdentifier,
           });
           completed++;
-          log.success(
-            `[${completed}/${totalOperations}] Deleted ${path.relative(process.cwd(), file.path)}`
+          deleteCompleted++;
+          deleteSpinner.message(
+            `Deleting ${deleteCompleted}/${deleteTotal} files...`
           );
           return { file, success: true };
         } catch (error) {
           completed++;
+          deleteCompleted++;
+          deleteSpinner.message(
+            `Deleting ${deleteCompleted}/${deleteTotal} files...`
+          );
           log.error(
-            `[${completed}/${totalOperations}] Failed to delete ${path.relative(process.cwd(), file.path)}: ${error instanceof Error ? error.message : "Unknown error"}`
+            `Failed to delete ${path.relative(process.cwd(), file.path)}: ${error instanceof Error ? error.message : "Unknown error"}`
           );
           return {
             file,
@@ -314,6 +324,8 @@ export async function executeSyncChanges(
     );
 
     const deleteResults = await Promise.allSettled(deletePromises);
+    deleteSpinner.stop(`Deleted ${deleteTotal} files`);
+
     deleteResults.forEach((result) => {
       if (result.status === "fulfilled") {
         const syncResult = result.value;
@@ -328,14 +340,17 @@ export async function executeSyncChanges(
 
   // Upload new and modified files
   if (filesToUpload.length > 0) {
-    console.log(
-      chalk.blue(
-        `\nUploading ${formatCountWithSuffix(filesToUpload.length, "file")}...`
-      )
+    const uploadTotal = filesToUpload.length;
+    let uploadCompleted = 0;
+    const uploadSpinner = spinner();
+    uploadSpinner.start(
+      `Uploading 0/${uploadTotal} files...`
     );
 
     const uploadPromises: Promise<SyncResult>[] = filesToUpload.map((file) =>
       limit(async () => {
+        const relativePath = path.relative(process.cwd(), file.path);
+
         try {
           // Calculate hash if not already done
           const fileHash =
@@ -358,8 +373,9 @@ export async function executeSyncChanges(
           const stats = await fs.stat(file.path);
           if (stats.size === 0) {
             completed++;
-            log.warn(
-              `[${completed}/${totalOperations}] Skipped empty file ${path.relative(process.cwd(), file.path)}`
+            uploadCompleted++;
+            uploadSpinner.message(
+              `Uploading ${uploadCompleted}/${uploadTotal} files...`
             );
             return { file, success: false, skipped: true };
           }
@@ -370,17 +386,27 @@ export async function executeSyncChanges(
             strategy: options.strategy,
             externalId: file.path,
             multipartUpload: options.multipartUpload,
+            onProgress: (progress: UploadProgress) => {
+              uploadSpinner.message(
+                `Uploading ${uploadCompleted}/${uploadTotal} files... (${progress.fileName}: part ${progress.partsCompleted}/${progress.totalParts}, ${formatBytes(progress.uploadedBytes)}/${formatBytes(progress.totalBytes)})`
+              );
+            },
           });
 
           completed++;
-          log.success(
-            `[${completed}/${totalOperations}] Uploaded ${path.relative(process.cwd(), file.path)}`
+          uploadCompleted++;
+          uploadSpinner.message(
+            `Uploading ${uploadCompleted}/${uploadTotal} files...`
           );
           return { file, success: true };
         } catch (error) {
           completed++;
+          uploadCompleted++;
+          uploadSpinner.message(
+            `Uploading ${uploadCompleted}/${uploadTotal} files...`
+          );
           log.error(
-            `[${completed}/${totalOperations}] Failed to upload ${path.relative(process.cwd(), file.path)}: ${error instanceof Error ? error.message : "Unknown error"}`
+            `Failed to upload ${relativePath}: ${error instanceof Error ? error.message : "Unknown error"}`
           );
           return {
             file,
@@ -392,6 +418,8 @@ export async function executeSyncChanges(
     );
 
     const uploadResults = await Promise.allSettled(uploadPromises);
+    uploadSpinner.stop(`Uploaded ${uploadTotal} files`);
+
     uploadResults.forEach((result) => {
       if (result.status === "fulfilled") {
         const syncResult = result.value;

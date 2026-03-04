@@ -62,11 +62,20 @@ export function resolveMultipartConfig(
   };
 }
 
+export interface UploadProgress {
+  fileName: string;
+  partsCompleted: number;
+  totalParts: number;
+  uploadedBytes: number;
+  totalBytes: number;
+}
+
 export interface UploadFileOptions {
   metadata?: Record<string, unknown>;
   strategy?: FileCreateParams.Config["parsing_strategy"];
   externalId?: string;
   multipartUpload?: MultipartUploadOptions;
+  onProgress?: (progress: UploadProgress) => void;
 }
 
 export interface FileToUpload {
@@ -123,7 +132,8 @@ export async function uploadFile(
   filePath: string,
   options: UploadFileOptions = {}
 ): Promise<void> {
-  const { metadata = {}, strategy, externalId, multipartUpload } = options;
+  const { metadata = {}, strategy, externalId, multipartUpload, onProgress } =
+    options;
 
   // Read file content
   const fileContent = await readFile(filePath);
@@ -138,9 +148,20 @@ export async function uploadFile(
 
   if (totalFileBytes >= mpConfig.threshold) {
     const expectedParts = Math.ceil(totalFileBytes / mpConfig.partSize);
-    log.info(
-      `${fileName}: 0/${expectedParts} parts — ${formatBytes(0)}/${formatBytes(totalFileBytes)}`
-    );
+    const zeroProgress: UploadProgress = {
+      fileName,
+      partsCompleted: 0,
+      totalParts: expectedParts,
+      uploadedBytes: 0,
+      totalBytes: totalFileBytes,
+    };
+    if (onProgress) {
+      onProgress(zeroProgress);
+    } else {
+      log.info(
+        `${fileName}: 0/${expectedParts} parts — ${formatBytes(0)}/${formatBytes(totalFileBytes)}`
+      );
+    }
   }
 
   let partsCompleted = 0;
@@ -159,9 +180,20 @@ export async function uploadFile(
       ...mpConfig,
       onPartUpload: (event) => {
         partsCompleted++;
-        log.info(
-          `${fileName}: part ${partsCompleted}/${event.totalParts} — ${formatBytes(event.uploadedBytes)}/${formatBytes(event.totalBytes)}`
-        );
+        const progress: UploadProgress = {
+          fileName,
+          partsCompleted,
+          totalParts: event.totalParts,
+          uploadedBytes: event.uploadedBytes,
+          totalBytes: event.totalBytes,
+        };
+        if (onProgress) {
+          onProgress(progress);
+        } else {
+          log.info(
+            `${fileName}: part ${partsCompleted}/${event.totalParts} — ${formatBytes(event.uploadedBytes)}/${formatBytes(event.totalBytes)}`
+          );
+        }
       },
     },
   });
