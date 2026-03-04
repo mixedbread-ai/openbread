@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.0.1",
-    "@mixedbread/sdk": "https://pkg.stainless.com/s/mixedbread-typescript/8f4a498c448b4beeb4d609bcc7b296bd7c3e0316",
+    "@mixedbread/sdk": "https://pkg.stainless.com/s/mixedbread-typescript/6c522ab9642c9efb265a6469a925ad8401a6581e/dist.tar.gz",
     "@pnpm/tabtab": "^0.5.4",
     "chalk": "^5.6.2",
     "cli-table3": "^0.6.5",

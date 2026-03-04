@@ -1,5 +1,6 @@
 import { readFile, stat } from "node:fs/promises";
 import { basename, relative } from "node:path";
+import { cpus, freemem } from "node:os";
 import type Mixedbread from "@mixedbread/sdk";
 import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
@@ -11,14 +12,54 @@ import { formatBytes, formatCountWithSuffix } from "./output";
 export const UPLOAD_TIMEOUT = 1000 * 60 * 10; // 10 minutes
 
 const MB = 1024 * 1024;
-export const DEFAULT_MULTIPART_THRESHOLD = 50 * MB; // 50 MB
-export const DEFAULT_MULTIPART_PART_SIZE = 20 * MB; // 20 MB
-export const DEFAULT_MULTIPART_CONCURRENCY = 5;
+const MIN_PART_SIZE = 5 * MB;
+const MAX_PARTS = 10_000;
 
 export interface MultipartUploadOptions {
   threshold?: number;
   partSize?: number;
   concurrency?: number;
+}
+
+/**
+ * Compute multipart config based on file size and system resources.
+ * User-provided overrides take precedence.
+ */
+export function resolveMultipartConfig(
+  fileSize: number,
+  overrides?: MultipartUploadOptions
+): { threshold: number; partSize: number; concurrency: number } {
+  // Part size: smaller parts = more granular progress
+  let partSize: number;
+  if (fileSize < 200 * MB) {
+    partSize = 10 * MB;
+  } else if (fileSize < 1024 * MB) {
+    partSize = 20 * MB;
+  } else if (fileSize < 5 * 1024 * MB) {
+    partSize = 50 * MB;
+  } else {
+    partSize = 100 * MB;
+  }
+
+  // Ensure we don't exceed the 10,000 parts limit
+  if (Math.ceil(fileSize / partSize) > MAX_PARTS) {
+    partSize = Math.ceil(fileSize / MAX_PARTS);
+  }
+
+  partSize = Math.max(partSize, MIN_PART_SIZE);
+
+  // Concurrency: bounded by CPU cores and available memory
+  const cores = cpus().length;
+  // Reserve 25% of free memory for other work; each concurrent part holds ~partSize in memory
+  const memoryBudget = Math.floor(freemem() * 0.75);
+  const maxByMemory = Math.max(1, Math.floor(memoryBudget / partSize));
+  const concurrency = Math.min(cores, maxByMemory, 10);
+
+  return {
+    threshold: overrides?.threshold ?? 50 * MB,
+    partSize: overrides?.partSize ?? partSize,
+    concurrency: overrides?.concurrency ?? Math.max(concurrency, 2),
+  };
 }
 
 export interface UploadFileOptions {
@@ -92,6 +133,16 @@ export async function uploadFile(
     new File([fileContent], fileName, { type: mimeType })
   );
 
+  const mpConfig = resolveMultipartConfig(fileContent.length, multipartUpload);
+  const totalFileBytes = fileContent.length;
+
+  if (totalFileBytes >= mpConfig.threshold) {
+    const expectedParts = Math.ceil(totalFileBytes / mpConfig.partSize);
+    log.info(
+      `${fileName}: 0/${expectedParts} parts — ${formatBytes(0)}/${formatBytes(totalFileBytes)}`
+    );
+  }
+
   let partsCompleted = 0;
   await client.stores.files.upload({
     storeIdentifier,
@@ -105,17 +156,11 @@ export async function uploadFile(
     },
     options: { timeout: UPLOAD_TIMEOUT },
     multipartUpload: {
-      threshold: DEFAULT_MULTIPART_THRESHOLD,
-      partSize: DEFAULT_MULTIPART_PART_SIZE,
-      concurrency: DEFAULT_MULTIPART_CONCURRENCY,
-      ...multipartUpload,
+      ...mpConfig,
       onPartUpload: (event) => {
         partsCompleted++;
-        const pct = Math.round(
-          (partsCompleted / event.totalParts) * 100
-        );
         log.info(
-          `${fileName}: Uploaded part ${partsCompleted}/${event.totalParts} (${pct}%)`
+          `${fileName}: part ${partsCompleted}/${event.totalParts} — ${formatBytes(event.uploadedBytes)}/${formatBytes(event.totalBytes)}`
         );
       },
     },
@@ -157,17 +202,20 @@ export async function uploadFilesInBatch(
     successfulSize: 0,
   };
 
-  const configParts = [`${parallel} files at a time`];
-  if (multipartUpload?.threshold) {
-    configParts.push(`multipart threshold ${formatBytes(multipartUpload.threshold)}`);
-  }
-  if (multipartUpload?.partSize) {
-    configParts.push(`part size ${formatBytes(multipartUpload.partSize)}`);
-  }
-  if (multipartUpload?.concurrency) {
-    configParts.push(`${multipartUpload.concurrency} concurrent part uploads`);
-  }
+  // Show a preview of multipart config using a representative file size (first file)
+  const previewConfig = resolveMultipartConfig(0, multipartUpload);
+  const configParts = [
+    `${parallel} files at a time`,
+    `multipart threshold ${formatBytes(previewConfig.threshold)}`,
+    `part size ${formatBytes(previewConfig.partSize)}`,
+    `${previewConfig.concurrency} concurrent part uploads`,
+  ];
   console.log(chalk.gray(`Processing ${configParts.join(", ")}...`));
+  if (!multipartUpload?.partSize || !multipartUpload?.concurrency) {
+    console.log(
+      chalk.gray("(part size and concurrency auto-tune per file size)")
+    );
+  }
 
   // Process files with sliding-window concurrency
   const total = files.length;
@@ -214,6 +262,19 @@ export async function uploadFilesInBatch(
             })
           );
 
+          const mpConfig = resolveMultipartConfig(
+            fileContent.length,
+            multipartUpload
+          );
+          const totalFileBytes = fileContent.length;
+
+          if (totalFileBytes >= mpConfig.threshold) {
+            const expectedParts = Math.ceil(totalFileBytes / mpConfig.partSize);
+            uploadSpinner.message(
+              `Uploading ${completed}/${total} files... (${fileName}: 0/${expectedParts} parts, ${formatBytes(0)}/${formatBytes(totalFileBytes)})`
+            );
+          }
+
           let partsCompleted = 0;
           await client.stores.files.upload({
             storeIdentifier,
@@ -226,17 +287,11 @@ export async function uploadFilesInBatch(
             },
             options: { timeout: UPLOAD_TIMEOUT },
             multipartUpload: {
-              threshold: DEFAULT_MULTIPART_THRESHOLD,
-              partSize: DEFAULT_MULTIPART_PART_SIZE,
-              concurrency: DEFAULT_MULTIPART_CONCURRENCY,
-              ...multipartUpload,
+              ...mpConfig,
               onPartUpload: (event) => {
                 partsCompleted++;
-                const pct = Math.round(
-                  (partsCompleted / event.totalParts) * 100
-                );
                 uploadSpinner.message(
-                  `Uploading ${completed}/${total} files... (${fileName}: part ${partsCompleted}/${event.totalParts}, ${pct}%)`
+                  `Uploading ${completed}/${total} files... (${fileName}: part ${partsCompleted}/${event.totalParts}, ${formatBytes(event.uploadedBytes)}/${formatBytes(event.totalBytes)})`
                 );
               },
             },
