@@ -48,16 +48,20 @@ export function resolveMultipartConfig(
 
   partSize = Math.max(partSize, MIN_PART_SIZE);
 
+  // Apply user override before computing concurrency so the memory budget
+  // accounts for the actual part size that will be used.
+  const finalPartSize = overrides?.partSize ?? partSize;
+
   // Concurrency: bounded by CPU cores and available memory
   const cores = cpus().length;
   // Reserve 25% of free memory for other work; each concurrent part holds ~partSize in memory
   const memoryBudget = Math.floor(freemem() * 0.75);
-  const maxByMemory = Math.max(1, Math.floor(memoryBudget / partSize));
+  const maxByMemory = Math.max(1, Math.floor(memoryBudget / finalPartSize));
   const concurrency = Math.min(cores, maxByMemory, 10);
 
   return {
     threshold: overrides?.threshold ?? 50 * MB,
-    partSize: overrides?.partSize ?? partSize,
+    partSize: finalPartSize,
     concurrency: overrides?.concurrency ?? Math.max(concurrency, 2),
   };
 }
@@ -378,7 +382,17 @@ export async function uploadFilesInBatch(
     );
   }
 
-  if (!showStrategyPerFile && files.length > 0) {
+  if (showStrategyPerFile && files.length > 0) {
+    const strategyCounts = new Map<string, number>();
+    for (const file of files) {
+      const s = file.strategy ?? "default";
+      strategyCounts.set(s, (strategyCounts.get(s) ?? 0) + 1);
+    }
+    const parts = Array.from(strategyCounts.entries()).map(
+      ([s, count]) => `${s} (${count})`
+    );
+    console.log(chalk.gray(`Strategies: ${parts.join(", ")}`));
+  } else if (files.length > 0) {
     const firstFile = files[0];
     console.log(chalk.gray(`Strategy: ${firstFile.strategy}`));
   }
