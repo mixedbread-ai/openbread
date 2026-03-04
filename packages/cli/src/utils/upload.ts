@@ -242,20 +242,16 @@ export async function uploadFilesInBatch(
     successfulSize: 0,
   };
 
-  // Show a preview of multipart config using a representative file size (first file)
-  const previewConfig = resolveMultipartConfig(0, multipartUpload);
-  const configParts = [
-    `${parallel} files at a time`,
-    `multipart threshold ${formatBytes(previewConfig.threshold)}`,
-    `part size ${formatBytes(previewConfig.partSize)}`,
-    `${previewConfig.concurrency} concurrent part uploads`,
-  ];
-  console.log(chalk.gray(`Processing ${configParts.join(", ")}...`));
-  if (!multipartUpload?.partSize || !multipartUpload?.concurrency) {
-    console.log(
-      chalk.gray("(part size and concurrency auto-tune per file size)")
-    );
+  const configParts = [`${parallel} files at a time`];
+  const threshold = multipartUpload?.threshold ?? 50 * MB;
+  configParts.push(`multipart above ${formatBytes(threshold)}`);
+  if (multipartUpload?.partSize) {
+    configParts.push(`part size ${formatBytes(multipartUpload.partSize)}`);
   }
+  if (multipartUpload?.concurrency) {
+    configParts.push(`${multipartUpload.concurrency} concurrent part uploads`);
+  }
+  console.log(chalk.gray(`Processing ${configParts.join(", ")}...`));
 
   // Process files with sliding-window concurrency
   const total = files.length;
