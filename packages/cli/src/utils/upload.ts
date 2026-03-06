@@ -242,7 +242,7 @@ export async function uploadFilesInBatch(
     successfulSize: 0,
   };
 
-  const configParts = [`${parallel} files at a time`];
+  const configParts = [`${formatCountWithSuffix(parallel, "file")} at a time`];
   const threshold = multipartUpload?.threshold ?? 50 * MB;
   configParts.push(`multipart above ${formatBytes(threshold)}`);
   if (multipartUpload?.partSize) {
@@ -257,7 +257,7 @@ export async function uploadFilesInBatch(
   const total = files.length;
   let completed = 0;
   const uploadSpinner = spinner();
-  uploadSpinner.start(`Uploading 0/${total} files...`);
+  uploadSpinner.start(`Uploading 0/${formatCountWithSuffix(total, "file")}...`);
 
   const limit = pLimit(parallel);
   await Promise.allSettled(
@@ -284,7 +284,7 @@ export async function uploadFilesInBatch(
           const stats = await stat(file.path);
           if (stats.size === 0) {
             completed++;
-            uploadSpinner.message(`Uploading ${completed}/${total} files...`);
+            uploadSpinner.message(`Uploading ${completed}/${formatCountWithSuffix(total, "file")}...`);
             results.skipped++;
             return;
           }
@@ -307,7 +307,7 @@ export async function uploadFilesInBatch(
           if (totalFileBytes >= mpConfig.threshold) {
             const expectedParts = Math.ceil(totalFileBytes / mpConfig.partSize);
             uploadSpinner.message(
-              `Uploading ${completed}/${total} files... (${fileName}: 0/${expectedParts} parts, ${formatBytes(0)}/${formatBytes(totalFileBytes)})`
+              `Uploading ${completed}/${formatCountWithSuffix(total, "file")}... (${fileName}: 0/${expectedParts} parts, ${formatBytes(0)}/${formatBytes(totalFileBytes)})`
             );
           }
 
@@ -327,7 +327,7 @@ export async function uploadFilesInBatch(
               onPartUpload: (event) => {
                 partsCompleted++;
                 uploadSpinner.message(
-                  `Uploading ${completed}/${total} files... (${fileName}: part ${partsCompleted}/${event.totalParts}, ${formatBytes(event.uploadedBytes)}/${formatBytes(event.totalBytes)})`
+                  `Uploading ${completed}/${formatCountWithSuffix(total, "file")}... (${fileName}: part ${partsCompleted}/${event.totalParts}, ${formatBytes(event.uploadedBytes)}/${formatBytes(event.totalBytes)})`
                 );
               },
             },
@@ -341,11 +341,11 @@ export async function uploadFilesInBatch(
 
           results.successfulSize += stats.size;
           completed++;
-          uploadSpinner.message(`Uploading ${completed}/${total} files...`);
+          uploadSpinner.message(`Uploading ${completed}/${formatCountWithSuffix(total, "file")}...`);
         } catch (error) {
           results.failed++;
           completed++;
-          uploadSpinner.message(`Uploading ${completed}/${total} files...`);
+          uploadSpinner.message(`Uploading ${completed}/${formatCountWithSuffix(total, "file")}...`);
           const errorMsg =
             error instanceof Error ? error.message : "Unknown error";
           log.error(`${relativePath} - ${errorMsg}`);
@@ -357,8 +357,8 @@ export async function uploadFilesInBatch(
   const successCount = results.uploaded + results.updated;
   uploadSpinner.stop(
     successCount === total
-      ? `Uploaded ${total} files`
-      : `Uploaded ${successCount}/${total} files (${results.failed} failed, ${results.skipped} skipped)`
+      ? `Uploaded ${formatCountWithSuffix(total, "file")}`
+      : `Uploaded ${successCount}/${formatCountWithSuffix(total, "file")} (${results.failed} failed, ${results.skipped} skipped)`
   );
 
   // Summary

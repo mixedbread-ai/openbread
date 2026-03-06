@@ -288,7 +288,7 @@ export async function executeSyncChanges(
     let deleteCompleted = 0;
     const deleteSpinner = spinner();
     deleteSpinner.start(
-      `Deleting 0/${deleteTotal} files...`
+      `Deleting 0/${formatCountWithSuffix(deleteTotal, "file")}...`
     );
 
     const deletePromises: Promise<SyncResult>[] = filesToDelete.map((file) =>
@@ -299,13 +299,13 @@ export async function executeSyncChanges(
           });
           deleteCompleted++;
           deleteSpinner.message(
-            `Deleting ${deleteCompleted}/${deleteTotal} files...`
+            `Deleting ${deleteCompleted}/${formatCountWithSuffix(deleteTotal, "file")}...`
           );
           return { file, success: true };
         } catch (error) {
           deleteCompleted++;
           deleteSpinner.message(
-            `Deleting ${deleteCompleted}/${deleteTotal} files...`
+            `Deleting ${deleteCompleted}/${formatCountWithSuffix(deleteTotal, "file")}...`
           );
           log.error(
             `Failed to delete ${path.relative(process.cwd(), file.path)}: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -335,8 +335,8 @@ export async function executeSyncChanges(
     const deletedOk = results.deletions.successful.length;
     deleteSpinner.stop(
       deletedOk === deleteTotal
-        ? `Deleted ${deleteTotal} files`
-        : `Deleted ${deletedOk}/${deleteTotal} files (${results.deletions.failed.length} failed)`
+        ? `Deleted ${formatCountWithSuffix(deleteTotal, "file")}`
+        : `Deleted ${deletedOk}/${formatCountWithSuffix(deleteTotal, "file")} (${results.deletions.failed.length} failed)`
     );
   }
 
@@ -346,7 +346,7 @@ export async function executeSyncChanges(
     let uploadCompleted = 0;
     const uploadSpinner = spinner();
     uploadSpinner.start(
-      `Uploading 0/${uploadTotal} files...`
+      `Uploading 0/${formatCountWithSuffix(uploadTotal, "file")}...`
     );
 
     const uploadPromises: Promise<SyncResult>[] = filesToUpload.map((file) =>
@@ -376,7 +376,7 @@ export async function executeSyncChanges(
           if (stats.size === 0) {
             uploadCompleted++;
             uploadSpinner.message(
-              `Uploading ${uploadCompleted}/${uploadTotal} files...`
+              `Uploading ${uploadCompleted}/${formatCountWithSuffix(uploadTotal, "file")}...`
             );
             return { file, success: false, skipped: true };
           }
@@ -389,20 +389,20 @@ export async function executeSyncChanges(
             multipartUpload: options.multipartUpload,
             onProgress: (progress: UploadProgress) => {
               uploadSpinner.message(
-                `Uploading ${uploadCompleted}/${uploadTotal} files... (${progress.fileName}: part ${progress.partsCompleted}/${progress.totalParts}, ${formatBytes(progress.uploadedBytes)}/${formatBytes(progress.totalBytes)})`
+                `Uploading ${uploadCompleted}/${formatCountWithSuffix(uploadTotal, "file")}... (${progress.fileName}: part ${progress.partsCompleted}/${progress.totalParts}, ${formatBytes(progress.uploadedBytes)}/${formatBytes(progress.totalBytes)})`
               );
             },
           });
 
           uploadCompleted++;
           uploadSpinner.message(
-            `Uploading ${uploadCompleted}/${uploadTotal} files...`
+            `Uploading ${uploadCompleted}/${formatCountWithSuffix(uploadTotal, "file")}...`
           );
           return { file, success: true };
         } catch (error) {
           uploadCompleted++;
           uploadSpinner.message(
-            `Uploading ${uploadCompleted}/${uploadTotal} files...`
+            `Uploading ${uploadCompleted}/${formatCountWithSuffix(uploadTotal, "file")}...`
           );
           log.error(
             `Failed to upload ${relativePath}: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -434,13 +434,13 @@ export async function executeSyncChanges(
     const failedCount = results.uploads.failed.length - skippedCount;
 
     if (uploadedOk === uploadTotal) {
-      uploadSpinner.stop(`Uploaded ${uploadTotal} files`);
+      uploadSpinner.stop(`Uploaded ${formatCountWithSuffix(uploadTotal, "file")}`);
     } else {
       const parts: string[] = [];
       if (failedCount > 0) parts.push(`${failedCount} failed`);
       if (skippedCount > 0) parts.push(`${skippedCount} skipped`);
       uploadSpinner.stop(
-        `Uploaded ${uploadedOk}/${uploadTotal} files (${parts.join(", ")})`
+        `Uploaded ${uploadedOk}/${formatCountWithSuffix(uploadTotal, "file")} (${parts.join(", ")})`
       );
     }
   }
