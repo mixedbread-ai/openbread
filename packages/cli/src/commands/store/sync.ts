@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { warnContextualizationDeprecated } from "../../utils/deprecation";
 import { getGitInfo } from "../../utils/git";
+import type { MultipartUploadOptions } from "../../utils/upload";
 import {
   addGlobalOptions,
   extendGlobalOptions,
@@ -43,6 +44,19 @@ const SyncStoreSchema = extendGlobalOptions({
     .max(200, { error: '"parallel" must be less than or equal to 200' })
     .optional()
     .default(100),
+  multipartThreshold: z.coerce
+    .number({ error: '"multipart-threshold" must be a number' })
+    .min(5, { error: '"multipart-threshold" must be at least 5 MB' })
+    .optional(),
+  multipartPartSize: z.coerce
+    .number({ error: '"multipart-part-size" must be a number' })
+    .min(5, { error: '"multipart-part-size" must be at least 5 MB' })
+    .optional(),
+  multipartConcurrency: z.coerce
+    .number({ error: '"multipart-concurrency" must be a number' })
+    .int({ error: '"multipart-concurrency" must be an integer' })
+    .min(1, { error: '"multipart-concurrency" must be at least 1' })
+    .optional(),
 });
 
 export function createSyncCommand(): Command {
@@ -71,6 +85,18 @@ export function createSyncCommand(): Command {
       )
       .option("--metadata <json>", "Additional metadata for files")
       .option("--parallel <n>", "Number of concurrent operations (1-200)")
+      .option(
+        "--multipart-threshold <mb>",
+        "File size threshold in MB to trigger multipart upload",
+      )
+      .option(
+        "--multipart-part-size <mb>",
+        "Size of each part in MB for multipart upload",
+      )
+      .option(
+        "--multipart-concurrency <n>",
+        "Number of concurrent part uploads for multipart upload",
+      )
   );
 
   command.action(async (nameOrId: string, patterns: string[]) => {
@@ -188,12 +214,27 @@ export function createSyncCommand(): Command {
         log.success("Auto-proceeding with --yes flag");
       }
 
+      // Build multipart upload options
+      const MB = 1024 * 1024;
+      const multipartUpload: MultipartUploadOptions = {
+        ...(parsedOptions.multipartThreshold != null && {
+          threshold: parsedOptions.multipartThreshold * MB,
+        }),
+        ...(parsedOptions.multipartPartSize != null && {
+          partSize: parsedOptions.multipartPartSize * MB,
+        }),
+        ...(parsedOptions.multipartConcurrency != null && {
+          concurrency: parsedOptions.multipartConcurrency,
+        }),
+      };
+
       // Execute changes
       const syncResults = await executeSyncChanges(client, store.id, analysis, {
         strategy: parsedOptions.strategy,
         metadata: additionalMetadata,
         gitInfo: gitInfo.isRepo ? gitInfo : undefined,
         parallel: parsedOptions.parallel,
+        multipartUpload,
       });
 
       // Display summary

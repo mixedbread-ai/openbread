@@ -30,8 +30,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       '@mixedbread/sdk':
-        specifier: ^0.51.0
-        version: 0.51.0
+        specifier: ^0.57.0
+        version: 0.57.0
       '@pnpm/tabtab':
         specifier: ^0.5.4
         version: 0.5.4
@@ -759,8 +759,8 @@ packages:
     resolution: {integrity: sha512-B0Un0thpz4UKN69QVmgdVsCIgiz+jR4V+nxuCOgdm/P0Iie1NctqY092VQ/iobY/FSMzhHJofXij086y/9E5rg==}
     hasBin: true
 
-  '@mixedbread/sdk@0.51.0':
-    resolution: {integrity: sha512-hkM4x4SecFGM54uIqev4jU7Uzx1mDqMlJM83mdVBFRWO3aiVNeb9cq1hKEIKTVh3Hju/58tLnWE7ETRHYIZIxQ==}
+  '@mixedbread/sdk@0.57.0':
+    resolution: {integrity: sha512-twoZYKSuSHsR1yKDaiEDB+TRGSPUYC9gfOTMC4duSbSdXYN12mPWiihMXuDfdZT/JuWGh2cnQ73rle8FoG0+rw==}
     hasBin: true
 
   '@napi-rs/wasm-runtime@0.2.12':
@@ -4104,7 +4104,7 @@ snapshots:
 
   '@mixedbread/sdk@0.26.0': {}
 
-  '@mixedbread/sdk@0.51.0': {}
+  '@mixedbread/sdk@0.57.0': {}
 
   '@napi-rs/wasm-runtime@0.2.12':
     dependencies:
