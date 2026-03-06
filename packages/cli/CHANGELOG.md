@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.0
+
+### Minor Changes
+
+- 8a49b7c: Support multipart uploads and use it by default for larger files
+
 ## 2.2.3
 
 ### Patch Changes
