@@ -98,15 +98,15 @@ export function createUploadCommand(): Command {
       .option("--manifest <file>", "Upload using manifest file")
       .option(
         "--multipart-threshold <mb>",
-        "File size threshold in MB to trigger multipart upload",
+        "File size threshold in MB to trigger multipart upload"
       )
       .option(
         "--multipart-part-size <mb>",
-        "Size of each part in MB for multipart upload",
+        "Size of each part in MB for multipart upload"
       )
       .option(
         "--multipart-concurrency <n>",
-        "Number of concurrent part uploads for multipart upload",
+        "Number of concurrent part uploads for multipart upload"
       )
   );
 

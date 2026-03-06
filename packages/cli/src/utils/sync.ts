@@ -434,7 +434,9 @@ export async function executeSyncChanges(
     const failedCount = results.uploads.failed.length - skippedCount;
 
     if (uploadedOk === uploadTotal) {
-      uploadSpinner.stop(`Uploaded ${formatCountWithSuffix(uploadTotal, "file")}`);
+      uploadSpinner.stop(
+        `Uploaded ${formatCountWithSuffix(uploadTotal, "file")}`
+      );
     } else {
       const parts: string[] = [];
       if (failedCount > 0) parts.push(`${failedCount} failed`);

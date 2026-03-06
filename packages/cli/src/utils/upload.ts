@@ -1,6 +1,6 @@
 import { readFile, stat } from "node:fs/promises";
-import { basename, relative } from "node:path";
 import { cpus, freemem } from "node:os";
+import { basename, relative } from "node:path";
 import type Mixedbread from "@mixedbread/sdk";
 import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
@@ -140,8 +140,13 @@ export async function uploadFile(
   filePath: string,
   options: UploadFileOptions = {}
 ): Promise<void> {
-  const { metadata = {}, strategy, externalId, multipartUpload, onProgress } =
-    options;
+  const {
+    metadata = {},
+    strategy,
+    externalId,
+    multipartUpload,
+    onProgress,
+  } = options;
 
   // Read file content
   const fileContent = await readFile(filePath);
@@ -284,7 +289,9 @@ export async function uploadFilesInBatch(
           const stats = await stat(file.path);
           if (stats.size === 0) {
             completed++;
-            uploadSpinner.message(`Uploading ${completed}/${formatCountWithSuffix(total, "file")}...`);
+            uploadSpinner.message(
+              `Uploading ${completed}/${formatCountWithSuffix(total, "file")}...`
+            );
             results.skipped++;
             return;
           }
@@ -341,11 +348,15 @@ export async function uploadFilesInBatch(
 
           results.successfulSize += stats.size;
           completed++;
-          uploadSpinner.message(`Uploading ${completed}/${formatCountWithSuffix(total, "file")}...`);
+          uploadSpinner.message(
+            `Uploading ${completed}/${formatCountWithSuffix(total, "file")}...`
+          );
         } catch (error) {
           results.failed++;
           completed++;
-          uploadSpinner.message(`Uploading ${completed}/${formatCountWithSuffix(total, "file")}...`);
+          uploadSpinner.message(
+            `Uploading ${completed}/${formatCountWithSuffix(total, "file")}...`
+          );
           const errorMsg =
             error instanceof Error ? error.message : "Unknown error";
           log.error(`${relativePath} - ${errorMsg}`);

@@ -136,10 +136,7 @@ describe("Store Utils", () => {
       });
 
       await expect(
-        resolveStore(
-          mockClient as unknown as Mixedbread,
-          "nonexistent-store"
-        )
+        resolveStore(mockClient as unknown as Mixedbread, "nonexistent-store")
       ).rejects.toThrow('Store "nonexistent-store" not found');
     });
 
