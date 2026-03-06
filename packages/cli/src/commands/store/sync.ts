@@ -5,7 +5,6 @@ import { z } from "zod";
 import { createClient } from "../../utils/client";
 import { warnContextualizationDeprecated } from "../../utils/deprecation";
 import { getGitInfo } from "../../utils/git";
-import type { MultipartUploadOptions } from "../../utils/upload";
 import {
   addGlobalOptions,
   extendGlobalOptions,
@@ -22,6 +21,7 @@ import {
   formatChangeSummary,
 } from "../../utils/sync";
 import { getSyncedFiles } from "../../utils/sync-state";
+import type { MultipartUploadOptions } from "../../utils/upload";
 
 const SyncStoreSchema = extendGlobalOptions({
   nameOrId: z.string().min(1, { error: '"name-or-id" is required' }),
@@ -87,15 +87,15 @@ export function createSyncCommand(): Command {
       .option("--parallel <n>", "Number of concurrent operations (1-200)")
       .option(
         "--multipart-threshold <mb>",
-        "File size threshold in MB to trigger multipart upload",
+        "File size threshold in MB to trigger multipart upload"
       )
       .option(
         "--multipart-part-size <mb>",
-        "Size of each part in MB for multipart upload",
+        "Size of each part in MB for multipart upload"
       )
       .option(
         "--multipart-concurrency <n>",
-        "Number of concurrent part uploads for multipart upload",
+        "Number of concurrent part uploads for multipart upload"
       )
   );
 
