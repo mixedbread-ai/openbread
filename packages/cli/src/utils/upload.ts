@@ -1,7 +1,9 @@
-import { readFile, stat } from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { stat } from "node:fs/promises";
 import { cpus, freemem } from "node:os";
 import { basename, relative } from "node:path";
 import type Mixedbread from "@mixedbread/sdk";
+import { toFile } from "@mixedbread/sdk/uploads";
 import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { lookup } from "mime-types";
@@ -100,35 +102,35 @@ export interface UploadResults {
   successfulSize: number;
 }
 
+
 /**
- * Fix MIME types for files that are commonly misidentified
+ * Resolve the correct MIME type for a file path, fixing common misidentifications.
  */
-function fixMimeTypes(file: File): File {
-  const fileName = file.name.toLowerCase();
-  let correctedType = file.type;
+function resolveMimeType(filePath: string): string {
+  const mimeType = lookup(filePath) || "application/octet-stream";
+  const lowerPath = filePath.toLowerCase();
 
-  // Fix .ts files that are detected as video/mp2t
-  if (fileName.endsWith(".ts") && file.type === "video/mp2t") {
-    correctedType = "text/typescript";
+  if (lowerPath.endsWith(".ts") && mimeType === "video/mp2t") {
+    return "text/typescript";
   }
-  // Fix .py files that might be detected incorrectly
-  else if (fileName.endsWith(".py") && file.type !== "text/x-python") {
-    correctedType = "text/x-python";
+  if (lowerPath.endsWith(".py") && mimeType !== "text/x-python") {
+    return "text/x-python";
   }
-  // Fix .mdx files that are detected as text/x-markdown
-  else if (fileName.endsWith(".mdx") && file.type !== "text/mdx") {
-    correctedType = "text/mdx";
+  if (lowerPath.endsWith(".mdx") && mimeType !== "text/mdx") {
+    return "text/mdx";
   }
 
-  if (correctedType !== file.type) {
-    // Only create a new File object if we need to correct the type
-    return new File([file], file.name, {
-      type: correctedType,
-      lastModified: file.lastModified,
-    });
-  }
+  return mimeType;
+}
 
-  return file;
+/**
+ * Create an uploadable File from a file path using streaming to avoid
+ * the 2 GiB Buffer limit for large files.
+ */
+async function createUploadableFile(filePath: string): Promise<File> {
+  const fileName = basename(filePath);
+  const mimeType = resolveMimeType(filePath);
+  return toFile(createReadStream(filePath), fileName, { type: mimeType });
 }
 
 /**
@@ -148,16 +150,11 @@ export async function uploadFile(
     onProgress,
   } = options;
 
-  // Read file content
-  const fileContent = await readFile(filePath);
+  const stats = await stat(filePath);
   const fileName = basename(filePath);
-  const mimeType = lookup(filePath) || "application/octet-stream";
-  const file = fixMimeTypes(
-    new File([fileContent], fileName, { type: mimeType })
-  );
+  const totalFileBytes = stats.size;
 
-  const mpConfig = resolveMultipartConfig(fileContent.length, multipartUpload);
-  const totalFileBytes = fileContent.length;
+  const mpConfig = resolveMultipartConfig(totalFileBytes, multipartUpload);
 
   if (totalFileBytes >= mpConfig.threshold) {
     const expectedParts = Math.ceil(totalFileBytes / mpConfig.partSize);
@@ -176,6 +173,8 @@ export async function uploadFile(
       );
     }
   }
+
+  const file = await createUploadableFile(filePath);
 
   let partsCompleted = 0;
   await client.stores.files.upload({
@@ -296,20 +295,13 @@ export async function uploadFilesInBatch(
             return;
           }
 
-          const fileContent = await readFile(file.path);
           const fileName = basename(file.path);
-          const mimeType = lookup(file.path) || "application/octet-stream";
-          const fileToUpload = fixMimeTypes(
-            new File([fileContent], fileName, {
-              type: mimeType,
-            })
-          );
+          const totalFileBytes = stats.size;
 
           const mpConfig = resolveMultipartConfig(
-            fileContent.length,
+            totalFileBytes,
             multipartUpload
           );
-          const totalFileBytes = fileContent.length;
 
           if (totalFileBytes >= mpConfig.threshold) {
             const expectedParts = Math.ceil(totalFileBytes / mpConfig.partSize);
@@ -317,6 +309,8 @@ export async function uploadFilesInBatch(
               `Uploading ${completed}/${formatCountWithSuffix(total, "file")}... (${fileName}: 0/${expectedParts} parts, ${formatBytes(0)}/${formatBytes(totalFileBytes)})`
             );
           }
+
+          const fileToUpload = await createUploadableFile(file.path);
 
           let partsCompleted = 0;
           await client.stores.files.upload({
