@@ -1,4 +1,5 @@
-import { readFile, stat } from "node:fs/promises";
+import { closeSync, openAsBlob, openSync, readSync } from "node:fs";
+import { stat } from "node:fs/promises";
 import { cpus, freemem } from "node:os";
 import { basename, relative } from "node:path";
 import type Mixedbread from "@mixedbread/sdk";
@@ -14,6 +15,51 @@ export const UPLOAD_TIMEOUT = 1000 * 60 * 10; // 10 minutes
 const MB = 1024 * 1024;
 const MIN_PART_SIZE = 5 * MB;
 const MAX_PARTS = 10_000;
+
+/**
+ * Maximum file size for which `openAsBlob` reports the correct size.
+ * Node.js truncates the blob size to uint32, so files above 4 GiB
+ * get a wrong `.size` value.
+ */
+const MAX_OPEN_AS_BLOB_SAFE_SIZE = 4 * 1024 * 1024 * 1024; // 4 GiB
+
+/**
+ * File subclass that reads data from disk on demand.
+ *
+ * Works around two Node.js limitations for very large files:
+ *  1. `readFile` fails for files > ~2 GB (Buffer size limit).
+ *  2. `openAsBlob` truncates `.size` to uint32, breaking files > 4 GB.
+ *
+ * The SDK only calls `.size` and `.slice(start, end)` during multipart
+ * uploads, so on-demand sync reads of individual parts are fine.
+ */
+class LazyFile extends File {
+  #path: string;
+  #realSize: number;
+
+  constructor(path: string, name: string, size: number, type: string) {
+    super([], name, { type });
+    this.#path = path;
+    this.#realSize = size;
+  }
+
+  override get size(): number {
+    return this.#realSize;
+  }
+
+  override slice(start?: number, end?: number, contentType?: string): Blob {
+    const s = start ?? 0;
+    const e = Math.min(end ?? this.#realSize, this.#realSize);
+    const fd = openSync(this.#path, "r");
+    try {
+      const buf = Buffer.alloc(e - s);
+      readSync(fd, buf, 0, buf.length, s);
+      return new Blob([buf], { type: contentType ?? this.type });
+    } finally {
+      closeSync(fd);
+    }
+  }
+}
 
 export interface MultipartUploadOptions {
   threshold?: number;
@@ -101,33 +147,33 @@ export interface UploadResults {
 }
 
 /**
+ * Return the corrected MIME type for commonly misidentified extensions.
+ */
+function correctMimeType(fileName: string, mimeType: string): string {
+  const lower = fileName.toLowerCase();
+  if (lower.endsWith(".ts") && mimeType === "video/mp2t") {
+    return "text/typescript";
+  }
+  if (lower.endsWith(".py") && mimeType !== "text/x-python") {
+    return "text/x-python";
+  }
+  if (lower.endsWith(".mdx") && mimeType !== "text/mdx") {
+    return "text/mdx";
+  }
+  return mimeType;
+}
+
+/**
  * Fix MIME types for files that are commonly misidentified
  */
 function fixMimeTypes(file: File): File {
-  const fileName = file.name.toLowerCase();
-  let correctedType = file.type;
-
-  // Fix .ts files that are detected as video/mp2t
-  if (fileName.endsWith(".ts") && file.type === "video/mp2t") {
-    correctedType = "text/typescript";
-  }
-  // Fix .py files that might be detected incorrectly
-  else if (fileName.endsWith(".py") && file.type !== "text/x-python") {
-    correctedType = "text/x-python";
-  }
-  // Fix .mdx files that are detected as text/x-markdown
-  else if (fileName.endsWith(".mdx") && file.type !== "text/mdx") {
-    correctedType = "text/mdx";
-  }
-
+  const correctedType = correctMimeType(file.name, file.type);
   if (correctedType !== file.type) {
-    // Only create a new File object if we need to correct the type
     return new File([file], file.name, {
       type: correctedType,
       lastModified: file.lastModified,
     });
   }
-
   return file;
 }
 
@@ -148,16 +194,25 @@ export async function uploadFile(
     onProgress,
   } = options;
 
-  // Read file content
-  const fileContent = await readFile(filePath);
+  const fileStats = await stat(filePath);
+  const totalFileBytes = fileStats.size;
   const fileName = basename(filePath);
-  const mimeType = lookup(filePath) || "application/octet-stream";
-  const file = fixMimeTypes(
-    new File([fileContent], fileName, { type: mimeType })
+  const mimeType = correctMimeType(
+    fileName,
+    lookup(filePath) || "application/octet-stream"
   );
 
-  const mpConfig = resolveMultipartConfig(fileContent.length, multipartUpload);
-  const totalFileBytes = fileContent.length;
+  // openAsBlob truncates .size to uint32 for files > 4 GiB; use a LazyFile
+  // that reads parts from disk on demand instead.
+  let file: File;
+  if (totalFileBytes > MAX_OPEN_AS_BLOB_SAFE_SIZE) {
+    file = new LazyFile(filePath, fileName, totalFileBytes, mimeType);
+  } else {
+    const blob = await openAsBlob(filePath);
+    file = fixMimeTypes(new File([blob], fileName, { type: mimeType }));
+  }
+
+  const mpConfig = resolveMultipartConfig(totalFileBytes, multipartUpload);
 
   if (totalFileBytes >= mpConfig.threshold) {
     const expectedParts = Math.ceil(totalFileBytes / mpConfig.partSize);
@@ -296,20 +351,32 @@ export async function uploadFilesInBatch(
             return;
           }
 
-          const fileContent = await readFile(file.path);
           const fileName = basename(file.path);
-          const mimeType = lookup(file.path) || "application/octet-stream";
-          const fileToUpload = fixMimeTypes(
-            new File([fileContent], fileName, {
-              type: mimeType,
-            })
+          const mimeType = correctMimeType(
+            fileName,
+            lookup(file.path) || "application/octet-stream"
           );
 
+          let fileToUpload: File;
+          if (stats.size > MAX_OPEN_AS_BLOB_SAFE_SIZE) {
+            fileToUpload = new LazyFile(
+              file.path,
+              fileName,
+              stats.size,
+              mimeType
+            );
+          } else {
+            const blob = await openAsBlob(file.path);
+            fileToUpload = fixMimeTypes(
+              new File([blob], fileName, { type: mimeType })
+            );
+          }
+
           const mpConfig = resolveMultipartConfig(
-            fileContent.length,
+            stats.size,
             multipartUpload
           );
-          const totalFileBytes = fileContent.length;
+          const totalFileBytes = stats.size;
 
           if (totalFileBytes >= mpConfig.threshold) {
             const expectedParts = Math.ceil(totalFileBytes / mpConfig.partSize);
