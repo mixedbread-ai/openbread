@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.2
+
+### Patch Changes
+
+- 65ace41: Allow file uploads greater than 2GBs
+
 ## 2.3.0
 
 ### Minor Changes
