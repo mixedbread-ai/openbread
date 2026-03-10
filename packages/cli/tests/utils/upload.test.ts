@@ -9,6 +9,21 @@ import {
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
 import mockFs from "mock-fs";
+
+// mock-fs does not intercept openAsBlob, so provide a shim that reads
+// the (mocked) file via readFileSync and wraps it in a Blob.
+jest.mock("node:fs", () => {
+  const actual =
+    jest.requireActual<typeof import("node:fs")>("node:fs");
+  return {
+    ...actual,
+    openAsBlob: jest.fn(async (path: string) => {
+      const content = actual.readFileSync(path);
+      return new Blob([content]);
+    }),
+  };
+});
+
 import {
   UPLOAD_TIMEOUT,
   uploadFile,
