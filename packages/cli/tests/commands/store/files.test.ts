@@ -94,6 +94,7 @@ describe("Files Command", () => {
         usage_bytes: 1048576,
         created_at: "2024-01-01T00:00:00Z",
         store_id: "550e8400-e29b-41d4-a716-446655440070",
+        content_url: "https://example.com/files/file_1",
       },
       {
         id: "file_2",
@@ -102,6 +103,7 @@ describe("Files Command", () => {
         usage_bytes: 2048,
         created_at: "2024-01-02T00:00:00Z",
         store_id: "550e8400-e29b-41d4-a716-446655440070",
+        content_url: "https://example.com/files/file_2",
       },
     ];
 
@@ -281,6 +283,7 @@ describe("Files Command", () => {
       created_at: "2024-01-01T12:00:00Z",
       metadata: { author: "John Doe", version: "1.0" },
       store_id: "550e8400-e29b-41d4-a716-446655440070",
+      content_url: "https://example.com/files/file_123",
     };
 
     it("should get file details", async () => {
@@ -484,6 +487,7 @@ describe("Files Command", () => {
         usage_bytes: 1024,
         created_at: "2024-01-01T00:00:00Z",
         store_id: "550e8400-e29b-41d4-a716-446655440070",
+        content_url: "https://example.com/files/file_1",
       },
     ];
 

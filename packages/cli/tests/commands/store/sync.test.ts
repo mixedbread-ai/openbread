@@ -150,6 +150,34 @@ describe("Store Sync Command", () => {
       });
     });
 
+    it("should pass --max-chunk-size to executeSyncChanges", async () => {
+      mockAnalyzeChanges.mockResolvedValue({
+        added: [{ path: "/test.txt", type: "added", size: 12 }],
+        modified: [],
+        deleted: [],
+        unchanged: 0,
+        totalFiles: 1,
+        totalSize: 12,
+      });
+
+      await command.parseAsync([
+        "node",
+        "sync",
+        "test-store",
+        "*.txt",
+        "--yes",
+        "--max-chunk-size",
+        "500",
+      ]);
+
+      expect(mockExecuteSyncChanges).toHaveBeenCalledWith(
+        expect.anything(),
+        "550e8400-e29b-41d4-a716-446655440040",
+        expect.anything(),
+        expect.objectContaining({ maxChunkSize: 500 })
+      );
+    });
+
     it("should work with other options when using -f", async () => {
       await command.parseAsync([
         "node",

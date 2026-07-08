@@ -35,18 +35,32 @@ type ParsedSearchOptions = z.infer<typeof SearchStoreSchema> & {
   storeIdentifier: string;
 };
 
+interface StoreFileSearchResponse {
+  data: Array<{
+    filename: string;
+    score: number;
+    store_id: string;
+    chunk_index?: number;
+    metadata?: unknown;
+  }>;
+}
+
 async function searchStoreFiles(
   client: Mixedbread,
   parsedOptions: ParsedSearchOptions
 ) {
-  return await client.stores.files.search({
-    query: parsedOptions.query,
-    store_identifiers: [parsedOptions.storeIdentifier],
-    top_k: parsedOptions.topK,
-    search_options: {
-      return_metadata: parsedOptions.returnMetadata,
-      score_threshold: parsedOptions.threshold,
-      rerank: parsedOptions.rerank,
+  // The file-level search endpoint is no longer exposed as a typed method on
+  // the SDK client, so call it directly.
+  return await client.post<StoreFileSearchResponse>("/v1/stores/files/search", {
+    body: {
+      query: parsedOptions.query,
+      store_identifiers: [parsedOptions.storeIdentifier],
+      top_k: parsedOptions.topK,
+      search_options: {
+        return_metadata: parsedOptions.returnMetadata,
+        score_threshold: parsedOptions.threshold,
+        rerank: parsedOptions.rerank,
+      },
     },
   });
 }

@@ -3,7 +3,7 @@ import { stat } from "node:fs/promises";
 import { cpus, freemem } from "node:os";
 import { basename, relative } from "node:path";
 import type Mixedbread from "@mixedbread/sdk";
-import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
+import type { StoreFileConfig } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { lookup } from "mime-types";
 import pLimit from "p-limit";
@@ -126,7 +126,8 @@ export interface UploadProgress {
 
 export interface UploadFileOptions {
   metadata?: Record<string, unknown>;
-  strategy?: FileCreateParams.Config["parsing_strategy"];
+  strategy?: StoreFileConfig["parsing_strategy"];
+  maxChunkSize?: number;
   externalId?: string;
   multipartUpload?: MultipartUploadOptions;
   onProgress?: (progress: UploadProgress) => void;
@@ -134,8 +135,22 @@ export interface UploadFileOptions {
 
 export interface FileToUpload {
   path: string;
-  strategy: FileCreateParams.Config["parsing_strategy"];
+  strategy: StoreFileConfig["parsing_strategy"];
   metadata: Record<string, unknown>;
+}
+
+/**
+ * Build the file processing config for an upload request. `max_chunk_size` is
+ * accepted by the API but not yet part of the SDK's StoreFileConfig type.
+ */
+export function buildFileConfig(
+  strategy: StoreFileConfig["parsing_strategy"],
+  maxChunkSize?: number
+): StoreFileConfig {
+  return {
+    parsing_strategy: strategy,
+    ...(maxChunkSize != null && { max_chunk_size: maxChunkSize }),
+  } as StoreFileConfig;
 }
 
 export interface UploadResults {
@@ -189,6 +204,7 @@ export async function uploadFile(
   const {
     metadata = {},
     strategy,
+    maxChunkSize,
     externalId,
     multipartUpload,
     onProgress,
@@ -238,9 +254,7 @@ export async function uploadFile(
     file,
     body: {
       metadata,
-      config: {
-        parsing_strategy: strategy,
-      },
+      config: buildFileConfig(strategy, maxChunkSize),
       ...(externalId ? { external_id: externalId } : {}),
     },
     options: { timeout: UPLOAD_TIMEOUT },
@@ -279,6 +293,7 @@ export async function uploadFilesInBatch(
     existingFiles: Map<string, string>;
     parallel: number;
     showStrategyPerFile?: boolean;
+    maxChunkSize?: number;
     multipartUpload?: MultipartUploadOptions;
   }
 ): Promise<UploadResults> {
@@ -287,6 +302,7 @@ export async function uploadFilesInBatch(
     existingFiles,
     parallel,
     showStrategyPerFile = false,
+    maxChunkSize,
     multipartUpload,
   } = options;
 
@@ -372,10 +388,7 @@ export async function uploadFilesInBatch(
             );
           }
 
-          const mpConfig = resolveMultipartConfig(
-            stats.size,
-            multipartUpload
-          );
+          const mpConfig = resolveMultipartConfig(stats.size, multipartUpload);
           const totalFileBytes = stats.size;
 
           if (totalFileBytes >= mpConfig.threshold) {
@@ -391,9 +404,7 @@ export async function uploadFilesInBatch(
             file: fileToUpload,
             body: {
               metadata: fileMetadata,
-              config: {
-                parsing_strategy: file.strategy,
-              },
+              config: buildFileConfig(file.strategy, maxChunkSize),
             },
             options: { timeout: UPLOAD_TIMEOUT },
             multipartUpload: {
