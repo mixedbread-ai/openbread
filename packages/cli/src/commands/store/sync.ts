@@ -29,6 +29,11 @@ const SyncStoreSchema = extendGlobalOptions({
     .array(z.string())
     .min(1, { error: "At least one pattern is required" }),
   strategy: z.enum(["fast", "high_quality"]).optional(),
+  maxChunkSize: z.coerce
+    .number({ error: '"max-chunk-size" must be a number' })
+    .int({ error: '"max-chunk-size" must be an integer' })
+    .positive({ error: '"max-chunk-size" must be positive' })
+    .optional(),
   contextualization: z
     .boolean({ error: '"contextualization" must be a boolean' })
     .optional(),
@@ -69,6 +74,10 @@ export function createSyncCommand(): Command {
         "File patterns, folders, or paths to sync (supports ./** and folder names)"
       )
       .option("--strategy <strategy>", "Upload strategy (fast|high_quality)")
+      .option(
+        "--max-chunk-size <n>",
+        "Maximum chunk size used when processing files"
+      )
       .option(
         "--contextualization",
         "Deprecated (ignored): contextualization is now configured at the store level"
@@ -231,6 +240,7 @@ export function createSyncCommand(): Command {
       // Execute changes
       const syncResults = await executeSyncChanges(client, store.id, analysis, {
         strategy: parsedOptions.strategy,
+        maxChunkSize: parsedOptions.maxChunkSize,
         metadata: additionalMetadata,
         gitInfo: gitInfo.isRepo ? gitInfo : undefined,
         parallel: parsedOptions.parallel,

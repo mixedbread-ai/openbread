@@ -463,6 +463,49 @@ describe("Store Create Command", () => {
       });
     });
 
+    it("should combine --contextualization fields with --with-file-context", async () => {
+      const mockResponse = {
+        id: "550e8400-e29b-41d4-a716-446655440010",
+        name: "ctx-store",
+        description: null,
+        is_public: false,
+        config: {
+          contextualization: {
+            with_metadata: ["filePath"],
+            with_file_context: true,
+          },
+        },
+        expires_after: null,
+        metadata: {},
+        created_at: "2021-01-01T00:00:00Z",
+        updated_at: "2021-01-01T00:00:00Z",
+      };
+
+      mockClient.stores.create.mockResolvedValue(mockResponse);
+
+      await command.parseAsync([
+        "node",
+        "create",
+        "ctx-store",
+        "--contextualization=filePath",
+        "--with-file-context",
+      ]);
+
+      expect(mockClient.stores.create).toHaveBeenCalledWith({
+        name: "ctx-store",
+        description: undefined,
+        is_public: undefined,
+        config: {
+          contextualization: {
+            with_metadata: ["filePath"],
+            with_file_context: true,
+          },
+        },
+        expires_after: undefined,
+        metadata: undefined,
+      });
+    });
+
     it("should parse single field for --contextualization", async () => {
       const mockResponse = {
         id: "550e8400-e29b-41d4-a716-446655440010",

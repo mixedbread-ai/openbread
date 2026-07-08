@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type Mixedbread from "@mixedbread/sdk";
-import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
+import type { StoreFileConfig } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { glob } from "glob";
 import pLimit from "p-limit";
@@ -264,7 +264,8 @@ export async function executeSyncChanges(
   storeIdentifier: string,
   analysis: SyncAnalysis,
   options: {
-    strategy?: FileCreateParams.Config["parsing_strategy"];
+    strategy?: StoreFileConfig["parsing_strategy"];
+    maxChunkSize?: number;
     metadata?: Record<string, unknown>;
     gitInfo?: { commit: string; branch: string };
     parallel?: number;
@@ -385,6 +386,7 @@ export async function executeSyncChanges(
           await uploadFile(client, storeIdentifier, file.path, {
             metadata: finalMetadata,
             strategy: options.strategy,
+            maxChunkSize: options.maxChunkSize,
             externalId: file.path,
             multipartUpload: options.multipartUpload,
             onProgress: (progress: UploadProgress) => {
@@ -455,7 +457,7 @@ export function displaySyncResultsSummary(
   gitInfo: { commit: string; branch: string; isRepo: boolean },
   fromGit?: string,
   uploadOptions?: {
-    strategy?: FileCreateParams.Config["parsing_strategy"];
+    strategy?: StoreFileConfig["parsing_strategy"];
   }
 ): void {
   console.log(chalk.bold("\nSummary:"));

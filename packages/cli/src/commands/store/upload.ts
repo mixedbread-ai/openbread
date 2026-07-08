@@ -1,5 +1,5 @@
 import { stat } from "node:fs/promises";
-import type { FileCreateParams } from "@mixedbread/sdk/resources/stores";
+import type { StoreFileConfig } from "@mixedbread/sdk/resources/stores";
 import chalk from "chalk";
 import { Command } from "commander";
 import { glob } from "glob";
@@ -32,6 +32,11 @@ const UploadStoreSchema = extendGlobalOptions({
       error: '"strategy" must be either "fast" or "high_quality"',
     })
     .optional(),
+  maxChunkSize: z.coerce
+    .number({ error: '"max-chunk-size" must be a number' })
+    .int({ error: '"max-chunk-size" must be an integer' })
+    .positive({ error: '"max-chunk-size" must be positive' })
+    .optional(),
   contextualization: z
     .boolean({ error: '"contextualization" must be a boolean' })
     .optional(),
@@ -61,7 +66,8 @@ const UploadStoreSchema = extendGlobalOptions({
 });
 
 export interface UploadOptions extends GlobalOptions {
-  strategy?: FileCreateParams.Config["parsing_strategy"];
+  strategy?: StoreFileConfig["parsing_strategy"];
+  maxChunkSize?: number;
   contextualization?: boolean;
   metadata?: string;
   dryRun?: boolean;
@@ -83,6 +89,10 @@ export function createUploadCommand(): Command {
         'File patterns to upload (e.g., "*.md", "docs/**/*.pdf")'
       )
       .option("--strategy <strategy>", "Processing strategy")
+      .option(
+        "--max-chunk-size <n>",
+        "Maximum chunk size used when processing files"
+      )
       .option(
         "--contextualization",
         "Deprecated (ignored): contextualization is now configured at the store level"
@@ -258,6 +268,7 @@ export function createUploadCommand(): Command {
         unique: parsedOptions.unique || false,
         existingFiles,
         parallel,
+        maxChunkSize: parsedOptions.maxChunkSize,
         multipartUpload,
       });
     } catch (error) {

@@ -8,7 +8,6 @@ import {
 } from "@jest/globals";
 import type Mixedbread from "@mixedbread/sdk";
 import type { StoreSearchResponse } from "@mixedbread/sdk/resources/index.mjs";
-import type { FileSearchResponse } from "@mixedbread/sdk/resources/stores.mjs";
 import type { Command } from "commander";
 import { createSearchCommand } from "../../../src/commands/store/search";
 import * as clientUtils from "../../../src/utils/client";
@@ -42,10 +41,10 @@ const mockFormatOutput = outputUtils.formatOutput as jest.MockedFunction<
 describe("Store Search Command", () => {
   let command: Command;
   let mockClient: {
+    post: jest.MockedFunction<
+      (path: string, opts?: unknown) => Promise<unknown>
+    >;
     stores: {
-      files: {
-        search: jest.MockedFunction<Mixedbread["stores"]["files"]["search"]>;
-      };
       search: jest.MockedFunction<Mixedbread["stores"]["search"]>;
     };
   };
@@ -53,10 +52,8 @@ describe("Store Search Command", () => {
   beforeEach(() => {
     command = createSearchCommand();
     mockClient = {
+      post: jest.fn(),
       stores: {
-        files: {
-          search: jest.fn(),
-        },
         search: jest.fn(),
       },
     };
@@ -278,7 +275,7 @@ describe("Store Search Command", () => {
 
   describe("File search", () => {
     it("should search files when file-search flag is enabled", async () => {
-      const mockFileResults: FileSearchResponse = {
+      const mockFileResults = {
         data: [
           {
             filename: "document1.pdf",
@@ -300,7 +297,7 @@ describe("Store Search Command", () => {
           },
         ],
       };
-      mockClient.stores.files.search.mockResolvedValue(mockFileResults);
+      mockClient.post.mockResolvedValue(mockFileResults);
 
       await command.parseAsync([
         "node",
@@ -310,14 +307,16 @@ describe("Store Search Command", () => {
         "--file-search",
       ]);
 
-      expect(mockClient.stores.files.search).toHaveBeenCalledWith({
-        query: "query",
-        store_identifiers: ["550e8400-e29b-41d4-a716-446655440080"],
-        top_k: 5,
-        search_options: {
-          return_metadata: undefined,
-          score_threshold: undefined,
-          rerank: false,
+      expect(mockClient.post).toHaveBeenCalledWith("/v1/stores/files/search", {
+        body: {
+          query: "query",
+          store_identifiers: ["550e8400-e29b-41d4-a716-446655440080"],
+          top_k: 5,
+          search_options: {
+            return_metadata: undefined,
+            score_threshold: undefined,
+            rerank: false,
+          },
         },
       });
 
@@ -327,7 +326,7 @@ describe("Store Search Command", () => {
     });
 
     it("should search files with all options", async () => {
-      const mockFileResults: FileSearchResponse = {
+      const mockFileResults = {
         data: [
           {
             filename: "document1.pdf",
@@ -340,7 +339,7 @@ describe("Store Search Command", () => {
           },
         ],
       };
-      mockClient.stores.files.search.mockResolvedValue(mockFileResults);
+      mockClient.post.mockResolvedValue(mockFileResults);
 
       await command.parseAsync([
         "node",
@@ -356,14 +355,16 @@ describe("Store Search Command", () => {
         "--rerank",
       ]);
 
-      expect(mockClient.stores.files.search).toHaveBeenCalledWith({
-        query: "query",
-        store_identifiers: ["550e8400-e29b-41d4-a716-446655440080"],
-        top_k: 15,
-        search_options: {
-          return_metadata: true,
-          score_threshold: 0.7,
-          rerank: true,
+      expect(mockClient.post).toHaveBeenCalledWith("/v1/stores/files/search", {
+        body: {
+          query: "query",
+          store_identifiers: ["550e8400-e29b-41d4-a716-446655440080"],
+          top_k: 15,
+          search_options: {
+            return_metadata: true,
+            score_threshold: 0.7,
+            rerank: true,
+          },
         },
       });
     });

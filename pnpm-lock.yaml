@@ -30,8 +30,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       '@mixedbread/sdk':
-        specifier: ^0.57.0
-        version: 0.57.0
+        specifier: ^0.77.0
+        version: 0.77.0
       '@pnpm/tabtab':
         specifier: ^0.5.4
         version: 0.5.4
@@ -759,8 +759,8 @@ packages:
     resolution: {integrity: sha512-B0Un0thpz4UKN69QVmgdVsCIgiz+jR4V+nxuCOgdm/P0Iie1NctqY092VQ/iobY/FSMzhHJofXij086y/9E5rg==}
     hasBin: true
 
-  '@mixedbread/sdk@0.57.0':
-    resolution: {integrity: sha512-twoZYKSuSHsR1yKDaiEDB+TRGSPUYC9gfOTMC4duSbSdXYN12mPWiihMXuDfdZT/JuWGh2cnQ73rle8FoG0+rw==}
+  '@mixedbread/sdk@0.77.0':
+    resolution: {integrity: sha512-OxVkpVoJpdCGSo1v1Nu6tDiSv7M17LXT9A0LOT97WnkiGaHTranfeTioUI1XuQYfqXiAftPWC6eznswW9AB0DA==}
     hasBin: true
 
   '@napi-rs/wasm-runtime@0.2.12':
@@ -1301,6 +1301,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@unrs/resolver-binding-android-arm-eabi@1.11.1':
     resolution: {integrity: sha512-ppLRUgHVaGRWUx0R0Ut06Mjo9gBaBkg3v/8AxusGLhsIotbBLuRk51rAzqLC8gq6NyyAojEXglNjzf6R948DNw==}
@@ -4104,7 +4105,7 @@ snapshots:
 
   '@mixedbread/sdk@0.26.0': {}
 
-  '@mixedbread/sdk@0.57.0': {}
+  '@mixedbread/sdk@0.77.0': {}
 
   '@napi-rs/wasm-runtime@0.2.12':
     dependencies:

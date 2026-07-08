@@ -1,6 +1,7 @@
 import { isCancel, select } from "@clack/prompts";
 import type { Mixedbread } from "@mixedbread/sdk";
 import type {
+  ContextualizationConfig,
   FileListParams,
   Store,
   StoreFile,
@@ -74,11 +75,13 @@ export function parsePublicFlag(value?: boolean | string): boolean | undefined {
 }
 
 export function buildStoreConfig(
-  contextualization?: boolean | string
-): { contextualization: boolean | { with_metadata: string[] } } | undefined {
-  if (contextualization === undefined) {
+  contextualization?: boolean | string,
+  withFileContext?: boolean
+): { contextualization: boolean | ContextualizationConfig } | undefined {
+  if (contextualization === undefined && !withFileContext) {
     return undefined;
   }
+  const config: ContextualizationConfig = {};
   if (typeof contextualization === "string") {
     const fields = contextualization
       .split(",")
@@ -89,9 +92,17 @@ export function buildStoreConfig(
         `Invalid value for --contextualization: "${contextualization}". Use a comma-separated list of metadata fields.`
       );
     }
-    return { contextualization: { with_metadata: fields } };
+    config.with_metadata = fields;
+  } else if (contextualization === true) {
+    if (!withFileContext) {
+      return { contextualization: true };
+    }
+    config.with_metadata = true;
   }
-  return { contextualization: true };
+  if (withFileContext) {
+    config.with_file_context = true;
+  }
+  return { contextualization: config };
 }
 
 export async function checkExistingFiles(

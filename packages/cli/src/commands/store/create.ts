@@ -20,6 +20,9 @@ const CreateStoreSchema = extendGlobalOptions({
   description: z.string().optional(),
   public: z.union([z.boolean(), z.string()]).optional(),
   contextualization: z.union([z.boolean(), z.string()]).optional(),
+  withFileContext: z
+    .boolean({ error: '"with-file-context" must be a boolean' })
+    .optional(),
   expiresAfter: z.coerce
     .number({ error: '"expires-after" must be a number' })
     .int({ error: '"expires-after" must be an integer' })
@@ -41,6 +44,10 @@ export function createCreateCommand(): Command {
       .option(
         "--contextualization [fields]",
         "Enable contextualization, optionally with specific metadata fields (comma-separated)"
+      )
+      .option(
+        "--with-file-context",
+        "Use an LLM to situate each text chunk within the full document during ingestion"
       )
       .option("--expires-after <days>", "Expire after number of days")
       .option("--metadata <json>", "Additional metadata as JSON string")
@@ -66,7 +73,10 @@ export function createCreateCommand(): Command {
         name: parsedOptions.name,
         description: parsedOptions.description,
         is_public: parsePublicFlag(parsedOptions.public),
-        config: buildStoreConfig(parsedOptions.contextualization),
+        config: buildStoreConfig(
+          parsedOptions.contextualization,
+          parsedOptions.withFileContext
+        ),
         expires_after: parsedOptions.expiresAfter
           ? {
               anchor: "last_active_at",
