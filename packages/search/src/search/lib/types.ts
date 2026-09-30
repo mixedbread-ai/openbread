@@ -1,4 +1,4 @@
-import type { FileSearchResponse } from "@mixedbread/sdk/resources/vector-stores.mjs";
+import type { StoreSearchResponse } from "@mixedbread/sdk/resources/stores";
 import type { z } from "zod";
 import type { SearchQuerySchema } from "./validations";
 
@@ -21,7 +21,7 @@ export interface Result {
 
 export type SearchQuery = z.infer<typeof SearchQuerySchema>;
 
-export type TransformFunc = (results: FileSearchResponse["data"]) => Result[];
+export type TransformFunc = (results: StoreSearchResponse["data"]) => Result[];
 
 export type Message =
   | {

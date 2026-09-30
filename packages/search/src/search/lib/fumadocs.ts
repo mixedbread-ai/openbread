@@ -1,12 +1,12 @@
 import type Mixedbread from "@mixedbread/sdk";
-import type { VectorStoreSearchResponse } from "@mixedbread/sdk/resources/vector-stores";
+import type { StoreSearchResponse } from "@mixedbread/sdk/resources/stores";
 import type { SearchMetadata } from "./types";
 
 export interface MixedbreadOptions {
   /**
    * The ID of the store to search in
    */
-  vectorStoreId: string;
+  storeId: string;
 
   /**
    * The Mixedbread SDK client instance
@@ -31,7 +31,7 @@ interface SortedResult {
   url: string;
 }
 
-type VectorStoreSearchResult = VectorStoreSearchResponse["data"][number] & {
+type StoreSearchResult = StoreSearchResponse["data"][number] & {
   generated_metadata: SearchMetadata;
 };
 
@@ -39,22 +39,22 @@ export async function search(
   query: string,
   options: MixedbreadOptions
 ): Promise<SortedResult[]> {
-  const { client, vectorStoreId, tag } = options;
+  const { client, storeId, tag } = options;
 
   if (!query.trim()) {
     return [];
   }
 
-  const res = await client.vectorStores.search({
+  const res = await client.stores.search({
     query,
-    vector_store_identifiers: [vectorStoreId],
+    store_identifiers: [storeId],
     top_k: 10,
     search_options: {
       return_metadata: true,
     },
   });
 
-  const results = (res.data as VectorStoreSearchResult[])
+  const results = (res.data as StoreSearchResult[])
     .filter((item) => {
       const metadata = item.generated_metadata;
       return !tag || metadata.tag === tag;
